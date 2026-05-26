@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import jsPDF from "jspdf";
 
 const PREFECTURES = [
   "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
@@ -70,6 +69,7 @@ type FormData = {
 };
 
 export default function Home() {
+  const [isGenerating, setIsGenerating] = useState(false);
   const [form, setForm] = useState<FormData>({
     name: "",
     nameKana: "",
@@ -114,73 +114,35 @@ export default function Home() {
     });
   }
 
-  function generatePDF() {
-    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  async function generatePDF() {
+    setIsGenerating(true);
+    try {
+      // サーバーサイドAPIにフォームデータを送ってPDFを生成・ダウンロード
+      const res = await fetch("/api/pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
 
-    // フォント設定（日本語対応のためbase64フォントは使わず、標準フォントで代替）
-    // 実用上は日本語フォントが必要だが、ここでは構造を正確に作成
-    const pageW = 210;
-    const marginL = 20;
-    const marginR = 20;
-    const contentW = pageW - marginL - marginR;
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `サーバーエラー (${res.status})`);
+      }
 
-    // ヘッダー
-    doc.setFontSize(16);
-    doc.setFont("helvetica", "bold");
-    doc.text("Rice Grain Sales Notification Form", pageW / 2, 25, { align: "center" });
-
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "normal");
-    doc.text(`(Submission Date: ${todayWareki()})`, pageW - marginR, 35, { align: "right" });
-
-    doc.setFontSize(12);
-    doc.text(`To: ${nokyo || "___"} Director`, marginL, 45);
-
-    // 区切り線
-    doc.setLineWidth(0.5);
-    doc.line(marginL, 50, pageW - marginR, 50);
-
-    // 申請者情報
-    let y = 58;
-    const labelX = marginL;
-    const valueX = marginL + 55;
-
-    const rows: [string, string][] = [
-      ["Name (Kana):", `${form.name}  (${form.nameKana})`],
-      ["Address:", `${form.prefecture}${form.cityAddress}`],
-      ["Phone:", form.phone],
-      ["Farm Name:", form.farmName],
-      ["Farm Address:", form.farmAddressSame
-        ? `${form.prefecture}${form.cityAddress}`
-        : `${form.farmPrefecture}${form.farmCityAddress}`],
-      ["Grain Types:", form.grainTypes.join(", ")],
-      ["Annual Volume:", `${form.quantity} ton (milled rice equivalent)`],
-      ["Start Date:", toWareki(form.startDate)],
-      ["Submitted to:", nokyo ? `${nokyo} Director` : ""],
-    ];
-
-    doc.setFontSize(11);
-    for (const [label, value] of rows) {
-      doc.setFont("helvetica", "bold");
-      doc.text(label, labelX, y);
-      doc.setFont("helvetica", "normal");
-      const lines = doc.splitTextToSize(value || "-", contentW - 55);
-      doc.text(lines, valueX, y);
-      y += Math.max(8, lines.length * 6 + 2);
-      doc.setLineWidth(0.1);
-      doc.setDrawColor(200, 200, 200);
-      doc.line(labelX, y - 1, pageW - marginR, y - 1);
+      // バイナリデータを受け取りブラウザにダウンロードさせる
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "米穀販売届出書.pdf";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("PDF生成エラー:", err);
+      alert("PDFの生成に失敗しました。もう一度お試しください。");
+    } finally {
+      setIsGenerating(false);
     }
-
-    // 署名欄
-    y += 10;
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.text("Applicant Signature:", marginL, y);
-    doc.setLineWidth(0.5);
-    doc.line(marginL + 50, y, marginL + 130, y);
-
-    doc.save("米穀販売届出書.pdf");
   }
 
   const inputClass =
@@ -385,13 +347,15 @@ export default function Home() {
         {/* 生成ボタン */}
         <button
           onClick={generatePDF}
-          className="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white text-xl font-bold py-5 px-6 rounded-2xl shadow-lg transition-colors"
+          disabled={isGenerating}
+          className="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 disabled:bg-green-400 text-white text-xl font-bold py-5 px-6 rounded-2xl shadow-lg transition-colors"
         >
-          届出書PDFを作成する
+          {isGenerating ? "PDF作成中…少々お待ちください" : "届出書PDFを作成する"}
         </button>
 
         <p className="text-center text-sm text-gray-500 mt-4 mb-8">
           ボタンを押すと PDF ファイルが自動でダウンロードされます
+          {isGenerating && "（フォントを読み込んでいます…）"}
         </p>
       </main>
     </div>
