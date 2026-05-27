@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 const PREFECTURES = [
   "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
@@ -162,7 +163,19 @@ export default function Home() {
         </p>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 py-8">
+      {/* 書類選択メニュー */}
+      <nav className="max-w-2xl mx-auto px-4 pt-6">
+        <div className="flex gap-3">
+          <div className="flex-1 text-center py-3 px-4 rounded-xl border-2 border-green-600 bg-green-600 text-white font-bold text-sm sm:text-base">
+            米穀販売届出書 ✓
+          </div>
+          <Link href="/nenkin" className="flex-1 text-center py-3 px-4 rounded-xl border-2 border-green-200 bg-white text-green-700 font-medium text-sm sm:text-base hover:border-green-400 hover:bg-green-50 transition-colors">
+            農業者年金申込書
+          </Link>
+        </div>
+      </nav>
+
+      <main className="max-w-2xl mx-auto px-4 py-6">
 
         {/* 基本情報 */}
         <section className={sectionClass}>
