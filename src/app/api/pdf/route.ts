@@ -2,12 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import path from "path";
 import fs from "fs";
 
-function toWareki(dateStr: string): string {
-  if (!dateStr) return "　　年　　月　　日";
-  const d = new Date(dateStr);
-  const y = d.getFullYear();
-  const m = d.getMonth() + 1;
-  const day = d.getDate();
+function toWareki(y: number, m: number, day: number): string {
   let era = "";
   let eraYear = 0;
   if (y >= 2019) { era = "令和"; eraYear = y - 2018; }
@@ -17,24 +12,38 @@ function toWareki(dateStr: string): string {
 }
 
 function todayWareki(): string {
-  return toWareki(new Date().toISOString().slice(0, 10));
+  // JST（日本標準時 UTC+9）で今日の日付を取得
+  const jst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  const y = jst.getUTCFullYear();
+  const m = jst.getUTCMonth() + 1;
+  const day = jst.getUTCDate();
+  return toWareki(y, m, day);
+}
+
+function startDateWareki(dateStr: string): string {
+  if (!dateStr) return "　　年　　月　　日";
+  const d = new Date(dateStr);
+  const y = d.getFullYear();
+  const m = d.getMonth() + 1;
+  const day = d.getDate();
+  return toWareki(y, m, day);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const pdfMake = require("pdfmake/build/pdfmake");
 
-// フォントはサーバー起動時に1回だけ読み込んでキャッシュ
-const fontPath = path.join(process.cwd(), "public", "fonts", "YuMincho.ttf");
+// フォントをサーバー起動時に1回だけ読み込んでキャッシュ
+const fontPath = path.join(process.cwd(), "public", "fonts", "NotoSansJP.ttf");
 if (fs.existsSync(fontPath)) {
   const fontData = fs.readFileSync(fontPath);
-  pdfMake.virtualfs.storage["YuMincho.ttf"] = fontData;
+  pdfMake.virtualfs.storage["NotoSansJP.ttf"] = fontData;
 }
 pdfMake.fonts = {
-  YuMincho: {
-    normal: "YuMincho.ttf",
-    bold: "YuMincho.ttf",
-    italics: "YuMincho.ttf",
-    bolditalics: "YuMincho.ttf",
+  NotoSansJP: {
+    normal: "NotoSansJP.ttf",
+    bold: "NotoSansJP.ttf",
+    italics: "NotoSansJP.ttf",
+    bolditalics: "NotoSansJP.ttf",
   },
 };
 
@@ -89,15 +98,15 @@ export async function POST(request: NextRequest) {
       ["農場名", form.farmName || "　"],
       ["事業所住所", farmAddress || "　"],
       ["米穀の種類", grainText],
-      ["年間取扱予定数量", `${form.quantity || "0"} 精米トン`],
-      ["事業開始予定日", toWareki(form.startDate || "")],
+      ["年間取扱予定数量", form.quantity ? `${form.quantity} 精米トン` : "　"],
+      ["事業開始予定日", startDateWareki(form.startDate || "")],
       ["提出先農政局", nokyo ? `${nokyo}長　殿` : "　"],
     ];
 
     const docDef = {
       pageSize: "A4",
       pageMargins: [50, 60, 50, 60],
-      defaultStyle: { font: "YuMincho", fontSize: 11, lineHeight: 1.6 },
+      defaultStyle: { font: "NotoSansJP", fontSize: 11, lineHeight: 1.6 },
       content: [
         {
           text: "米穀の出荷又は販売の事業開始届出書",

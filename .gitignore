@@ -40,5 +40,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# fonts (Windows system fonts - not redistributable)
+# fonts (large binary files - generate locally with pyftsubset or download from Google Fonts)
 /public/fonts/
