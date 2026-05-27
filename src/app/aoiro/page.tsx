@@ -26,50 +26,63 @@ const ERA_YEARS: Record<string, number[]> = {
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
 const DAYS   = Array.from({ length: 31 }, (_, i) => i + 1);
 
-type FormData = {
+type AoiroFormData = {
   name: string;
   nameKana: string;
   dobEra: string;
   dobYear: string;
   dobMonth: string;
   dobDay: string;
-  gender: string;
   prefecture: string;
   cityAddress: string;
   phone: string;
+  myNumber: string;
+  farmName: string;
   farmTypes: string[];
-  workDays: string;
-  farmArea: string;
-  nenkinType: string;
-  monthlyPremium: number;
-  submissionDest: string;
-  submissionName: string;
+  startEra: string;
+  startYear: string;
+  startMonth: string;
+  startDay: string;
+  taxOffice: string;
+  bookType: string;
 };
 
-export default function NenkinPage() {
+export default function AoiroPage() {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [form, setForm] = useState<FormData>({
+  const [form, setForm] = useState<AoiroFormData>({
     name: "",
     nameKana: "",
     dobEra: "昭和",
     dobYear: "50",
     dobMonth: "1",
     dobDay: "1",
-    gender: "",
     prefecture: "",
     cityAddress: "",
     phone: "",
+    myNumber: "",
+    farmName: "",
     farmTypes: [],
-    workDays: "",
-    farmArea: "",
-    nenkinType: "",
-    monthlyPremium: 20000,
-    submissionDest: "",
-    submissionName: "",
+    startEra: "令和",
+    startYear: "1",
+    startMonth: "1",
+    startDay: "1",
+    taxOffice: "",
+    bookType: "",
   });
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     const { name, value } = e.target;
+    // 元号が変わったとき年のデフォルトをリセット
+    if (name === "dobEra") {
+      const years = ERA_YEARS[value] ?? [];
+      setForm((prev) => ({ ...prev, dobEra: value, dobYear: String(years[0] ?? 1) }));
+      return;
+    }
+    if (name === "startEra") {
+      const years = ERA_YEARS[value] ?? [];
+      setForm((prev) => ({ ...prev, startEra: value, startYear: String(years[0] ?? 1) }));
+      return;
+    }
     setForm((prev) => ({ ...prev, [name]: value }));
   }
 
@@ -86,7 +99,7 @@ export default function NenkinPage() {
   async function generatePDF() {
     setIsGenerating(true);
     try {
-      const res = await fetch("/api/nenkin-pdf", {
+      const res = await fetch("/api/aoiro-pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -99,7 +112,7 @@ export default function NenkinPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "農業者年金通常加入申込書.pdf";
+      a.download = "青色申告承認申請書.pdf";
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
@@ -110,7 +123,8 @@ export default function NenkinPage() {
     }
   }
 
-  const eraYears = ERA_YEARS[form.dobEra] ?? [];
+  const dobEraYears   = ERA_YEARS[form.dobEra]   ?? [];
+  const startEraYears = ERA_YEARS[form.startEra] ?? [];
 
   const inputClass =
     "w-full rounded-lg border-2 border-green-200 bg-white px-4 py-3 text-lg focus:border-green-500 focus:outline-none transition-colors";
@@ -126,21 +140,21 @@ export default function NenkinPage() {
       {/* ヘッダー */}
       <header className="bg-green-700 text-white py-6 px-4 text-center shadow-md">
         <h1 className="text-2xl font-bold leading-tight">
-          農業者年金通常加入申込書
+          青色申告承認申請書
         </h1>
         <p className="mt-2 text-green-100 text-base">
-          様式第１号・農業者年金基金への提出書類を作成します
+          所得税の青色申告承認申請書を作成します
         </p>
       </header>
 
-      <DocNav current="/nenkin" />
+      <DocNav current="/aoiro" />
 
       <main className="max-w-2xl mx-auto px-4 py-6">
 
-        {/* 申込者情報 */}
+        {/* 申請者情報 */}
         <section className={sectionClass}>
           <h2 className="text-xl font-bold text-green-800 mb-5 pb-2 border-b-2 border-green-200">
-            申込者情報
+            申請者情報
           </h2>
           <div className="space-y-5">
             <div>
@@ -166,7 +180,7 @@ export default function NenkinPage() {
                 </select>
                 <select name="dobYear" value={form.dobYear} onChange={handleChange}
                   className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500 focus:outline-none">
-                  {eraYears.map((y) => (
+                  {dobEraYears.map((y) => (
                     <option key={y} value={String(y)}>{y}年</option>
                   ))}
                 </select>
@@ -182,20 +196,6 @@ export default function NenkinPage() {
                     <option key={d} value={String(d)}>{d}日</option>
                   ))}
                 </select>
-              </div>
-            </div>
-
-            {/* 性別 */}
-            <div>
-              <label className={labelClass}>性別</label>
-              <div className="flex gap-4">
-                {["男", "女"].map((g) => (
-                  <label key={g} className={radioClass(form.gender === g)}>
-                    <input type="radio" name="gender" value={g} checked={form.gender === g}
-                      onChange={handleChange} className="w-5 h-5 accent-green-600" />
-                    <span className="text-lg">{g}</span>
-                  </label>
-                ))}
               </div>
             </div>
 
@@ -219,15 +219,46 @@ export default function NenkinPage() {
               <input type="tel" name="phone" value={form.phone} onChange={handleChange}
                 placeholder="例：090-1234-5678" className={inputClass} />
             </div>
+
+            {/* 個人番号 */}
+            <div>
+              <label className={labelClass}>個人番号（マイナンバー）</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={12}
+                name="myNumber"
+                value={form.myNumber}
+                onChange={handleChange}
+                placeholder="123456789012"
+                className={inputClass}
+              />
+            </div>
+
+            {/* 職業 */}
+            <div>
+              <label className={labelClass}>職業</label>
+              <div className="bg-gray-50 rounded px-4 py-3 text-gray-600 text-lg">
+                農業
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* 農業情報 */}
+        {/* 事業情報 */}
         <section className={sectionClass}>
           <h2 className="text-xl font-bold text-green-800 mb-5 pb-2 border-b-2 border-green-200">
-            農業情報
+            事業情報
           </h2>
           <div className="space-y-5">
+
+            {/* 屋号 */}
+            <div>
+              <label className={labelClass}>屋号（農場名）</label>
+              <input type="text" name="farmName" value={form.farmName} onChange={handleChange}
+                placeholder="例：田中農場（任意）" className={inputClass} />
+            </div>
+
             {/* 農業の種類 */}
             <div>
               <label className={labelClass}>農業の種類（複数選択可）</label>
@@ -247,109 +278,74 @@ export default function NenkinPage() {
               </div>
             </div>
 
-            {/* 農業従事日数 */}
+            {/* 事業開始年月日 */}
             <div>
-              <label className={labelClass}>農業従事日数（年間）</label>
-              <div className="flex items-center gap-3">
-                <input type="number" name="workDays" value={form.workDays} onChange={handleChange}
-                  placeholder="0" min="0" max="365"
-                  className={`${inputClass} flex-1`} />
-                <span className="text-lg text-gray-600 whitespace-nowrap">日</span>
+              <label className={labelClass}>事業開始年月日</label>
+              <div className="flex flex-wrap gap-2 items-center">
+                <select name="startEra" value={form.startEra} onChange={handleChange}
+                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500 focus:outline-none">
+                  {Object.keys(ERA_YEARS).map((era) => (
+                    <option key={era} value={era}>{era}</option>
+                  ))}
+                </select>
+                <select name="startYear" value={form.startYear} onChange={handleChange}
+                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500 focus:outline-none">
+                  {startEraYears.map((y) => (
+                    <option key={y} value={String(y)}>{y}年</option>
+                  ))}
+                </select>
+                <select name="startMonth" value={form.startMonth} onChange={handleChange}
+                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500 focus:outline-none">
+                  {MONTHS.map((m) => (
+                    <option key={m} value={String(m)}>{m}月</option>
+                  ))}
+                </select>
+                <select name="startDay" value={form.startDay} onChange={handleChange}
+                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500 focus:outline-none">
+                  {DAYS.map((d) => (
+                    <option key={d} value={String(d)}>{d}日</option>
+                  ))}
+                </select>
               </div>
             </div>
 
-            {/* 農地面積 */}
+            {/* 提出先税務署名 */}
             <div>
-              <label className={labelClass}>農地面積</label>
-              <div className="flex items-center gap-3">
-                <input type="number" name="farmArea" value={form.farmArea} onChange={handleChange}
-                  placeholder="0.00" min="0" step="0.01"
-                  className={`${inputClass} flex-1`} />
-                <span className="text-lg text-gray-600 whitespace-nowrap">ha</span>
-              </div>
-            </div>
-
-            {/* 国民年金の被保険者種別 */}
-            <div>
-              <label className={labelClass}>国民年金の被保険者種別</label>
-              <div className="space-y-2 mt-1">
-                {[
-                  { value: "第1号", label: "第1号被保険者（自営業・農業者など）" },
-                  { value: "第2号", label: "第2号被保険者（会社員・公務員など）" },
-                  { value: "第3号", label: "第3号被保険者（専業主婦・主夫など）" },
-                ].map((opt) => (
-                  <label key={opt.value} className={radioClass(form.nenkinType === opt.value)}>
-                    <input type="radio" name="nenkinType" value={opt.value}
-                      checked={form.nenkinType === opt.value} onChange={handleChange}
-                      className="w-5 h-5 accent-green-600" />
-                    <span className="text-base text-gray-800">{opt.label}</span>
-                  </label>
-                ))}
-              </div>
+              <label className={labelClass}>提出先税務署名</label>
+              <input type="text" name="taxOffice" value={form.taxOffice} onChange={handleChange}
+                placeholder="例：新宿税務署" className={inputClass} />
             </div>
           </div>
         </section>
 
-        {/* 保険料情報 */}
+        {/* 帳簿の種類 */}
         <section className={sectionClass}>
           <h2 className="text-xl font-bold text-green-800 mb-5 pb-2 border-b-2 border-green-200">
-            保険料情報
+            帳簿の種類
           </h2>
-          <div>
-            <label className={labelClass}>月額保険料</label>
-            <div className="bg-green-50 rounded-xl p-5 border-2 border-green-200">
-              <div className="text-center mb-4">
-                <span className="text-4xl font-bold text-green-700">
-                  {form.monthlyPremium.toLocaleString("ja-JP")}
-                </span>
-                <span className="text-lg text-gray-600 ml-2">円 / 月</span>
-              </div>
-              <input
-                type="range"
-                min="20000"
-                max="67000"
-                step="1000"
-                value={form.monthlyPremium}
-                onChange={(e) => setForm((prev) => ({ ...prev, monthlyPremium: parseInt(e.target.value) }))}
-                className="w-full accent-green-600 h-2"
-              />
-              <div className="flex justify-between text-sm text-gray-500 mt-2">
-                <span>20,000円（最低額）</span>
-                <span>67,000円（最高額）</span>
-              </div>
-            </div>
-            <p className="text-sm text-gray-500 mt-2">
-              ※ 1,000円単位でスライダーを動かして選択できます
-            </p>
-          </div>
-        </section>
-
-        {/* 提出先 */}
-        <section className={sectionClass}>
-          <h2 className="text-xl font-bold text-green-800 mb-5 pb-2 border-b-2 border-green-200">
-            提出先
-          </h2>
-          <div className="space-y-5">
-            <div>
-              <label className={labelClass}>提出先の区分</label>
-              <div className="flex gap-4">
-                {["農業協同組合", "農業委員会"].map((dest) => (
-                  <label key={dest} className={`flex-1 ${radioClass(form.submissionDest === dest)}`}>
-                    <input type="radio" name="submissionDest" value={dest}
-                      checked={form.submissionDest === dest} onChange={handleChange}
-                      className="w-5 h-5 accent-green-600" />
-                    <span className="text-base">{dest}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-            <div>
-              <label className={labelClass}>提出先の名称</label>
-              <input type="text" name="submissionName" value={form.submissionName}
-                onChange={handleChange}
-                placeholder="例：○○農業協同組合、○○市農業委員会"
-                className={inputClass} />
-            </div>
+          <div className="space-y-3">
+            {[
+              {
+                value: "複式簿記（65万円控除）",
+                label: "複式簿記（65万円控除）",
+                desc: "主な書類：仕訳帳・総勘定元帳など",
+              },
+              {
+                value: "簡易簿記（10万円控除）",
+                label: "簡易簿記（10万円控除）",
+                desc: "主な書類：現金出納帳・売掛帳など",
+              },
+            ].map((opt) => (
+              <label key={opt.value} className={radioClass(form.bookType === opt.value)}>
+                <input type="radio" name="bookType" value={opt.value}
+                  checked={form.bookType === opt.value} onChange={handleChange}
+                  className="w-5 h-5 accent-green-600 shrink-0" />
+                <div>
+                  <div className="text-lg font-bold text-gray-800">{opt.label}</div>
+                  <div className="text-sm text-gray-500 mt-0.5">{opt.desc}</div>
+                </div>
+              </label>
+            ))}
           </div>
         </section>
 
@@ -359,7 +355,7 @@ export default function NenkinPage() {
           disabled={isGenerating}
           className="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 disabled:bg-green-400 text-white text-xl font-bold py-5 px-6 rounded-2xl shadow-lg transition-colors"
         >
-          {isGenerating ? "PDF作成中…少々お待ちください" : "申込書PDFを作成する"}
+          {isGenerating ? "PDF作成中…少々お待ちください" : "申請書PDFを作成する"}
         </button>
 
         <p className="text-center text-sm text-gray-500 mt-4 mb-8">
