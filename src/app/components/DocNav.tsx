@@ -9,12 +9,13 @@ const NAV_ITEMS = [
   { href: "/nenkin", label: "農業者年金申込書" },
   { href: "/nouchi", label: "農地法届出書" },
   { href: "/aoiro", label: "青色申告申請書" },
+  { href: "/keiei", label: "経営所得安定対策申請書" },
 ];
 
 export default function DocNav({ current }: DocNavProps) {
   return (
     <nav className="max-w-2xl mx-auto px-4 pt-6">
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-3 gap-2">
         {NAV_ITEMS.map((item) => {
           const isActive = item.href === current;
           if (isActive) {
