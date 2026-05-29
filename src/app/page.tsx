@@ -163,8 +163,8 @@ export default function Home() {
             "以下のいずれかで農政局に提出してください",
           ]}
           buttons={[
-            { label: "eMAFFでオンライン申請する →", href: "https://www.e-marion.maff.go.jp/", variant: "green" },
-            { label: "最寄りの農政局を探す →", href: "https://www.maff.go.jp/j/kokusai/kokusei/kaigai_nogyo/index.html", variant: "outline" },
+            { label: "eMAFFでオンライン申請する →", href: "https://e.maff.go.jp/PortalLogin", variant: "green" },
+            { label: "最寄りの農政局を探す →", href: "https://www.maff.go.jp/j/council/kouteki/index.html", variant: "outline" },
             { label: "閉じる", variant: "gray", onClick: () => setShowModal(false) },
           ]}
           onClose={() => setShowModal(false)}

@@ -125,7 +125,7 @@ export default function NouchiPage() {
             "農地のある市区町村の農業委員会に提出してください",
           ]}
           buttons={[
-            { label: "eMAFFで申請する →", href: "https://www.e-marion.maff.go.jp/", variant: "green" },
+            { label: "eMAFFで申請する →", href: "https://e.maff.go.jp/PortalLogin", variant: "green" },
             { label: "閉じる", variant: "gray", onClick: () => setShowModal(false) },
           ]}
           onClose={() => setShowModal(false)}

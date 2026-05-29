@@ -161,7 +161,7 @@ export default function KeieiPage() {
             "様式第2号（営農計画書）も別途必要です",
           ]}
           buttons={[
-            { label: "eMAFFで申請する →", href: "https://www.e-marion.maff.go.jp/", variant: "green" },
+            { label: "eMAFFで申請する →", href: "https://e.maff.go.jp/PortalLogin", variant: "green" },
             { label: "様式第2号をダウンロード →", href: "https://www.maff.go.jp/j/kobetu_ninaite/keiei/h27_download.html", variant: "outline" },
             { label: "閉じる", variant: "gray", onClick: () => setShowModal(false) },
           ]}
