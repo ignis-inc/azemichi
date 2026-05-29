@@ -193,10 +193,10 @@ export default function Home() {
       {/* ヘッダー */}
       <header className="bg-green-700 text-white py-6 px-4 text-center shadow-md">
         <h1 className="text-2xl font-bold leading-tight">
-          米穀の出荷又は販売の<br />事業開始届出書
+          お米を売り始めるときの届出
         </h1>
         <p className="mt-2 text-green-100 text-base">
-          農林水産省・農政局への提出書類を作成します
+          正式名称：米穀の出荷又は販売の事業開始届出書
         </p>
       </header>
 

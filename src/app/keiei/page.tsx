@@ -182,10 +182,10 @@ export default function KeieiPage() {
       {/* ヘッダー */}
       <header className="bg-green-700 text-white py-6 px-4 text-center shadow-md">
         <h1 className="text-2xl font-bold leading-tight">
-          経営所得安定対策等交付金<br />交付申請書（様式第1号A）
+          経営所得安定対策（補助金）の申請書
         </h1>
         <p className="mt-2 text-green-100 text-base">
-          農林水産大臣への提出書類を作成します
+          正式名称：経営所得安定対策等交付金交付申請書（様式第1号A）
         </p>
       </header>
 

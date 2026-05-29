@@ -145,10 +145,10 @@ export default function NouchiPage() {
       {/* ヘッダー */}
       <header className="bg-green-700 text-white py-6 px-4 text-center shadow-md">
         <h1 className="text-2xl font-bold leading-tight">
-          農地法第3条の3届出書
+          農地を相続・売買したときの届出
         </h1>
         <p className="mt-2 text-green-100 text-base">
-          農業委員会への提出書類を作成します
+          正式名称：農地法第3条の3第1項の規定による届出書
         </p>
       </header>
 

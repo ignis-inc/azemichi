@@ -153,10 +153,10 @@ export default function NenkinPage() {
       {/* ヘッダー */}
       <header className="bg-green-700 text-white py-6 px-4 text-center shadow-md">
         <h1 className="text-2xl font-bold leading-tight">
-          農業者年金通常加入申込書
+          農業者年金に加入するときの申込書
         </h1>
         <p className="mt-2 text-green-100 text-base">
-          様式第１号・農業者年金基金への提出書類を作成します
+          正式名称：農業者年金通常加入申込書（様式第1号）
         </p>
       </header>
 

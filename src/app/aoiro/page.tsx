@@ -169,10 +169,10 @@ export default function AoiroPage() {
       {/* ヘッダー */}
       <header className="bg-green-700 text-white py-6 px-4 text-center shadow-md">
         <h1 className="text-2xl font-bold leading-tight">
-          青色申告承認申請書
+          青色申告をはじめるときの申請書
         </h1>
         <p className="mt-2 text-green-100 text-base">
-          所得税の青色申告承認申請書を作成します
+          正式名称：所得税の青色申告承認申請書
         </p>
       </header>
 
