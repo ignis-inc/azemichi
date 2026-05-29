@@ -164,7 +164,7 @@ export default function Home() {
           ]}
           buttons={[
             { label: "eMAFFでオンライン申請する →", href: "https://e.maff.go.jp/PortalLogin", variant: "green" },
-            { label: "最寄りの農政局を探す →", href: "https://www.maff.go.jp/j/council/kouteki/index.html", variant: "outline" },
+            { label: "最寄りの農政局を探す →", href: "https://www.maff.go.jp/j/org/outline/dial/kyoku.html", variant: "outline" },
             { label: "閉じる", variant: "gray", onClick: () => setShowModal(false) },
           ]}
           onClose={() => setShowModal(false)}
