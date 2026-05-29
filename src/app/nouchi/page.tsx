@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import DocNav from "../components/DocNav";
+import PDFModal from "../components/PDFModal";
 
 const PREFECTURES = [
   "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
@@ -49,6 +50,7 @@ type NouchiFormData = {
 
 export default function NouchiPage() {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState<NouchiFormData>({
     name: "",
     nameKana: "",
@@ -94,6 +96,7 @@ export default function NouchiPage() {
       a.download = "農地法第3条の3届出書.pdf";
       a.click();
       URL.revokeObjectURL(url);
+      setShowModal(true);
     } catch (err) {
       console.error("PDF生成エラー:", err);
       alert("PDFの生成に失敗しました。もう一度お試しください。");
@@ -115,6 +118,19 @@ export default function NouchiPage() {
 
   return (
     <div className="min-h-screen bg-green-50">
+      {showModal && (
+        <PDFModal
+          steps={[
+            "このPDFを印刷してください",
+            "農地のある市区町村の農業委員会に提出してください",
+          ]}
+          buttons={[
+            { label: "eMAFFで申請する →", href: "https://www.e-marion.maff.go.jp/", variant: "green" },
+            { label: "閉じる", variant: "gray", onClick: () => setShowModal(false) },
+          ]}
+          onClose={() => setShowModal(false)}
+        />
+      )}
       {/* ヘッダー */}
       <header className="bg-green-700 text-white py-6 px-4 text-center shadow-md">
         <h1 className="text-2xl font-bold leading-tight">

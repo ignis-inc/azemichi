@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import DocNav from "../components/DocNav";
+import PDFModal from "../components/PDFModal";
 
 const PREFECTURES = [
   "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
@@ -58,6 +59,7 @@ type KeieiFormData = {
 
 export default function KeieiPage() {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState<KeieiFormData>({
     nenji: "6",
     applicationStatus: "",
@@ -129,6 +131,7 @@ export default function KeieiPage() {
       a.download = "経営所得安定対策等交付金交付申請書.pdf";
       a.click();
       URL.revokeObjectURL(url);
+      setShowModal(true);
     } catch (err) {
       console.error("PDF生成エラー:", err);
       alert("PDFの生成に失敗しました。もう一度お試しください。");
@@ -150,6 +153,21 @@ export default function KeieiPage() {
 
   return (
     <div className="min-h-screen bg-green-50">
+      {showModal && (
+        <PDFModal
+          steps={[
+            "このPDFを印刷してください",
+            "地域農業再生協議会に提出してください（提出期限：毎年4月1日〜6月30日）",
+            "様式第2号（営農計画書）も別途必要です",
+          ]}
+          buttons={[
+            { label: "eMAFFで申請する →", href: "https://www.e-marion.maff.go.jp/", variant: "green" },
+            { label: "様式第2号をダウンロード →", href: "https://www.maff.go.jp/j/kobetu_ninaite/keiei/h27_download.html", variant: "outline" },
+            { label: "閉じる", variant: "gray", onClick: () => setShowModal(false) },
+          ]}
+          onClose={() => setShowModal(false)}
+        />
+      )}
       {/* ヘッダー */}
       <header className="bg-green-700 text-white py-6 px-4 text-center shadow-md">
         <h1 className="text-2xl font-bold leading-tight">

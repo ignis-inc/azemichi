@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import DocNav from "../components/DocNav";
+import PDFModal from "../components/PDFModal";
 
 const PREFECTURES = [
   "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
@@ -48,6 +49,7 @@ type FormData = {
 
 export default function NenkinPage() {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState<FormData>({
     name: "",
     nameKana: "",
@@ -102,6 +104,7 @@ export default function NenkinPage() {
       a.download = "農業者年金通常加入申込書.pdf";
       a.click();
       URL.revokeObjectURL(url);
+      setShowModal(true);
     } catch (err) {
       console.error("PDF生成エラー:", err);
       alert("PDFの生成に失敗しました。もう一度お試しください。");
@@ -123,6 +126,19 @@ export default function NenkinPage() {
 
   return (
     <div className="min-h-screen bg-green-50">
+      {showModal && (
+        <PDFModal
+          steps={[
+            "このPDFを印刷してください",
+            "最寄りの農協または農業委員会に持参してください",
+          ]}
+          note="※ 農業者年金はeMAFF非対応です"
+          buttons={[
+            { label: "閉じる", variant: "gray", onClick: () => setShowModal(false) },
+          ]}
+          onClose={() => setShowModal(false)}
+        />
+      )}
       {/* ヘッダー */}
       <header className="bg-green-700 text-white py-6 px-4 text-center shadow-md">
         <h1 className="text-2xl font-bold leading-tight">
