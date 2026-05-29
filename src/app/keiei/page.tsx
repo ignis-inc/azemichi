@@ -60,6 +60,7 @@ type KeieiFormData = {
 export default function KeieiPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState<KeieiFormData>({
     nenji: "6",
     applicationStatus: "",
@@ -112,7 +113,17 @@ export default function KeieiPage() {
     });
   }
 
+  function validate(): boolean {
+    const e: Record<string, string> = {};
+    if (!form.name.trim()) e.name = "氏名または法人名を入力してください";
+    if (!form.prefecture) e.prefecture = "都道府県を選択してください";
+    if (!form.cityAddress.trim()) e.cityAddress = "市区町村・番地を入力してください";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  }
+
   async function generatePDF() {
+    if (!validate()) return;
     setIsGenerating(true);
     try {
       const res = await fetch("/api/keiei-pdf", {
@@ -220,6 +231,7 @@ export default function KeieiPage() {
               <label className={labelClass}>氏名または法人名</label>
               <input type="text" name="name" value={form.name} onChange={handleChange}
                 placeholder="例：田中　太郎" className={inputClass} />
+              {errors.name && <p className="text-red-600 text-base mt-2">{errors.name}</p>}
             </div>
             <div>
               <label className={labelClass}>ふりがな</label>
@@ -303,8 +315,10 @@ export default function KeieiPage() {
                   <option key={p} value={p}>{p}</option>
                 ))}
               </select>
+              {errors.prefecture && <p className="text-red-600 text-base mb-2">{errors.prefecture}</p>}
               <input type="text" name="cityAddress" value={form.cityAddress} onChange={handleChange}
                 placeholder="例：○○市○○町1-2-3" className={inputClass} />
+              {errors.cityAddress && <p className="text-red-600 text-base mt-2">{errors.cityAddress}</p>}
             </div>
 
             {/* 電話番号 */}

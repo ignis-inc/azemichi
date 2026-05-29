@@ -5,11 +5,11 @@ type DocNavProps = {
 };
 
 const NAV_ITEMS = [
-  { href: "/", label: "米穀販売届出書" },
-  { href: "/nenkin", label: "農業者年金申込書" },
-  { href: "/nouchi", label: "農地法届出書" },
-  { href: "/aoiro", label: "青色申告申請書" },
-  { href: "/keiei", label: "経営所得安定対策申請書" },
+  { href: "/", label: "お米を売り始めるときの届出" },
+  { href: "/nenkin", label: "農業者年金に加入するときの申込書" },
+  { href: "/nouchi", label: "農地を相続・売買したときの届出" },
+  { href: "/aoiro", label: "青色申告をはじめるときの申請書" },
+  { href: "/keiei", label: "経営所得安定対策（補助金）の申請書" },
 ];
 
 export default function DocNav({ current }: DocNavProps) {
@@ -22,7 +22,7 @@ export default function DocNav({ current }: DocNavProps) {
             return (
               <div
                 key={item.href}
-                className="text-center py-3 px-4 rounded-xl border-2 border-green-600 bg-green-600 text-white font-bold text-sm sm:text-base"
+                className="flex items-center justify-center text-center py-4 px-2 rounded-xl border-2 border-green-600 bg-green-600 text-white font-bold text-base min-h-[64px]"
               >
                 {item.label} ✓
               </div>
@@ -32,7 +32,7 @@ export default function DocNav({ current }: DocNavProps) {
             <Link
               key={item.href}
               href={item.href}
-              className="text-center py-3 px-4 rounded-xl border-2 border-green-200 bg-white text-green-700 font-medium text-sm sm:text-base hover:border-green-400 hover:bg-green-50 transition-colors"
+              className="flex items-center justify-center text-center py-4 px-2 rounded-xl border-2 border-green-200 bg-white text-green-700 font-medium text-base hover:border-green-400 hover:bg-green-50 transition-colors min-h-[64px]"
             >
               {item.label}
             </Link>

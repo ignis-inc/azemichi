@@ -73,6 +73,7 @@ type FormData = {
 export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState<FormData>({
     name: "",
     nameKana: "",
@@ -117,7 +118,17 @@ export default function Home() {
     });
   }
 
+  function validate(): boolean {
+    const e: Record<string, string> = {};
+    if (!form.name.trim()) e.name = "氏名を入力してください";
+    if (!form.prefecture) e.prefecture = "都道府県を選択してください";
+    if (!form.cityAddress.trim()) e.cityAddress = "市区町村・番地を入力してください";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  }
+
   async function generatePDF() {
+    if (!validate()) return;
     setIsGenerating(true);
     try {
       // サーバーサイドAPIにフォームデータを送ってPDFを生成・ダウンロード
@@ -170,6 +181,15 @@ export default function Home() {
           onClose={() => setShowModal(false)}
         />
       )}
+      {/* あぜみち サービス紹介 */}
+      <div className="bg-white border-b-2 border-green-100 px-4 py-8 text-center">
+        <h2 className="text-4xl font-bold text-green-800 mb-3">あぜみち</h2>
+        <p className="text-xl font-medium text-gray-700 mb-4">農業の手続き書類を、スマホで簡単に作れます</p>
+        <p className="text-base text-gray-600 leading-relaxed max-w-lg mx-auto">
+          必要な情報を入力するだけで、農林水産省や税務署に提出する書類のPDFが自動で作成されます。印刷して窓口に持参するか、オンラインで申請できます。
+        </p>
+      </div>
+
       {/* ヘッダー */}
       <header className="bg-green-700 text-white py-6 px-4 text-center shadow-md">
         <h1 className="text-2xl font-bold leading-tight">
@@ -200,6 +220,7 @@ export default function Home() {
                 placeholder="例：田中　太郎"
                 className={inputClass}
               />
+              {errors.name && <p className="text-red-600 text-base mt-2">{errors.name}</p>}
             </div>
             <div>
               <label className={labelClass}>ふりがな</label>
@@ -225,6 +246,7 @@ export default function Home() {
                   <option key={p} value={p}>{p}</option>
                 ))}
               </select>
+              {errors.prefecture && <p className="text-red-600 text-base mb-2">{errors.prefecture}</p>}
               <input
                 type="text"
                 name="cityAddress"
@@ -233,6 +255,7 @@ export default function Home() {
                 placeholder="例：○○市○○町1-2-3"
                 className={inputClass}
               />
+              {errors.cityAddress && <p className="text-red-600 text-base mt-2">{errors.cityAddress}</p>}
             </div>
             <div>
               <label className={labelClass}>電話番号</label>
