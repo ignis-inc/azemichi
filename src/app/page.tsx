@@ -68,6 +68,7 @@ type FormData = {
   grainTypes: string[];
   quantity: string;
   startDate: string;
+  submissionDest: string;
 };
 
 export default function Home() {
@@ -87,13 +88,20 @@ export default function Home() {
     grainTypes: [],
     quantity: "",
     startDate: "",
+    submissionDest: "",
   });
-
-  const nokyo = form.prefecture ? NOSEI_KYOKU[form.prefecture] ?? "" : "";
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+  }
+
+  // 都道府県を選ぶと提出先農政局を自動で入力する（利用者はあとから修正可能）
+  function handlePrefectureChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const value = e.target.value;
+    const kyoku = value ? NOSEI_KYOKU[value] ?? "" : "";
+    const dest = kyoku ? `${kyoku}長　殿` : "";
+    setForm((prev) => ({ ...prev, prefecture: value, submissionDest: dest }));
   }
 
   function handleSameAddress(e: React.ChangeEvent<HTMLInputElement>) {
@@ -186,7 +194,7 @@ export default function Home() {
         <h2 className="text-4xl font-bold text-green-800 mb-3">あぜみち</h2>
         <p className="text-xl font-medium text-gray-700 mb-4">農業の手続き書類を、スマホで簡単に作れます</p>
         <p className="text-base text-gray-600 leading-relaxed max-w-lg mx-auto">
-          必要な情報を入力するだけで、農林水産省や税務署に提出する書類のPDFが自動で作成されます。印刷して窓口に持参するか、オンラインで申請できます。
+          必要な情報を入力すると、農林水産省や税務署に提出する書類の様式をPDFにできます。内容をご確認のうえ、印刷して窓口に持参するか、オンラインで申請してください。
         </p>
       </div>
 
@@ -238,7 +246,7 @@ export default function Home() {
               <select
                 name="prefecture"
                 value={form.prefecture}
-                onChange={handleChange}
+                onChange={handlePrefectureChange}
                 className={`${inputClass} mb-2`}
               >
                 <option value="">都道府県を選択</option>
@@ -380,9 +388,17 @@ export default function Home() {
             </div>
             <div>
               <label className={labelClass}>提出先農政局</label>
-              <div className="rounded-lg bg-green-50 border-2 border-green-200 px-4 py-3 text-lg text-gray-800 font-medium min-h-[52px]">
-                {nokyo ? `${nokyo}長　殿` : "（住所の都道府県を入力すると自動で表示されます）"}
-              </div>
+              <input
+                type="text"
+                name="submissionDest"
+                value={form.submissionDest}
+                onChange={handleChange}
+                placeholder="（住所の都道府県を選ぶと自動で表示されます）"
+                className={inputClass}
+              />
+              <p className="text-sm text-gray-500 mt-2">
+                ※自動で表示されますが、ご確認のうえ必要に応じて修正してください
+              </p>
             </div>
           </div>
         </section>
@@ -396,9 +412,13 @@ export default function Home() {
           {isGenerating ? "PDF作成中…少々お待ちください" : "届出書PDFを作成する"}
         </button>
 
-        <p className="text-center text-sm text-gray-500 mt-4 mb-8">
+        <p className="text-center text-sm text-gray-500 mt-4 mb-4">
           ボタンを押すと PDF ファイルが自動でダウンロードされます
           {isGenerating && "（フォントを読み込んでいます…）"}
+        </p>
+
+        <p className="text-xs text-gray-400 leading-relaxed text-center max-w-lg mx-auto mb-10 px-2">
+          このサービスは、入力内容をもとに書類の様式を作成する補助ツールです。記載内容の正確性や提出の可否はご自身でご確認ください。あぜみちは行政書士・税理士業務を行うものではありません。正式な手続きの前に、提出先の窓口や専門家にご相談ください。
         </p>
       </main>
     </div>

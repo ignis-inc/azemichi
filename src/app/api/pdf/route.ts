@@ -78,6 +78,11 @@ export async function POST(request: NextRequest) {
     const form = await request.json();
 
     const nokyo = form.prefecture ? (NOSEI_KYOKU[form.prefecture] ?? "") : "";
+    // 画面で利用者が確認・修正した提出先を優先。未入力なら都道府県から自動算出。
+    const submissionDest =
+      form.submissionDest && form.submissionDest.trim()
+        ? form.submissionDest.trim()
+        : (nokyo ? `${nokyo}長　殿` : "");
 
     const farmAddress = form.farmAddressSame
       ? `${form.prefecture}${form.cityAddress}`
@@ -100,7 +105,7 @@ export async function POST(request: NextRequest) {
       ["米穀の種類", grainText],
       ["年間取扱予定数量", form.quantity ? `${form.quantity} 精米トン` : "　"],
       ["事業開始予定日", startDateWareki(form.startDate || "")],
-      ["提出先農政局", nokyo ? `${nokyo}長　殿` : "　"],
+      ["提出先農政局", submissionDest || "　"],
     ];
 
     const docDef = {
@@ -122,7 +127,7 @@ export async function POST(request: NextRequest) {
           margin: [0, 0, 0, 12],
         },
         {
-          text: nokyo ? `${nokyo}長　殿` : "農政局長　殿",
+          text: submissionDest || "農政局長　殿",
           fontSize: 13,
           margin: [0, 0, 0, 6],
         },
