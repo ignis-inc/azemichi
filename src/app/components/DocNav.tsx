@@ -7,7 +7,7 @@ type DocNavProps = {
 };
 
 const NAV_ITEMS = [
-  { href: "/", label: "お米を売り始めるときの届出", formal: "米穀の出荷又は販売の事業開始届出書" },
+  { href: "/tool", label: "お米を売り始めるときの届出", formal: "米穀の出荷又は販売の事業開始届出書" },
   { href: "/nenkin", label: "農業者年金に加入するときの申込書", formal: "農業者年金通常加入申込書（様式第1号）" },
   { href: "/nouchi", label: "農地を相続・売買したときの届出", formal: "農地法第3条の3第1項の規定による届出書" },
   { href: "/aoiro", label: "青色申告をはじめるときの申請書", formal: "所得税の青色申告承認申請書" },

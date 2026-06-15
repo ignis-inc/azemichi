@@ -1,26 +1,542 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* 農業サイト デザイン案 v1 のトークン */
+  --mist: #edf0e6; /* 背景：緑がかった霧色 */
+  --paper: #fbfbf7; /* 面 */
+  --soil: #1b2417; /* 土に近い黒（文字・暗部） */
+  --soil-soft: #27331e; /* 暗部の面 */
+  --field: #3e6b2a; /* あぜみちの緑 */
+  --field-deep: #2c5018;
+  --harvest: #be5e16; /* ちょっくらの琥珀 */
+  --harvest-deep: #9c4a0f;
+  --sprout: #9cc056; /* 新芽の差し色 */
+  --muted: #5c6753; /* 補助テキスト（緑灰） */
+  --line: rgba(27, 36, 23, 0.14);
+  --serif: "Hiragino Mincho ProN", "Yu Mincho", YuMincho, "MS PMincho", serif;
+  --sans: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", YuGothic,
+    Meiryo, system-ui, sans-serif;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-mist: var(--mist);
+  --color-paper: var(--paper);
+  --color-soil: var(--soil);
+  --color-field: var(--field);
+  --color-field-deep: var(--field-deep);
+  --color-harvest: var(--harvest);
+  --color-harvest-deep: var(--harvest-deep);
+  --color-sprout: var(--sprout);
+  --font-sans: var(--sans);
+  --font-serif: var(--serif);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--mist);
+  color: var(--soil);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* キーボード操作時のフォーカスを全ページで可視化 */
+:focus-visible {
+  outline: 3px solid var(--sprout);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* =========================================================
+   ランディング（トップ）専用スタイル。
+   ツール各ページに影響しないよう、すべて .landing 配下に限定する。
+   ========================================================= */
+.landing {
+  line-height: 1.85;
+  overflow-x: hidden;
+}
+.landing ::selection {
+  background: var(--sprout);
+  color: var(--soil);
+}
+.landing img,
+.landing svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* レイアウト土台：中央に一本の"道"が通る */
+.landing .road {
+  position: relative;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+.landing .road::before {
+  content: "";
+  position: absolute;
+  left: 50px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--line) 0 8px,
+    transparent 8px 16px
+  );
+}
+@media (max-width: 720px) {
+  .landing .road::before {
+    left: 26px;
+  }
+}
+
+.landing .section {
+  position: relative;
+  padding: 96px 0;
+}
+.landing .seg {
+  position: relative;
+  padding-left: 96px;
+}
+@media (max-width: 720px) {
+  .landing .seg {
+    padding-left: 56px;
+  }
+  .landing .section {
+    padding: 64px 0;
+  }
+}
+
+/* 道の上の節目（マーカー） */
+.landing .seg::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  left: 42px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--mist);
+  border: 2px solid var(--field);
+  box-shadow: 0 0 0 5px var(--mist);
+}
+@media (max-width: 720px) {
+  .landing .seg::before {
+    left: 18px;
+    width: 16px;
+    height: 16px;
+  }
+}
+.landing .seg.amber::before {
+  border-color: var(--harvest);
+}
+
+.landing .eyebrow {
+  font-size: 0.8rem;
+  letter-spacing: 0.22em;
+  font-weight: 700;
+  color: var(--field);
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.landing .eyebrow.amber {
+  color: var(--harvest);
+}
+.landing .eyebrow .ja {
+  letter-spacing: 0.12em;
+  font-size: 0.82rem;
+}
+
+.landing h2 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: clamp(1.7rem, 3.6vw, 2.9rem);
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  margin-bottom: 24px;
+}
+.landing .body {
+  font-size: 1.0125rem;
+  color: #3a4731;
+  max-width: 48ch;
+  margin-bottom: 14px;
+}
+
+/* ヒーロー */
+.landing .hero {
+  padding: 0;
+  min-height: 92vh;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+.landing .hero-fields {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.9;
+}
+.landing .hero-inner {
+  position: relative;
+  z-index: 2;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 120px 24px 80px;
+  width: 100%;
+}
+.landing .brandmark {
+  font-family: var(--sans);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  font-size: 0.95rem;
+  color: var(--field-deep);
+  margin-bottom: 34px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.landing .brandmark .dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--harvest);
+}
+.landing .hero h1 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: clamp(2.3rem, 7vw, 4.6rem);
+  line-height: 1.28;
+  letter-spacing: 0.01em;
+  color: var(--soil);
+  max-width: 16ch;
+  margin-bottom: 28px;
+}
+.landing .hero h1 .em {
+  background: linear-gradient(transparent 64%, rgba(156, 192, 86, 0.55) 64%);
+}
+.landing .hero-sub {
+  font-size: clamp(1rem, 2.2vw, 1.2rem);
+  color: #3a4731;
+  max-width: 34ch;
+  margin-bottom: 40px;
+  line-height: 1.95;
+}
+.landing .cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+}
+
+.landing .btn {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 1.02rem;
+  padding: 16px 30px;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+.landing .btn-primary {
+  background: var(--field);
+  color: #fff;
+  box-shadow: 0 8px 22px -8px rgba(46, 80, 24, 0.6);
+}
+.landing .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px -10px rgba(46, 80, 24, 0.7);
+}
+.landing .btn-amber {
+  background: var(--harvest);
+  color: #fff;
+  box-shadow: 0 8px 22px -8px rgba(156, 74, 15, 0.55);
+}
+.landing .btn-amber:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px -10px rgba(156, 74, 15, 0.65);
+}
+.landing .btn-ghost {
+  border-color: var(--line);
+  color: var(--soil);
+  background: transparent;
+}
+.landing .btn-ghost:hover {
+  border-color: var(--field);
+  color: var(--field-deep);
+}
+.landing .btn .arrow {
+  transition: transform 0.2s ease;
+}
+.landing .btn:hover .arrow {
+  transform: translateX(3px);
+}
+
+/* 現状（暗い土の章） */
+.landing .reality {
+  background: var(--soil);
+  color: #e7ecdf;
+}
+.landing .reality .road::before {
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(231, 236, 223, 0.18) 0 8px,
+    transparent 8px 16px
+  );
+}
+.landing .reality .seg::before {
+  background: var(--soil);
+  border-color: var(--sprout);
+  box-shadow: 0 0 0 5px var(--soil);
+}
+.landing .reality .eyebrow {
+  color: var(--sprout);
+}
+.landing .reality h2 {
+  color: #f2f5ec;
+}
+.landing .reality .body {
+  color: #c3cdb6;
+}
+.landing .stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 34px 0 8px;
+}
+.landing .stat {
+  border: 1px solid rgba(231, 236, 223, 0.16);
+  border-radius: 14px;
+  padding: 20px 22px;
+  min-width: 158px;
+  flex: 1 1 158px;
+  background: rgba(255, 255, 255, 0.02);
+}
+.landing .stat .n {
+  font-family: var(--serif);
+  font-size: 2.1rem;
+  color: #fff;
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+}
+.landing .stat .n small {
+  font-size: 1rem;
+  color: var(--sprout);
+  margin-left: 3px;
+}
+.landing .stat .l {
+  font-size: 0.86rem;
+  color: #9fae90;
+  margin-top: 8px;
+  line-height: 1.6;
+}
+.landing .turn {
+  font-family: var(--serif);
+  font-size: clamp(1.25rem, 2.8vw, 1.7rem);
+  line-height: 1.7;
+  color: #f2f5ec;
+  max-width: 30ch;
+  margin-top: 40px;
+}
+.landing .turn .hl {
+  color: var(--sprout);
+}
+
+/* 想い */
+.landing .voices {
+  border-left: 3px solid var(--field);
+  background: var(--paper);
+  border-radius: 0 14px 14px 0;
+  padding: 22px 26px;
+  margin: 24px 0 26px;
+  max-width: 44ch;
+  box-shadow: 0 14px 40px -28px rgba(27, 36, 23, 0.5);
+}
+.landing .voices p {
+  font-family: var(--serif);
+  font-size: 1.06rem;
+  color: #39472e;
+  line-height: 2;
+}
+.landing .sign {
+  font-weight: 700;
+  color: var(--field-deep);
+  margin-top: 18px;
+}
+
+/* 道具カード */
+.landing .tool {
+  background: var(--paper);
+  border-radius: 20px;
+  padding: 40px 38px;
+  box-shadow: 0 30px 60px -40px rgba(27, 36, 23, 0.55);
+  border: 1px solid var(--line);
+  max-width: 560px;
+}
+@media (max-width: 720px) {
+  .landing .tool {
+    padding: 30px 24px;
+  }
+}
+.landing .tool .tag {
+  display: inline-block;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  padding: 5px 12px;
+  border-radius: 999px;
+  margin-bottom: 18px;
+}
+.landing .tool.green .tag {
+  background: rgba(62, 107, 42, 0.12);
+  color: var(--field-deep);
+}
+.landing .tool.amber .tag {
+  background: rgba(190, 94, 22, 0.13);
+  color: var(--harvest-deep);
+}
+.landing .tool h3 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.7rem;
+  line-height: 1.4;
+  margin-bottom: 16px;
+}
+.landing .tool .desc {
+  color: #42513a;
+  font-size: 1.0125rem;
+  margin-bottom: 20px;
+  line-height: 1.9;
+}
+.landing .toollist {
+  list-style: none;
+  margin: 0 0 26px;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.landing .toollist li {
+  font-size: 0.86rem;
+  background: var(--mist);
+  border-radius: 8px;
+  padding: 7px 12px;
+  color: #3a4731;
+}
+.landing .note {
+  font-size: 0.84rem;
+  color: var(--muted);
+  margin-top: 14px;
+}
+
+/* 結び */
+.landing .finale {
+  background: linear-gradient(160deg, var(--field-deep), var(--field));
+  color: #fff;
+  text-align: center;
+}
+.landing .finale .wrap {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 96px 24px;
+}
+.landing .finale h2 {
+  font-family: var(--serif);
+  color: #fff;
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  margin-bottom: 20px;
+}
+.landing .finale p {
+  color: #e4efd8;
+  font-size: 1.1rem;
+  max-width: 34ch;
+  margin: 0 auto 36px;
+  line-height: 1.95;
+}
+.landing .finale .btn-primary {
+  background: #fff;
+  color: var(--field-deep);
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.35);
+}
+
+/* フッター */
+.landing .site-footer {
+  background: var(--soil);
+  color: #9fae90;
+  padding: 56px 0 64px;
+  font-size: 0.9rem;
+}
+.landing .site-footer .road::before {
+  display: none;
+}
+.landing .site-footer .ftop {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-end;
+}
+.landing .site-footer .fbrand {
+  font-family: var(--serif);
+  font-size: 1.3rem;
+  color: #e7ecdf;
+}
+.landing .site-footer .fnav a {
+  margin-left: 22px;
+  text-decoration: none;
+  color: #c3cdb6;
+}
+.landing .site-footer .fnav a:hover {
+  color: #fff;
+}
+.landing .site-footer .meta {
+  margin-top: 26px;
+  line-height: 1.9;
+  color: #7e8c70;
+}
+@media (max-width: 560px) {
+  .landing .site-footer .fnav a {
+    margin: 0 18px 0 0;
+    display: inline-block;
+  }
+}
+
+/* スクロール演出 */
+.landing .reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.8s ease,
+    transform 0.8s ease;
+}
+.landing .reveal.in {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .landing .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .landing .btn {
+    transition: none;
+  }
 }
