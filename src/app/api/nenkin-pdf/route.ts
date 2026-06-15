@@ -163,7 +163,9 @@ export async function POST(request: NextRequest) {
 
     const pdfBuffer: Buffer = await pdfMake.createPdf(docDef).getBuffer();
 
-    return new NextResponse(pdfBuffer, {
+    // Buffer<ArrayBufferLike> をそのまま渡すと BodyInit に型が合わないため、
+    // ArrayBuffer 裏付けの Uint8Array に包む（送信するバイト列・挙動は同一）。
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",

@@ -1,8 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import DocNav from "./components/DocNav";
 import PDFModal from "./components/PDFModal";
+
+// ちょっくらのお知らせ登録/アンケートURL
+const CHOKKURA_NOTIFY_URL = "https://forms.gle/hdG1aCmDJCZimr5d8";
 
 const PREFECTURES = [
   "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
@@ -186,16 +190,27 @@ export default function Home() {
             { label: "最寄りの農政局を探す →", href: "https://www.maff.go.jp/j/org/outline/dial/kyoku.html", variant: "outline" },
             { label: "閉じる", variant: "gray", onClick: () => setShowModal(false) },
           ]}
+          chokkuraCta={{
+            text: "次は、つくったものを売る場所。ちょっくらで直販を始めませんか？（近日公開）",
+            href: CHOKKURA_NOTIFY_URL,
+          }}
           onClose={() => setShowModal(false)}
         />
       )}
       {/* あぜみち サービス紹介 */}
       <div className="bg-white border-b-2 border-green-100 px-4 py-8 text-center">
-        <h2 className="text-4xl font-bold text-green-800 mb-3">あぜみち</h2>
+        <h2 className="text-4xl font-bold text-green-800 mb-2">あぜみち</h2>
+        <p className="text-lg font-bold text-green-700 mb-3">農家の手続きと直販を、もっと簡単に。</p>
         <p className="text-xl font-medium text-gray-700 mb-4">農業の手続き書類を、スマホで簡単に作れます</p>
         <p className="text-base text-gray-600 leading-relaxed max-w-lg mx-auto">
           必要な情報を入力すると、農林水産省や税務署に提出する書類の様式をPDFにできます。内容をご確認のうえ、印刷して窓口に持参するか、オンラインで申請してください。
         </p>
+        <Link
+          href="/about"
+          className="inline-block mt-5 text-base font-bold text-green-700 underline underline-offset-4 hover:text-green-800"
+        >
+          私たちの想い
+        </Link>
       </div>
 
       {/* ヘッダー */}
@@ -421,6 +436,36 @@ export default function Home() {
           このサービスは、入力内容をもとに書類の様式を作成する補助ツールです。記載内容の正確性や提出の可否はご自身でご確認ください。あぜみちは行政書士・税理士業務を行うものではありません。正式な手続きの前に、提出先の窓口や専門家にご相談ください。
         </p>
       </main>
+
+      {/* 別サービス「ちょっくら」紹介（琥珀・茶系アクセントで別サービスと区別） */}
+      <section className="border-t-4 px-4 py-10" style={{ background: "#FFFBEB", borderColor: "#B45309" }}>
+        <div className="max-w-2xl mx-auto text-center">
+          <span
+            className="inline-block text-sm font-bold rounded-full px-4 py-1 mb-4"
+            style={{ background: "#B45309", color: "#FFFFFF" }}
+          >
+            ちょっくら（近日公開）
+          </span>
+          <h2 className="text-2xl font-bold mb-3" style={{ color: "#92400E" }}>
+            つくったものを、自分の値段で直接売る。
+          </h2>
+          <p className="text-base leading-relaxed max-w-lg mx-auto mb-6" style={{ color: "#78350F" }}>
+            ちょっくらは、農家さんが育てた農産物を、自分でつけた価格でお客さまに直接販売できる直販サービスです。あぜみちで手続きを整えたら、次は売る場所へ。
+          </p>
+          <a
+            href={CHOKKURA_NOTIFY_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block text-lg font-bold py-4 px-8 rounded-2xl shadow-md transition-colors"
+            style={{ background: "#B45309", color: "#FFFFFF" }}
+          >
+            興味がある方はこちら（お知らせ登録）
+          </a>
+          <p className="text-xs mt-4" style={{ color: "#B45309" }}>
+            ※ ちょっくらはあぜみちとは別のサービスです
+          </p>
+        </div>
+      </section>
     </div>
   );
 }

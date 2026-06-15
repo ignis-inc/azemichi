@@ -11,10 +11,12 @@ type PDFModalProps = {
   steps: string[];
   note?: string;
   buttons: ModalButton[];
+  // 別サービス「ちょっくら」への導線（指定された画面でのみ渡す）。琥珀色で別サービスと分かるようにする。
+  chokkuraCta?: { text: string; href: string };
   onClose: () => void;
 };
 
-export default function PDFModal({ steps, note, buttons, onClose }: PDFModalProps) {
+export default function PDFModal({ steps, note, buttons, chokkuraCta, onClose }: PDFModalProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center px-4"
@@ -45,6 +47,27 @@ export default function PDFModal({ steps, note, buttons, onClose }: PDFModalProp
           <p className="text-sm text-gray-500 bg-gray-50 rounded-lg px-4 py-3 mb-5 leading-relaxed">
             {note}
           </p>
+        )}
+
+        {/* 別サービス「ちょっくら」への導線（琥珀色アクセントで別サービスと区別） */}
+        {chokkuraCta && (
+          <a
+            href={chokkuraCta.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block rounded-xl border-2 px-4 py-4 mb-2 mt-1 transition-colors"
+            style={{ borderColor: "#FCD9A8", background: "#FFFBEB" }}
+          >
+            <span
+              className="inline-block text-sm font-bold rounded-full px-3 py-0.5 mb-2"
+              style={{ background: "#B45309", color: "#FFFFFF" }}
+            >
+              ちょっくら（近日公開）
+            </span>
+            <p className="text-base font-bold leading-relaxed" style={{ color: "#92400E" }}>
+              {chokkuraCta.text}
+            </p>
+          </a>
         )}
 
         {/* ボタン群 */}
