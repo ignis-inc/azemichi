@@ -176,11 +176,45 @@ body {
   align-items: center;
   position: relative;
 }
-.landing .hero-fields {
+.landing .hero-photo {
   position: absolute;
   inset: 0;
   z-index: 0;
-  opacity: 0.9;
+  overflow: hidden;
+}
+.landing .hero-img {
+  object-fit: cover;
+  object-position: center 35%;
+}
+/* 見出し文字を読みやすくする、左からの薄い白いかすみ＋上下のなじみ */
+.landing .hero-photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(251, 251, 247, 0.94) 0%,
+      rgba(251, 251, 247, 0.82) 30%,
+      rgba(251, 251, 247, 0.35) 62%,
+      rgba(251, 251, 247, 0) 88%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(251, 251, 247, 0.5) 0%,
+      rgba(251, 251, 247, 0) 26%
+    );
+}
+@media (max-width: 720px) {
+  /* スマホは横幅が狭く文字が写真に重なるため、全面を強めに白くかすませる */
+  .landing .hero-photo::after {
+    background: linear-gradient(
+      180deg,
+      rgba(251, 251, 247, 0.8) 0%,
+      rgba(251, 251, 247, 0.62) 45%,
+      rgba(251, 251, 247, 0.4) 100%
+    );
+  }
 }
 .landing .hero-inner {
   position: relative;

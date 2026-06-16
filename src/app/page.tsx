@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import Reveal from "./components/Reveal";
 
@@ -10,46 +11,20 @@ export default function Home() {
       {/* ============ ヒーロー ============ */}
       <header className="hero">
         {/*
-          畑の帯と、間を縫う畦道のイメージ（装飾）。
-          将来、豊後大野の実写写真に差し替える場合はこの <svg> を <img>/<Image> に置き換える。
+          ヒーロー背景：豊後大野を思わせる里山の田園風景（フリー素材 / Unsplash License）。
+          アクセスが増えたら、ここの src を実写写真（例: /hero-bungoono.jpg）に差し替える。
+          左からの薄い白いかすみ（.hero-photo::after）で見出し文字を読みやすく保っている。
         */}
-        <svg
-          className="hero-fields"
-          viewBox="0 0 1440 900"
-          preserveAspectRatio="xMidYMax slice"
-          aria-hidden="true"
-        >
-          <defs>
-            <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor="#EDF0E6" />
-              <stop offset="1" stopColor="#E3EAD7" />
-            </linearGradient>
-          </defs>
-          <rect width="1440" height="900" fill="url(#sky)" />
-          <path d="M0,640 C360,600 1080,700 1440,650 L1440,900 L0,900 Z" fill="#D7E3C2" />
-          <path d="M0,720 C420,690 1020,780 1440,730 L1440,900 L0,900 Z" fill="#BFD3A1" />
-          <path
-            d="M0,800 C480,775 980,850 1440,815 L1440,900 L0,900 Z"
-            fill="#9CC056"
-            opacity=".85"
+        <div className="hero-photo" aria-hidden="true">
+          <Image
+            className="hero-img"
+            src="/hero.jpg"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
           />
-          <path
-            d="M-20,905 C300,820 360,760 760,720 C1080,690 1180,650 1460,640"
-            fill="none"
-            stroke="#FBFBF7"
-            strokeWidth="14"
-            strokeLinecap="round"
-            opacity=".7"
-          />
-          <path
-            d="M-20,905 C300,820 360,760 760,720 C1080,690 1180,650 1460,640"
-            fill="none"
-            stroke="#7FA046"
-            strokeWidth="2"
-            strokeDasharray="2 12"
-            strokeLinecap="round"
-          />
-        </svg>
+        </div>
         <div className="hero-inner">
           <div className="brandmark">
             <span className="dot" />
