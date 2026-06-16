@@ -161,6 +161,17 @@ body {
   letter-spacing: 0.02em;
   margin-bottom: 24px;
 }
+/* 見出し（h1・h2・h3）の折り返しを整える（本文は対象外）。
+   - line-break: strict … 句読点や小さい仮名が行頭/行末に来ないよう禁則を強める。
+   - text-wrap: balance … <br> の無い見出しで各行の長さを均し、1文字だけ残るのを防ぐ。
+   ※ <br> 入りの長い見出しは balance が効かないため、読点での nowrap 分割（.nw）や
+     スマホ幅の文字サイズ調整で、語の途中での改行・1文字残りを防いでいる。 */
+.landing .hero h1,
+.landing h2,
+.landing .tool h3 {
+  line-break: strict;
+  text-wrap: balance;
+}
 .landing .body {
   font-size: 1.0125rem;
   color: #3a4731;
@@ -265,8 +276,9 @@ body {
   margin-bottom: 40px;
   line-height: 1.95;
 }
-/* サブ文は文節ごとに改行させ、「自／分」のような単語途中での改行を防ぐ */
-.landing .hero-sub .nw {
+/* 文節ごとに改行させ、「自／分」のような単語途中での改行を防ぐ汎用ヘルパー。
+   サブ文や、読点で区切りたい見出しの中で使う。 */
+.landing .nw {
   white-space: nowrap;
 }
 .landing .cta-row {
@@ -288,10 +300,18 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 10px;
+  /* ラベルが「（無/料）」「こち/ら」のように語・括弧の途中で割れないようにする。
+     折り返すときは <wbr> を入れた括弧の前など自然な位置でだけ折る。 */
+  word-break: keep-all;
   transition:
     transform 0.15s ease,
     box-shadow 0.2s ease,
     background 0.2s ease;
+}
+/* ボタンのラベル本体（矢印とは別のまとまり）。括弧つきラベルの <wbr> を
+   正しく効かせるため、ラベルを1つの span にまとめている。 */
+.landing .btn-label {
+  display: inline;
 }
 .landing .btn-primary {
   background: var(--field);
@@ -335,6 +355,20 @@ body {
 }
 .landing .btn:hover .arrow {
   transform: translateX(3px);
+}
+@media (max-width: 720px) {
+  /* スマホ幅は長いラベルが収まるよう、文字と左右の余白をわずかに詰める */
+  .landing .btn {
+    font-size: 0.96rem;
+    padding: 14px 22px;
+  }
+  /* カード内で幅が狭い h3 は、各行（読点までの一節）が1行に収まるよう少しだけ小さく。
+     これで「直接売／る。」「PDF／に。」のような語の途中・1文字残りの改行を防ぐ。
+     .tool.green / .tool.amber と指定して基本ルール（1.7rem）より確実に優先させる。 */
+  .landing .tool.green h3,
+  .landing .tool.amber h3 {
+    font-size: 1.35rem;
+  }
 }
 
 /* 現状（暗い土の章） */

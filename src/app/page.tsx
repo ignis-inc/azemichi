@@ -61,9 +61,11 @@ export default function Home() {
               現在地 <span className="ja">／ いま、農業の現場で</span>
             </div>
             <h2>
-              「農業は、割に合わない」
+              <span className="nw">「農業は、</span>
+              <span className="nw">割に合わない」</span>
               <br />
-              ——本当に、そうだろうか。
+              <span className="nw">——本当に、</span>
+              <span className="nw">そうだろうか。</span>
             </h2>
             <p className="body">
               朝早くから手をかけ、天候と向き合い、ようやく実ったもの。それを出荷しても、手元にいくら残るのかが見えにくい。価格も売り先も、自分では決められない。
@@ -157,7 +159,10 @@ export default function Home() {
                 <li>補助金申請</li>
               </ul>
               <Link className="btn btn-primary" href="/tool">
-                あぜみちを使う（無料）<span className="arrow">→</span>
+                <span className="btn-label">
+                  あぜみちを使う<wbr />（無料）
+                </span>
+                <span className="arrow">→</span>
               </Link>
               <p className="note">会員登録もお金もいりません。誰でも、必要なときにすぐ使えます。</p>
             </div>
@@ -193,7 +198,10 @@ export default function Home() {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                興味がある方はこちら（お知らせ登録）<span className="arrow">→</span>
+                <span className="btn-label">
+                  興味がある方はこちら<wbr />（お知らせ登録）
+                </span>
+                <span className="arrow">→</span>
               </a>
               <p className="note">※ ちょっくらはあぜみちとは別のサービスです。</p>
             </div>
