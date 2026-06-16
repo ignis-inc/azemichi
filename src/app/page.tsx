@@ -36,9 +36,11 @@ export default function Home() {
             ちゃんと<span className="em">報われる</span>農業へ。
           </h1>
           <p className="hero-sub">
-            手続きの壁をなくす「あぜみち」と、自分の値段で直接売る「ちょっくら」。
+            <span className="nw">手続きの壁をなくす「あぜみち」と、</span>
+            <span className="nw">自分の値段で直接売る「ちょっくら」。</span>
             <br />
-            農家の“つくる”と“売る”を、もっと身軽に。
+            <span className="nw">農家の“つくる”と“売る”を、</span>
+            <span className="nw">もっと身軽に。</span>
           </p>
           <div className="cta-row">
             <Link className="btn btn-primary" href="/tool">

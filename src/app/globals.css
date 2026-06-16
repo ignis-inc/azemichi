@@ -186,7 +186,8 @@ body {
   object-fit: cover;
   object-position: center 35%;
 }
-/* 見出し文字を読みやすくする、左からの薄い白いかすみ＋上下のなじみ */
+/* 白文字を読みやすくする暗いスクリム（--soil #1b2417 ベース）。
+   文字のある左〜下を濃く、右上に向かってほぼ透明にして写真を見せる。 */
 .landing .hero-photo::after {
   content: "";
   position: absolute;
@@ -194,25 +195,25 @@ body {
   background:
     linear-gradient(
       90deg,
-      rgba(251, 251, 247, 0.94) 0%,
-      rgba(251, 251, 247, 0.82) 30%,
-      rgba(251, 251, 247, 0.35) 62%,
-      rgba(251, 251, 247, 0) 88%
+      rgba(27, 36, 23, 0.74) 0%,
+      rgba(27, 36, 23, 0.58) 32%,
+      rgba(27, 36, 23, 0.22) 62%,
+      rgba(27, 36, 23, 0.05) 100%
     ),
     linear-gradient(
       180deg,
-      rgba(251, 251, 247, 0.5) 0%,
-      rgba(251, 251, 247, 0) 26%
+      rgba(27, 36, 23, 0) 38%,
+      rgba(27, 36, 23, 0.45) 100%
     );
 }
 @media (max-width: 720px) {
-  /* スマホは横幅が狭く文字が写真に重なるため、全面を強めに白くかすませる */
+  /* スマホは文字が写真の広い範囲に重なるため、文字エリア（上＋下）を濃いめにかすませる */
   .landing .hero-photo::after {
     background: linear-gradient(
       180deg,
-      rgba(251, 251, 247, 0.8) 0%,
-      rgba(251, 251, 247, 0.62) 45%,
-      rgba(251, 251, 247, 0.4) 100%
+      rgba(27, 36, 23, 0.62) 0%,
+      rgba(27, 36, 23, 0.46) 45%,
+      rgba(27, 36, 23, 0.66) 100%
     );
   }
 }
@@ -229,7 +230,7 @@ body {
   font-weight: 800;
   letter-spacing: 0.04em;
   font-size: 0.95rem;
-  color: var(--field-deep);
+  color: #eef0e4;
   margin-bottom: 34px;
   display: flex;
   align-items: center;
@@ -247,19 +248,26 @@ body {
   font-size: clamp(2.3rem, 7vw, 4.6rem);
   line-height: 1.28;
   letter-spacing: 0.01em;
-  color: var(--soil);
+  color: #ffffff;
+  text-shadow: 0 1px 20px rgba(27, 36, 23, 0.45);
   max-width: 16ch;
   margin-bottom: 28px;
 }
+/* 写真の上では緑ハイライトが濁るため、白文字のまま見せる（背景なし） */
 .landing .hero h1 .em {
-  background: linear-gradient(transparent 64%, rgba(156, 192, 86, 0.55) 64%);
+  background: none;
 }
 .landing .hero-sub {
   font-size: clamp(1rem, 2.2vw, 1.2rem);
-  color: #3a4731;
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 1px 16px rgba(27, 36, 23, 0.45);
   max-width: 34ch;
   margin-bottom: 40px;
   line-height: 1.95;
+}
+/* サブ文は文節ごとに改行させ、「自／分」のような単語途中での改行を防ぐ */
+.landing .hero-sub .nw {
+  white-space: nowrap;
 }
 .landing .cta-row {
   display: flex;
@@ -311,6 +319,16 @@ body {
 .landing .btn-ghost:hover {
   border-color: var(--field);
   color: var(--field-deep);
+}
+/* ヒーロー内のゴーストボタンは暗いスクリム上に置くため白系にする（他セクションは現状維持） */
+.landing .hero .btn-ghost {
+  border-color: rgba(255, 255, 255, 0.7);
+  color: #ffffff;
+}
+.landing .hero .btn-ghost:hover {
+  border-color: #ffffff;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
 }
 .landing .btn .arrow {
   transition: transform 0.2s ease;
