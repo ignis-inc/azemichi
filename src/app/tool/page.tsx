@@ -54,11 +54,6 @@ function toWareki(dateStr: string): string {
   return `${era}${eraYear}年${m}月${day}日`;
 }
 
-function todayWareki(): string {
-  const today = new Date();
-  return toWareki(today.toISOString().slice(0, 10));
-}
-
 type FormData = {
   name: string;
   nameKana: string;

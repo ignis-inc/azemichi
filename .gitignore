@@ -41,4 +41,6 @@ yarn-error.log*
 next-env.d.ts
 
 # fonts (large binary files - generate locally with pyftsubset or download from Google Fonts)
-/public/fonts/
+# ただし PDF 生成サーバーが読み込む NotoSansJP.ttf だけは本番でも必要なのでコミットする。
+/public/fonts/*
+!/public/fonts/NotoSansJP.ttf

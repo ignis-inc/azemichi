@@ -25,8 +25,10 @@ export default function Reveal({ children, className = "" }: RevealProps) {
       window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
     if (reduce || typeof IntersectionObserver === "undefined") {
-      setShown(true);
-      return;
+      // 演出なしで表示する。効果内で同期的に setState せず次フレームで反映する
+      // （reduce-motion 時は CSS 側でも最初から表示される）。
+      const id = requestAnimationFrame(() => setShown(true));
+      return () => cancelAnimationFrame(id);
     }
 
     const io = new IntersectionObserver(
