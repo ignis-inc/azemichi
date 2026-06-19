@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>azemichi forms</title>
+  </head>
+  <body>
+    <!--
+      Netlify のビルド時フォーム検出用の静的フォーム。
+      Next.js のフォームは画面側(JavaScript)で描画されるため Netlify のボットが
+      検出できないことがある。この静的HTMLを置くことで、フォーム名とフィールドを
+      確実に拾わせる。実際の送信は / 上の React フォーム(ContactForm)から行う。
+      フォーム名・フィールド名は ContactForm.tsx と一致させること。
+    -->
+    <form name="azemichi-contact" data-netlify="true" data-netlify-honeypot="bot-field" hidden>
+      <input type="hidden" name="form-name" value="azemichi-contact" />
+      <input name="bot-field" />
+      <textarea name="message"></textarea>
+      <input type="email" name="email" />
+    </form>
+  </body>
+</html>

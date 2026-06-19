@@ -625,4 +625,141 @@ body {
   .landing .btn {
     transition: none;
   }
+  /* アコーディオン開閉の記号アニメも止める */
+  .landing .faq-item summary::after {
+    transition: none;
+  }
+}
+
+/* =========================================================
+   よくある質問（FAQ アコーディオン）
+   ネイティブの <details>/<summary> を使い、キーボード操作（Tab→Enter/Space）
+   に標準対応。フォーカスは全体共通の :focus-visible で可視化される。
+   ========================================================= */
+.landing .faq-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 8px;
+  max-width: 720px;
+}
+.landing .faq-item {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+  overflow: hidden;
+}
+.landing .faq-item summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 20px 22px;
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 1.02rem;
+  line-height: 1.6;
+  color: var(--soil);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+/* デフォルトの三角マーカーを消す（Chrome/Safari/Firefox） */
+.landing .faq-item summary::-webkit-details-marker {
+  display: none;
+}
+.landing .faq-item summary::after {
+  content: "＋";
+  flex-shrink: 0;
+  color: var(--field);
+  font-weight: 700;
+  font-size: 1.25rem;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+.landing .faq-item[open] summary::after {
+  content: "−";
+}
+.landing .faq-item summary:hover {
+  color: var(--field-deep);
+}
+.landing .faq-answer {
+  padding: 2px 22px 20px;
+  color: #3a4731;
+  line-height: 1.95;
+  font-size: 1rem;
+}
+
+/* =========================================================
+   質問・ご意見箱（Netlify Forms）
+   ========================================================= */
+.landing .contact-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 30px;
+  max-width: 640px;
+  margin-top: 8px;
+}
+.landing .field {
+  margin-bottom: 20px;
+}
+.landing .field label {
+  display: block;
+  font-family: var(--sans);
+  font-weight: 700;
+  color: var(--soil);
+  margin-bottom: 8px;
+  font-size: 0.98rem;
+}
+.landing .field .req {
+  color: var(--harvest);
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-left: 8px;
+}
+.landing .field textarea,
+.landing .field input[type="email"] {
+  width: 100%;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 1rem;
+  font-family: var(--sans);
+  background: #fff;
+  color: var(--soil);
+  line-height: 1.7;
+  resize: vertical;
+}
+.landing .field textarea:focus,
+.landing .field input[type="email"]:focus {
+  border-color: var(--field);
+  outline: none;
+}
+.landing .field textarea::placeholder,
+.landing .field input::placeholder {
+  color: #9aa790;
+}
+/* honeypot（人には見せず、ボットだけが入力してしまう罠）。画面外に隠す */
+.landing .contact-hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.landing .contact-error {
+  color: var(--harvest-deep);
+  font-size: 0.95rem;
+  margin-bottom: 14px;
+}
+.landing .contact-thanks {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--field);
+  border-radius: 14px;
+  padding: 24px 26px;
+  max-width: 640px;
+  margin-top: 8px;
+  color: var(--soil);
+  font-weight: 600;
+  line-height: 1.9;
 }
