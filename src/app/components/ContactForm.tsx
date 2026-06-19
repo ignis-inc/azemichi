@@ -35,7 +35,10 @@ export default function ContactForm() {
     setSubmitting(true);
     setError(false);
     try {
-      const res = await fetch("/", {
+      // Next.js（App Router）では "/" への POST がアプリ側に取られ Netlify の
+      // フォーム処理に届かないことがある。検出用の静的ファイル(/__forms.html)へ
+      // POST すると、Netlify のフォーム処理が確実に受け取る。
+      const res = await fetch("/__forms.html", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: encode(data),
@@ -72,6 +75,7 @@ export default function ContactForm() {
     <form
       name={FORM_NAME}
       method="POST"
+      action="/__forms.html"
       data-netlify="true"
       data-netlify-honeypot="bot-field"
       onSubmit={handleSubmit}
