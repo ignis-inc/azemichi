@@ -1,10 +1,63 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import ContactForm from "./components/ContactForm";
 import Reveal from "./components/Reveal";
+import { pageMetadata } from "./site";
 
 // ちょっくらのお知らせ登録/アンケートURL
 const CHOKKURA_NOTIFY_URL = "https://forms.gle/hdG1aCmDJCZimr5d8";
+
+export const metadata: Metadata = pageMetadata({
+  title: "つくる人が、ちゃんと報われる農業へ。｜あぜみち・ちょっくら / IGNIS",
+  description:
+    "農業の手続き書類を、スマホでかんたんにPDF化できる無料ツール「あぜみち」。米の販売届出・青色申告・農地の届出・農業者年金・補助金申請に対応。登録不要で、つくる人の最初の一歩を軽くします。",
+  path: "/",
+  absoluteTitle: true,
+});
+
+// よくある質問。画面表示とFAQPageのJSON-LDを同じデータから生成し、文面を完全一致させる。
+const FAQ_ITEMS: { q: string; a: string }[] = [
+  {
+    q: "あぜみちは無料ですか？",
+    a: "はい、完全に無料でお使いいただけます。会員登録も必要ありません。",
+  },
+  {
+    q: "どんな書類が作れますか？",
+    a: "次の5種類に対応しています。米の販売届出・青色申告・農地の届出・農業者年金・補助金申請。",
+  },
+  {
+    q: "PDFを作ったあと、どうすればいいですか？",
+    a: "①まず内容をご確認ください。②印刷して提出先の窓口に持参するか、対応している手続きならオンライン申請もできます。様式に沿って作成しますが、記載内容の最終確認はご自身でお願いします。",
+  },
+  {
+    q: "作ったPDFはどこに保存される？印刷やコピーはできますか？",
+    a: "作成したPDFは、あぜみちのサーバーには保存されません。入力内容からその場でPDFを作り、お使いの端末（ブラウザのダウンロード先。多くは「ダウンロード」フォルダ）に保存されます。あなたの端末のファイルなので、印刷もコピーも自由です。スマホで作った場合は、コンビニのプリントサービスでも印刷できます。",
+  },
+  {
+    q: "行政書士・税理士のサービスですか？",
+    a: "いいえ。あぜみちは書類の作成を補助するツールで、行政書士・税理士などの専門業務ではありません。手続きの可否や内容については、提出先の窓口や専門家にご確認ください。",
+  },
+  {
+    q: "入力した個人情報はどう扱われますか？",
+    a: "入力された内容は、PDFを作成するためだけに使われます。あぜみちのサーバーに保存・記録することはなく、作成後のPDFもお使いの端末に保存されるだけで、こちらには残りません。会員登録も不要です。",
+  },
+  {
+    q: "ちょっくらとは？",
+    a: "農家が中間を通さず、自分の値段でお客さんに直接販売できるサービスです（近日公開）。あぜみちとは別のサービスです。",
+  },
+];
+
+// FAQ構造化データ（FAQPage）。質問・回答は上の FAQ_ITEMS と同一なので画面と完全一致する。
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQ_ITEMS.map((item) => ({
+    "@type": "Question",
+    name: item.q,
+    acceptedAnswer: { "@type": "Answer", text: item.a },
+  })),
+};
 
 export default function Home() {
   return (
@@ -218,49 +271,18 @@ export default function Home() {
               よくある質問 <span className="ja">／ はじめる前に</span>
             </div>
             <h2>気になることに、お答えします。</h2>
+            {/* FAQ構造化データ。文面は FAQ_ITEMS と同一なので画面表示と完全一致 */}
+            <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+            />
             <div className="faq-list">
-              <details className="faq-item">
-                <summary>あぜみちは無料ですか？</summary>
-                <div className="faq-answer">
-                  はい、完全に無料でお使いいただけます。会員登録も必要ありません。
-                </div>
-              </details>
-              <details className="faq-item">
-                <summary>どんな書類が作れますか？</summary>
-                <div className="faq-answer">
-                  次の5種類に対応しています。米の販売届出・青色申告・農地の届出・農業者年金・補助金申請。
-                </div>
-              </details>
-              <details className="faq-item">
-                <summary>PDFを作ったあと、どうすればいいですか？</summary>
-                <div className="faq-answer">
-                  ①まず内容をご確認ください。②印刷して提出先の窓口に持参するか、対応している手続きならオンライン申請もできます。様式に沿って作成しますが、記載内容の最終確認はご自身でお願いします。
-                </div>
-              </details>
-              <details className="faq-item">
-                <summary>作ったPDFはどこに保存される？印刷やコピーはできますか？</summary>
-                <div className="faq-answer">
-                  作成したPDFは、あぜみちのサーバーには保存されません。入力内容からその場でPDFを作り、お使いの端末（ブラウザのダウンロード先。多くは「ダウンロード」フォルダ）に保存されます。あなたの端末のファイルなので、印刷もコピーも自由です。スマホで作った場合は、コンビニのプリントサービスでも印刷できます。
-                </div>
-              </details>
-              <details className="faq-item">
-                <summary>行政書士・税理士のサービスですか？</summary>
-                <div className="faq-answer">
-                  いいえ。あぜみちは書類の作成を補助するツールで、行政書士・税理士などの専門業務ではありません。手続きの可否や内容については、提出先の窓口や専門家にご確認ください。
-                </div>
-              </details>
-              <details className="faq-item">
-                <summary>入力した個人情報はどう扱われますか？</summary>
-                <div className="faq-answer">
-                  入力された内容は、PDFを作成するためだけに使われます。あぜみちのサーバーに保存・記録することはなく、作成後のPDFもお使いの端末に保存されるだけで、こちらには残りません。会員登録も不要です。
-                </div>
-              </details>
-              <details className="faq-item">
-                <summary>ちょっくらとは？</summary>
-                <div className="faq-answer">
-                  農家が中間を通さず、自分の値段でお客さんに直接販売できるサービスです（近日公開）。あぜみちとは別のサービスです。
-                </div>
-              </details>
+              {FAQ_ITEMS.map((item) => (
+                <details className="faq-item" key={item.q}>
+                  <summary>{item.q}</summary>
+                  <div className="faq-answer">{item.a}</div>
+                </details>
+              ))}
             </div>
           </Reveal>
         </div>
