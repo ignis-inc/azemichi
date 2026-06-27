@@ -763,3 +763,83 @@ body {
   font-weight: 600;
   line-height: 1.9;
 }
+
+/* =========================================================
+   ちょっくら紹介ページ（/chokkura）。畦道デザインを流用し、琥珀をアクセントに。
+   ========================================================= */
+.landing .chokkura-hero {
+  max-width: 1080px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 116px 24px 64px;
+}
+.landing .chokkura-hero .eyebrow .dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--harvest);
+  display: inline-block;
+}
+.landing .chokkura-hero h1 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: clamp(2.3rem, 7vw, 4.4rem);
+  line-height: 1.28;
+  letter-spacing: 0.01em;
+  color: var(--soil);
+  margin: 16px 0 22px;
+  text-wrap: balance;
+  line-break: strict;
+}
+.landing .chokkura-hero-sub {
+  font-size: clamp(1rem, 2.2vw, 1.18rem);
+  color: #3a4731;
+  line-height: 1.9;
+  max-width: 40ch;
+}
+@media (max-width: 720px) {
+  .landing .chokkura-hero {
+    padding: 92px 24px 48px;
+  }
+}
+
+/* 準備中の機能（控えめに見せる） */
+.landing .ck-prep {
+  margin-top: 24px;
+  border: 1px dashed rgba(190, 94, 22, 0.45);
+  border-radius: 14px;
+  background: rgba(190, 94, 22, 0.05);
+  padding: 20px 24px;
+  max-width: 520px;
+}
+.landing .ck-prep-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--harvest-deep);
+  margin-bottom: 12px;
+}
+.landing .ck-prep ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.landing .ck-prep li {
+  position: relative;
+  padding-left: 20px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.landing .ck-prep li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.66em;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--harvest);
+  opacity: 0.7;
+}

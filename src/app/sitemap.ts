@@ -5,7 +5,15 @@ import { SITE_URL } from "./site";
 // /api/*（PDF生成）や /__forms.html（Netlify検出用）はクロール不要なので含めない。
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();
-  const paths = ["/", "/tool", "/nenkin", "/nouchi", "/aoiro", "/keiei"];
+  const paths = [
+    "/",
+    "/chokkura",
+    "/tool",
+    "/nenkin",
+    "/nouchi",
+    "/aoiro",
+    "/keiei",
+  ];
 
   return paths.map((path) => ({
     url: `${SITE_URL}${path === "/" ? "" : path}`,

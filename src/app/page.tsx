@@ -3,10 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import ContactForm from "./components/ContactForm";
 import Reveal from "./components/Reveal";
-import { pageMetadata } from "./site";
-
-// ちょっくらのお知らせ登録/アンケートURL
-const CHOKKURA_NOTIFY_URL = "https://forms.gle/hdG1aCmDJCZimr5d8";
+import { CHOKKURA_NOTIFY_URL, pageMetadata } from "./site";
 
 export const metadata: Metadata = pageMetadata({
   title: "つくる人が、ちゃんと報われる農業へ。｜あぜみち・ちょっくら / IGNIS",
@@ -246,17 +243,22 @@ export default function Home() {
               <p className="desc">
                 注文も発送も売上の管理も、スマホ一台で。つくった人の手元に、きちんと残る売り方を目指しています。手続きを整えたら、次は売る場所へ。
               </p>
-              <a
-                className="btn btn-amber"
-                href={CHOKKURA_NOTIFY_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <span className="btn-label">
-                  興味がある方はこちら<wbr />（お知らせ登録）
-                </span>
-                <span className="arrow">→</span>
-              </a>
+              <div className="cta-row">
+                <a
+                  className="btn btn-amber"
+                  href={CHOKKURA_NOTIFY_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <span className="btn-label">
+                    興味がある方はこちら<wbr />（お知らせ登録）
+                  </span>
+                  <span className="arrow">→</span>
+                </a>
+                <Link className="btn btn-ghost" href="/chokkura">
+                  詳しくはこちら<span className="arrow">→</span>
+                </Link>
+              </div>
               <p className="note">※ ちょっくらはあぜみちとは別のサービスです。</p>
             </div>
           </Reveal>

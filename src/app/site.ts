@@ -11,6 +11,9 @@ export const SITE_URL = (
 
 export const SITE_NAME = "あぜみち";
 
+/** ちょっくらのお知らせ登録/アンケートURL（トップ・/chokkura から共通で参照する） */
+export const CHOKKURA_NOTIFY_URL = "https://forms.gle/hdG1aCmDJCZimr5d8";
+
 /**
  * OGP / Twitter カード用の画像（1200×630）。
  * 暫定でロゴ＋サイト名の静的画像を使用。将来 豊後大野の実写ベースに差し替える場合は、
