@@ -19,6 +19,9 @@ export const metadata: Metadata = {
   applicationName: SITE_NAME,
   alternates: { canonical: "/" },
   robots: { index: true, follow: true },
+  // Google Search Console の所有権確認用メタタグ（全ページの <head> に出力される）。
+  // ※削除しないこと：Search Console が「確認済み」状態の維持にこのタグを使うため。
+  verification: { google: "tx-irimQoxccMWGomvfsMkFKvj60jH-YZK09ZZjWO70" },
   openGraph: {
     type: "website",
     siteName: SITE_NAME,
