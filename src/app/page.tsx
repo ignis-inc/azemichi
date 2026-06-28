@@ -251,7 +251,7 @@ export default function Home() {
                   rel="noopener noreferrer"
                 >
                   <span className="btn-label">
-                    興味がある方はこちら<wbr />（お知らせ登録）
+                    ご意見をきかせてください<wbr />（アンケートに答える）
                   </span>
                   <span className="arrow">→</span>
                 </a>

@@ -84,7 +84,7 @@ export default function ChokkuraPage() {
           <Reveal className="seg amber">
             <div className="eyebrow amber">まだ準備中</div>
             <p className="body">
-              ちょっくらは現在準備中です。「使ってみたい」「話を聞きたい」という方は、お知らせ登録を。公開のご案内や、先行してお試しいただける機会をお届けします。
+              ちょっくらは現在準備中です。よりよいしくみにするため、直販についてのご意見をお聞かせください。いただいた声を、これからのちょっくらづくりの参考にします。
             </p>
             <a
               className="btn btn-amber"
@@ -93,7 +93,7 @@ export default function ChokkuraPage() {
               rel="noopener noreferrer"
             >
               <span className="btn-label">
-                興味がある方はこちら<wbr />（お知らせ登録）
+                ご意見をきかせてください<wbr />（アンケートに答える）
               </span>
               <span className="arrow">→</span>
             </a>
