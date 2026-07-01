@@ -13,6 +13,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/nouchi",
     "/aoiro",
     "/keiei",
+    "/privacy",
   ];
 
   return paths.map((path) => ({

@@ -319,26 +319,7 @@ export default function Home() {
         </Reveal>
       </section>
 
-      {/* ============ フッター ============ */}
-      <footer className="site-footer">
-        <div className="road">
-          <div className="ftop">
-            <div className="fbrand">あぜみち ／ ちょっくら</div>
-            <nav className="fnav">
-              <a href="#omoi">想い</a>
-              <Link href="/tool">あぜみち</Link>
-              <a href={CHOKKURA_NOTIFY_URL} target="_blank" rel="noopener noreferrer">
-                ちょっくら
-              </a>
-            </nav>
-          </div>
-          <div className="meta">
-            株式会社IGNIS（大分県豊後大野市）
-            <br />
-            つくる人が、ちゃんと報われる農業へ。
-          </div>
-        </div>
-      </footer>
+      {/* フッターはルート layout.tsx の共通 <SiteFooter /> で全ページに表示 */}
     </div>
   );
 }
