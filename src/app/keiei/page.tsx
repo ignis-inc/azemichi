@@ -3,6 +3,7 @@
 import { useState } from "react";
 import DocNav from "../components/DocNav";
 import PDFModal from "../components/PDFModal";
+import { DOC_LAST_CHECKED } from "../site";
 
 const PREFECTURES = [
   "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
@@ -189,11 +190,26 @@ export default function KeieiPage() {
         </p>
       </header>
 
-      {/* この書類が必要な場面（一般的な説明・非断定） */}
+      {/* この書類が必要な場面（一般的な説明・非断定）＋出典 */}
       <div className="max-w-2xl mx-auto px-4 pt-5">
-        <p className="text-base text-gray-600 leading-relaxed bg-white border border-green-100 rounded-xl px-5 py-4">
-          経営所得安定対策などの交付申請に用いる書類です。対象や要件は、農林水産省・地域の窓口でご確認ください。
-        </p>
+        <div className="bg-white border border-green-100 rounded-xl px-5 py-4">
+          <p className="text-base text-gray-600 leading-relaxed">
+            経営所得安定対策などの交付申請に用いる書類です。対象や要件は、農林水産省・地域の窓口でご確認ください。
+          </p>
+          <p className="mt-3 text-sm text-gray-500 leading-relaxed">
+            出典：
+            <a
+              href="https://www.maff.go.jp/j/kobetu_ninaite/keiei/h27_download.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-green-700 underline underline-offset-2 hover:text-green-800 break-words"
+            >
+              農林水産省「経営所得安定対策等の交付申請書（様式）」
+            </a>
+            <br />
+            最終確認：{DOC_LAST_CHECKED}
+          </p>
+        </div>
       </div>
 
       <DocNav current="/keiei" />

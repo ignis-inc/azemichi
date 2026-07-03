@@ -3,6 +3,7 @@
 import { useState } from "react";
 import DocNav from "../components/DocNav";
 import PDFModal from "../components/PDFModal";
+import { DOC_LAST_CHECKED } from "../site";
 
 const PREFECTURES = [
   "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
@@ -176,11 +177,26 @@ export default function AoiroPage() {
         </p>
       </header>
 
-      {/* この書類が必要な場面（一般的な説明・非断定） */}
+      {/* この書類が必要な場面（一般的な説明・非断定）＋出典 */}
       <div className="max-w-2xl mx-auto px-4 pt-5">
-        <p className="text-base text-gray-600 leading-relaxed bg-white border border-green-100 rounded-xl px-5 py-4">
-          農業所得を青色申告するために、事前に税務署へ提出する申請書です。提出期限や要件は、国税庁・税務署の案内をご確認ください。
-        </p>
+        <div className="bg-white border border-green-100 rounded-xl px-5 py-4">
+          <p className="text-base text-gray-600 leading-relaxed">
+            農業所得を青色申告するために、事前に税務署へ提出する申請書です。提出期限や要件は、国税庁・税務署の案内をご確認ください。
+          </p>
+          <p className="mt-3 text-sm text-gray-500 leading-relaxed">
+            出典：
+            <a
+              href="https://www.nta.go.jp/taxes/tetsuzuki/shinsei/annai/shinkoku/annai/09.htm"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-green-700 underline underline-offset-2 hover:text-green-800 break-words"
+            >
+              国税庁「A1-8 所得税の青色申告承認申請手続」
+            </a>
+            <br />
+            最終確認：{DOC_LAST_CHECKED}
+          </p>
+        </div>
       </div>
 
       <DocNav current="/aoiro" />
