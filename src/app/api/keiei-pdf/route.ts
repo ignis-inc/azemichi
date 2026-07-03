@@ -60,7 +60,9 @@ export async function POST(request: NextRequest) {
       ? [
           form.bankName || "　",
           form.branchName ? `${form.branchName}` : "　",
-          form.accountType ? `${form.accountType}　${form.accountNumber || "　"}` : "　",
+          (form.accountType || form.accountNumber)
+            ? `${form.accountType || "　"}　${form.accountNumber || "　"}`
+            : "　",
           form.accountHolder || "　",
         ].join(" / ")
       : "変更なし";

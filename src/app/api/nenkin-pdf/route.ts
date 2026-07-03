@@ -65,9 +65,11 @@ export async function POST(request: NextRequest) {
     const destTitle = form.submissionDest ? (destTitleMap[form.submissionDest] ?? "長") : "";
     const submissionLabel = form.submissionName && form.submissionDest
       ? `${form.submissionName}　${destTitle}　殿`
-      : form.submissionDest
-        ? `${form.submissionDest}　殿`
-        : "農業協同組合（農業委員会）　殿";
+      : form.submissionName
+        ? `${form.submissionName}　殿`
+        : form.submissionDest
+          ? `${form.submissionDest}　殿`
+          : "農業協同組合（農業委員会）　殿";
 
     const premium = form.monthlyPremium ?? 20000;
 
