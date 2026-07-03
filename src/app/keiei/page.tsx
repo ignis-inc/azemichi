@@ -189,6 +189,13 @@ export default function KeieiPage() {
         </p>
       </header>
 
+      {/* この書類が必要な場面（一般的な説明・非断定） */}
+      <div className="max-w-2xl mx-auto px-4 pt-5">
+        <p className="text-base text-gray-600 leading-relaxed bg-white border border-green-100 rounded-xl px-5 py-4">
+          経営所得安定対策などの交付申請に用いる書類です。対象や要件は、農林水産省・地域の窓口でご確認ください。
+        </p>
+      </div>
+
       <DocNav current="/keiei" />
 
       <main className="max-w-2xl mx-auto px-4 py-6">

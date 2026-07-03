@@ -176,6 +176,13 @@ export default function AoiroPage() {
         </p>
       </header>
 
+      {/* この書類が必要な場面（一般的な説明・非断定） */}
+      <div className="max-w-2xl mx-auto px-4 pt-5">
+        <p className="text-base text-gray-600 leading-relaxed bg-white border border-green-100 rounded-xl px-5 py-4">
+          農業所得を青色申告するために、事前に税務署へ提出する申請書です。提出期限や要件は、国税庁・税務署の案内をご確認ください。
+        </p>
+      </div>
+
       <DocNav current="/aoiro" />
 
       <main className="max-w-2xl mx-auto px-4 py-6">

@@ -152,6 +152,13 @@ export default function NouchiPage() {
         </p>
       </header>
 
+      {/* この書類が必要な場面（一般的な説明・非断定） */}
+      <div className="max-w-2xl mx-auto px-4 pt-5">
+        <p className="text-base text-gray-600 leading-relaxed bg-white border border-green-100 rounded-xl px-5 py-4">
+          農地を相続などで取得したときに、農業委員会へ行う届出です。売買や贈与など、許可が必要になる取得は別の手続きになる場合があります。要否や期限は、農業委員会でご確認ください。
+        </p>
+      </div>
+
       <DocNav current="/nouchi" />
 
       <main className="max-w-2xl mx-auto px-4 py-6">

@@ -160,6 +160,13 @@ export default function NenkinPage() {
         </p>
       </header>
 
+      {/* この書類が必要な場面（一般的な説明・非断定） */}
+      <div className="max-w-2xl mx-auto px-4 pt-5">
+        <p className="text-base text-gray-600 leading-relaxed bg-white border border-green-100 rounded-xl px-5 py-4">
+          農業者年金に加入するときに提出する申込書です。加入資格や詳細は、農業者年金基金・JA等でご確認ください。
+        </p>
+      </div>
+
       <DocNav current="/nenkin" />
 
       <main className="max-w-2xl mx-auto px-4 py-6">

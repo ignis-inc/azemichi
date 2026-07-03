@@ -662,6 +662,86 @@ body {
   }
 }
 
+/* =========================================================
+   書類を選ぶカード一覧（/tool 冒頭）。畦道トーン（明朝見出し×ゴシック本文・
+   配色トークン）に合わせつつ、高齢の方向けにタップ領域を大きく取る。
+   ========================================================= */
+.doc-picker {
+  background: var(--mist);
+  padding: 40px 16px;
+}
+.doc-picker-inner {
+  max-width: 640px;
+  margin: 0 auto;
+}
+.doc-picker-title {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: clamp(1.4rem, 4vw, 1.9rem);
+  color: var(--soil);
+  text-align: center;
+  line-height: 1.4;
+}
+.doc-picker-lead {
+  text-align: center;
+  color: #3a4731;
+  margin: 8px 0 24px;
+  font-size: 1rem;
+}
+.doc-picker-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+}
+.doc-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #fff;
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  padding: 20px 22px;
+  min-height: 76px;
+  text-decoration: none;
+  transition:
+    border-color 0.15s ease,
+    transform 0.15s ease,
+    box-shadow 0.2s ease;
+}
+.doc-card:hover {
+  border-color: var(--field);
+  box-shadow: 0 8px 22px -12px rgba(46, 80, 24, 0.5);
+}
+.doc-card:active {
+  transform: translateY(1px);
+}
+.doc-card-body {
+  flex: 1;
+}
+.doc-card-purpose {
+  display: block;
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.2rem;
+  line-height: 1.5;
+  color: var(--field-deep);
+}
+.doc-card-name {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-top: 4px;
+  line-height: 1.5;
+}
+.doc-card-arrow {
+  flex-shrink: 0;
+  color: var(--field);
+  font-weight: 700;
+  font-size: 1.3rem;
+}
+
 /* スクロール演出 */
 .landing .reveal {
   opacity: 0;

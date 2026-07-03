@@ -216,6 +216,63 @@ export default function Home() {
         </div>
       </div>
 
+      {/* やりたいことから書類を選ぶカード一覧 */}
+      <section className="doc-picker">
+        <div className="doc-picker-inner">
+          <h2 className="doc-picker-title">やりたいことから書類を選ぶ</h2>
+          <p className="doc-picker-lead">あてはまるものをお選びください。</p>
+          <ul className="doc-picker-list">
+            <li>
+              <a href="#form" className="doc-card">
+                <span className="doc-card-body">
+                  <span className="doc-card-purpose">お米を売りはじめる方へ</span>
+                  <span className="doc-card-name">米の販売届出（米穀の出荷又は販売の事業開始届出書）</span>
+                </span>
+                <span className="doc-card-arrow" aria-hidden="true">↓</span>
+              </a>
+            </li>
+            <li>
+              <Link href="/aoiro" className="doc-card">
+                <span className="doc-card-body">
+                  <span className="doc-card-purpose">青色申告をはじめる方へ</span>
+                  <span className="doc-card-name">所得税の青色申告承認申請書</span>
+                </span>
+                <span className="doc-card-arrow" aria-hidden="true">→</span>
+              </Link>
+            </li>
+            <li>
+              <Link href="/nouchi" className="doc-card">
+                <span className="doc-card-body">
+                  <span className="doc-card-purpose">農地を相続・売買した方へ</span>
+                  <span className="doc-card-name">農地法第3条の3第1項の規定による届出書</span>
+                </span>
+                <span className="doc-card-arrow" aria-hidden="true">→</span>
+              </Link>
+            </li>
+            <li>
+              <Link href="/nenkin" className="doc-card">
+                <span className="doc-card-body">
+                  <span className="doc-card-purpose">農業者年金に加入する方へ</span>
+                  <span className="doc-card-name">農業者年金通常加入申込書（様式第1号）</span>
+                </span>
+                <span className="doc-card-arrow" aria-hidden="true">→</span>
+              </Link>
+            </li>
+            <li>
+              <Link href="/keiei" className="doc-card">
+                <span className="doc-card-body">
+                  <span className="doc-card-purpose">
+                    経営所得安定対策（補助金）を申請する方へ
+                  </span>
+                  <span className="doc-card-name">経営所得安定対策等交付金交付申請書（様式第1号A）</span>
+                </span>
+                <span className="doc-card-arrow" aria-hidden="true">→</span>
+              </Link>
+            </li>
+          </ul>
+        </div>
+      </section>
+
       {/* ヘッダー */}
       <header className="bg-green-700 text-white py-6 px-4 text-center shadow-md">
         <h1 className="text-2xl font-bold leading-tight">
@@ -226,9 +283,16 @@ export default function Home() {
         </p>
       </header>
 
+      {/* この書類が必要な場面（一般的な説明・非断定） */}
+      <div className="max-w-2xl mx-auto px-4 pt-5">
+        <p className="text-base text-gray-600 leading-relaxed bg-white border border-green-100 rounded-xl px-5 py-4">
+          米穀（お米）の出荷・販売の事業を始めるときに、食糧法にもとづいて地方農政局へ行う届出です。年間の取扱規模が一定（20精米トン）未満の場合は対象外とされています。要否や提出先は、農林水産省・地方農政局の案内をご確認ください。
+        </p>
+      </div>
+
       <DocNav current="/tool" />
 
-      <main className="max-w-2xl mx-auto px-4 py-6">
+      <main id="form" className="max-w-2xl mx-auto px-4 py-6 scroll-mt-4">
 
         {/* 基本情報 */}
         <section className={sectionClass}>
