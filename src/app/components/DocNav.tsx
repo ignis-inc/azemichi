@@ -41,7 +41,7 @@ export default function DocNav({ current }: DocNavProps) {
 
         <div className="flex-1 text-center py-2">
           <p className="text-xl font-bold text-green-800 leading-snug">{currentItem.label}</p>
-          <p className="text-xs text-gray-400 mt-1">{currentItem.formal}</p>
+          <p className="text-xs text-gray-600 mt-1">{currentItem.formal}</p>
           <p className="text-sm text-gray-500 mt-1 font-medium">{currentIndex + 1} / {NAV_ITEMS.length}</p>
         </div>
 

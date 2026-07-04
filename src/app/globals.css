@@ -584,7 +584,10 @@ body {
   color: #e7ecdf;
 }
 .site-footer .fnav a {
-  margin-left: 22px;
+  /* スマホで押しやすいよう余白でタップ領域を確保（高さ44px以上） */
+  display: inline-block;
+  padding: 12px 11px;
+  margin-left: 0;
   text-decoration: none;
   color: #c3cdb6;
 }
@@ -594,12 +597,12 @@ body {
 .site-footer .meta {
   margin-top: 26px;
   line-height: 1.9;
-  color: #7e8c70;
+  /* 緑地でも読めるよう、フッター基調色と同じ明るさに（コントラスト比6.8:1） */
+  color: #9fae90;
 }
 @media (max-width: 560px) {
   .site-footer .fnav a {
-    margin: 0 18px 0 0;
-    display: inline-block;
+    margin: 0;
   }
 }
 
@@ -878,9 +881,10 @@ body {
   margin-bottom: 8px;
   font-size: 0.98rem;
 }
-/* 必須バッジ。ご意見箱（.landing 配下）と書類ページの両方で同じ見た目にする */
+/* 必須バッジ。ご意見箱（.landing 配下）と書類ページの両方で同じ見た目にする。
+   白地で読めるよう一段濃い琥珀（コントラスト比6.2:1） */
 .req {
-  color: var(--harvest);
+  color: var(--harvest-deep);
   font-size: 0.78rem;
   font-weight: 700;
   margin-left: 8px;
