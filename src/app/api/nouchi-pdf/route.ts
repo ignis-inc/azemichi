@@ -41,10 +41,21 @@ export async function POST(request: NextRequest) {
 
     const form = await request.json();
 
+    // 地番は慣例どおり「123番」と印字する。
+    // 「123」→「123番」／「123番」「123番4」→そのまま／「123番地」→「123番」に直し、二重表記を防ぐ。
+    const chibanRaw = typeof form.landChiban === "string" ? form.landChiban.trim() : "";
+    const chibanText = !chibanRaw
+      ? "　"
+      : /番地$/.test(chibanRaw)
+        ? chibanRaw.replace(/地$/, "")
+        : /番/.test(chibanRaw)
+          ? chibanRaw
+          : `${chibanRaw}番`;
+
     const landLocation = [
       form.landCity || "　",
       form.landAza || "　",
-      form.landChiban ? `${form.landChiban}番地` : "　",
+      chibanText,
     ].join("　");
 
     const tableBody = [

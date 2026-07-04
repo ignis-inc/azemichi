@@ -320,9 +320,10 @@ export default function Home() {
           </h2>
           <div className="space-y-5">
             <div>
-              <label className={labelClass} htmlFor="tool-name">氏名</label>
+              <label className={labelClass} htmlFor="tool-name">氏名<span className="req">必須</span></label>
               <input
                 id="tool-name"
+                aria-required="true"
                 type="text"
                 name="name"
                 value={form.name}
@@ -345,10 +346,11 @@ export default function Home() {
               />
             </div>
             <div>
-              <label className={labelClass} htmlFor="tool-prefecture">住所</label>
+              <label className={labelClass} htmlFor="tool-prefecture">住所<span className="req">必須</span></label>
               <select
                 id="tool-prefecture"
                 aria-label="住所（都道府県）"
+                aria-required="true"
                 name="prefecture"
                 value={form.prefecture}
                 onChange={handlePrefectureChange}
@@ -363,6 +365,7 @@ export default function Home() {
               <input
                 id="tool-cityAddress"
                 aria-label="住所（市区町村・番地）"
+                aria-required="true"
                 type="text"
                 name="cityAddress"
                 value={form.cityAddress}

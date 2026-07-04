@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import DocNav from "../components/DocNav";
 import PDFModal from "../components/PDFModal";
 import { DOC_LAST_CHECKED } from "../site";
+import { isValidWarekiDate } from "../wareki";
 
 const PREFECTURES = [
   "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
@@ -86,6 +87,9 @@ export default function NouchiPage() {
     if (!form.name.trim()) e.name = "氏名を入力してください";
     if (!form.prefecture) e.prefecture = "都道府県を選択してください";
     if (!form.cityAddress.trim()) e.cityAddress = "市区町村・番地を入力してください";
+    if (!isValidWarekiDate(form.acqEra, Number(form.acqYear), Number(form.acqMonth), Number(form.acqDay))) {
+      e.acqDate = "権利取得年月日が実在しない日付です。月と日をご確認ください";
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -189,8 +193,8 @@ export default function NouchiPage() {
           </h2>
           <div className="space-y-5">
             <div>
-              <label className={labelClass} htmlFor="nouchi-name">氏名</label>
-              <input type="text" id="nouchi-name" name="name" value={form.name} onChange={handleChange}
+              <label className={labelClass} htmlFor="nouchi-name">氏名<span className="req">必須</span></label>
+              <input type="text" id="nouchi-name" name="name" aria-required="true" value={form.name} onChange={handleChange}
                 placeholder="例：田中　太郎" className={inputClass} />
               {errors.name && <p className="text-red-600 text-base mt-2">{errors.name}</p>}
             </div>
@@ -202,8 +206,8 @@ export default function NouchiPage() {
 
             {/* 住所 */}
             <div>
-              <label className={labelClass} htmlFor="nouchi-prefecture">住所</label>
-              <select id="nouchi-prefecture" name="prefecture" value={form.prefecture} onChange={handleChange}
+              <label className={labelClass} htmlFor="nouchi-prefecture">住所<span className="req">必須</span></label>
+              <select id="nouchi-prefecture" name="prefecture" aria-required="true" value={form.prefecture} onChange={handleChange}
                 aria-label="住所（都道府県）"
                 className={`${inputClass} mb-2`}>
                 <option value="">都道府県を選択</option>
@@ -212,7 +216,7 @@ export default function NouchiPage() {
                 ))}
               </select>
               {errors.prefecture && <p className="text-red-600 text-base mb-2">{errors.prefecture}</p>}
-              <input type="text" id="nouchi-cityAddress" name="cityAddress" value={form.cityAddress} onChange={handleChange}
+              <input type="text" id="nouchi-cityAddress" name="cityAddress" aria-required="true" value={form.cityAddress} onChange={handleChange}
                 aria-label="住所（市区町村・番地）"
                 placeholder="例：○○市○○町1-2-3" className={inputClass} />
               {errors.cityAddress && <p className="text-red-600 text-base mt-2">{errors.cityAddress}</p>}
@@ -261,7 +265,7 @@ export default function NouchiPage() {
                   placeholder="字" className={inputClass} />
                 <input type="text" id="nouchi-landChiban" name="landChiban" value={form.landChiban} onChange={handleChange}
                   aria-label="所在地（地番）"
-                  placeholder="地番" className={inputClass} />
+                  placeholder="地番（例：123 数字のみ）" className={inputClass} />
               </div>
             </div>
 
@@ -339,6 +343,7 @@ export default function NouchiPage() {
                   ))}
                 </select>
               </div>
+              {errors.acqDate && <p className="text-red-600 text-base mt-2">{errors.acqDate}</p>}
             </div>
 
             {/* 権利の種類 */}

@@ -852,7 +852,8 @@ body {
   margin-bottom: 8px;
   font-size: 0.98rem;
 }
-.landing .field .req {
+/* 必須バッジ。ご意見箱（.landing 配下）と書類ページの両方で同じ見た目にする */
+.req {
   color: var(--harvest);
   font-size: 0.78rem;
   font-weight: 700;

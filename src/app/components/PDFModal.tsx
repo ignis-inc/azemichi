@@ -87,9 +87,17 @@ export default function PDFModal({ steps, note, buttons, chokkuraCta, onClose, r
         tabIndex={-1}
         className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6"
       >
-        {/* タイトル */}
+        {/* タイトル。チェック印は環境により豆腐化する絵文字を避けSVGで描く */}
         <h2 id="pdf-modal-title" className="text-xl font-bold text-gray-900 mb-5 text-center">
-          ✅ PDFが作成されました
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            className="inline-block w-6 h-6 mr-2 -mt-1 text-green-600"
+            fill="currentColor"
+          >
+            <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-1.4 14.3-4.2-4.2 1.4-1.4 2.8 2.8 5.6-5.6 1.4 1.4-7 7Z" />
+          </svg>
+          PDFが作成されました
         </h2>
 
         {/* 次のステップ */}
