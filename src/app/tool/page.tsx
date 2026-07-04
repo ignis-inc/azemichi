@@ -292,6 +292,11 @@ export default function Home() {
             <br />
             最終確認：{DOC_LAST_CHECKED}
           </p>
+          <p className="mt-2 text-sm text-gray-500">
+            わからない言葉は
+            <Link href="/yougo" className="text-green-700 underline underline-offset-2 hover:text-green-800">用語集</Link>
+            で説明しています。
+          </p>
         </div>
       </div>
 

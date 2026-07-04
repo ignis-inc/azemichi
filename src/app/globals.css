@@ -645,6 +645,18 @@ body {
   font-size: 1.0125rem;
   margin-bottom: 14px;
 }
+/* 用語集の出典・最終確認行（小さめの補足表示） */
+.landing .legal .yougo-source {
+  font-size: 0.86rem;
+  color: var(--muted);
+  line-height: 1.8;
+}
+.landing .legal .yougo-source a {
+  color: var(--field-deep);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  overflow-wrap: anywhere;
+}
 .landing .legal .legal-back {
   margin-top: 8px;
 }

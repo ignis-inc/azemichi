@@ -12,6 +12,7 @@ export default function SiteFooter() {
             <Link href="/#omoi">想い</Link>
             <Link href="/tool">あぜみち</Link>
             <Link href="/chokkura">ちょっくら</Link>
+            <Link href="/yougo">用語集</Link>
             <Link href="/privacy">運営者情報・プライバシー</Link>
           </nav>
         </div>
