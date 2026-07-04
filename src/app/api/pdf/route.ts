@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import path from "path";
 import fs from "fs";
 import { validateForm, COMMON_RULES, type FieldRule } from "../formValidation";
+import { toWarekiDate } from "../../wareki";
 
 // 受信データの検証ルール（型と長さ上限）。ここに無いキーは無視される
 const RULES: Record<string, FieldRule> = {
@@ -16,31 +17,19 @@ const RULES: Record<string, FieldRule> = {
   submissionDest: { label: "提出先農政局", max: 30 },
 };
 
-function toWareki(y: number, m: number, day: number): string {
-  let era = "";
-  let eraYear = 0;
-  if (y >= 2019) { era = "令和"; eraYear = y - 2018; }
-  else if (y >= 1989) { era = "平成"; eraYear = y - 1988; }
-  else { era = "昭和"; eraYear = y - 1925; }
-  return `${era}${eraYear}年${m}月${day}日`;
-}
-
 function todayWareki(): string {
   // JST（日本標準時 UTC+9）で今日の日付を取得
   const jst = new Date(Date.now() + 9 * 60 * 60 * 1000);
-  const y = jst.getUTCFullYear();
-  const m = jst.getUTCMonth() + 1;
-  const day = jst.getUTCDate();
-  return toWareki(y, m, day);
+  return toWarekiDate(jst.getUTCFullYear(), jst.getUTCMonth() + 1, jst.getUTCDate());
 }
 
 function startDateWareki(dateStr: string): string {
+  // "2026-07-04" 形式を直接分解する（Dateに文字列で渡すとサーバーの
+  // タイムゾーン次第で1日ずれるため使わない）
   if (!dateStr) return "　　年　　月　　日";
-  const d = new Date(dateStr);
-  const y = d.getFullYear();
-  const m = d.getMonth() + 1;
-  const day = d.getDate();
-  return toWareki(y, m, day);
+  const [y, m, d] = dateStr.split("-").map(Number);
+  if (!y || !m || !d) return "　　年　　月　　日";
+  return toWarekiDate(y, m, d);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports

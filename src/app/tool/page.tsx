@@ -4,10 +4,7 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import DocNav from "../components/DocNav";
 import PDFModal from "../components/PDFModal";
-import { DOC_LAST_CHECKED } from "../site";
-
-// ちょっくらのお知らせ登録/アンケートURL
-const CHOKKURA_NOTIFY_URL = "https://forms.gle/hdG1aCmDJCZimr5d8";
+import { CHOKKURA_NOTIFY_URL, DOC_LAST_CHECKED } from "../site";
 
 const PREFECTURES = [
   "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
@@ -40,20 +37,6 @@ const NOSEI_KYOKU: Record<string, string> = {
   "鹿児島県": "九州農政局",
   "沖縄県": "内閣府沖縄総合事務局",
 };
-
-function toWareki(dateStr: string): string {
-  if (!dateStr) return "　　年　　月　　日";
-  const d = new Date(dateStr);
-  const y = d.getFullYear();
-  const m = d.getMonth() + 1;
-  const day = d.getDate();
-  let era = "";
-  let eraYear = 0;
-  if (y >= 2019) { era = "令和"; eraYear = y - 2018; }
-  else if (y >= 1989) { era = "平成"; eraYear = y - 1988; }
-  else { era = "昭和"; eraYear = y - 1925; }
-  return `${era}${eraYear}年${m}月${day}日`;
-}
 
 type FormData = {
   name: string;
@@ -199,10 +182,13 @@ export default function Home() {
       {/* あぜみち サービス紹介 */}
       <div className="bg-white border-b-2 border-green-100 px-4 py-8 text-center">
         <h2 className="text-4xl font-bold text-green-800 mb-2">あぜみち</h2>
-        <p className="text-lg font-bold text-green-700 mb-3">農家の手続きと直販を、もっと簡単に。</p>
+        <p className="text-lg font-bold text-green-700 mb-3">農家の手続きを、もっと簡単に。</p>
         <p className="text-xl font-medium text-gray-700 mb-4">農業の手続き書類を、スマホで簡単に作れます</p>
         <p className="text-base text-gray-600 leading-relaxed max-w-lg mx-auto">
           必要な情報を入力すると、農林水産省や税務署に提出する書類の様式をPDFにできます。内容をご確認のうえ、印刷して窓口に持参するか、オンラインで申請してください。
+        </p>
+        <p className="text-sm text-gray-500 leading-relaxed max-w-lg mx-auto mt-3">
+          つくったものを売る準備ができたら、その先は直販のしくみ『ちょっくら』へ（近日公開）。
         </p>
         <div className="mt-5 flex items-center justify-center gap-5">
           <Link

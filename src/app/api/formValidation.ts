@@ -19,6 +19,7 @@ export type FieldRule = {
 
 export type ValidationResult =
   // 検証済みデータ。既存ルートが form.xxx 形式で参照するため any 値のレコードで返す
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   | { ok: true; form: Record<string, any> }
   | { ok: false; error: string };
 
@@ -27,6 +28,7 @@ export function validateForm(raw: unknown, rules: Record<string, FieldRule>): Va
     return { ok: false, error: "送信データの形式が正しくありません" };
   }
   const src = raw as Record<string, unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const form: Record<string, any> = {};
 
   for (const [key, rule] of Object.entries(rules)) {

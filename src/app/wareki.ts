@@ -9,6 +9,19 @@ const ERA_BASE: Record<string, number> = {
   令和: 2018,
 };
 
+// 西暦の年月日を和暦表記にする。年だけでなく月日も見て、
+// 元号の変わり目（例：2019年4月30日まで＝平成31年）を正しく判定する。
+export function toWarekiDate(y: number, m: number, d: number): string {
+  const t = new Date(y, m - 1, d).getTime();
+  let era: string;
+  let eraYear: number;
+  if (t >= new Date(2019, 4, 1).getTime()) { era = "令和"; eraYear = y - 2018; }
+  else if (t >= new Date(1989, 0, 8).getTime()) { era = "平成"; eraYear = y - 1988; }
+  else if (t >= new Date(1926, 11, 25).getTime()) { era = "昭和"; eraYear = y - 1925; }
+  else { era = "大正"; eraYear = y - 1911; }
+  return `${era}${eraYear}年${m}月${d}日`;
+}
+
 export function isValidWarekiDate(era: string, year: number, month: number, day: number): boolean {
   const base = ERA_BASE[era];
   // 判定材料が揃わないものはここでは弾かない（未入力の扱いは呼び出し側の責務）

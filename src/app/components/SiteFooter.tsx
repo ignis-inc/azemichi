@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { CHOKKURA_NOTIFY_URL } from "../site";
 
 // 全ページ共通フッター（ルートの layout.tsx から全ページに表示）。
 // 「想い」は全ページから動くよう /#omoi（絶対パス）にしている。
@@ -12,13 +11,7 @@ export default function SiteFooter() {
           <nav className="fnav">
             <Link href="/#omoi">想い</Link>
             <Link href="/tool">あぜみち</Link>
-            <a
-              href={CHOKKURA_NOTIFY_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              ちょっくら
-            </a>
+            <Link href="/chokkura">ちょっくら</Link>
             <Link href="/privacy">運営者情報・プライバシー</Link>
           </nav>
         </div>

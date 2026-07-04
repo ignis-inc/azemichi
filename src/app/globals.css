@@ -767,6 +767,20 @@ body {
   .landing .btn {
     transition: none;
   }
+  /* ボタン内矢印のスライドも止める */
+  .landing .btn .arrow {
+    transition: none;
+  }
+  .landing .btn:hover .arrow {
+    transform: none;
+  }
+  /* 書類選択カードの浮き沈みも止める */
+  .doc-card {
+    transition: none;
+  }
+  .doc-card:active {
+    transform: none;
+  }
   /* アコーディオン開閉の記号アニメも止める */
   .landing .faq-item summary::after {
     transition: none;

@@ -25,10 +25,13 @@ type PDFModalProps = {
 export default function PDFModal({ steps, note, buttons, chokkuraCta, onClose, returnFocusRef }: PDFModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   // 親が onClose を毎レンダーで作り直しても副作用が張り直されないよう ref に保持する
+  // （ref の更新は描画中ではなく effect 内で行う）
   const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
   const returnFocusHolder = useRef(returnFocusRef);
-  returnFocusHolder.current = returnFocusRef;
+  useEffect(() => {
+    onCloseRef.current = onClose;
+    returnFocusHolder.current = returnFocusRef;
+  });
 
   useEffect(() => {
     // 開く前にフォーカスされていた要素を覚えておき、閉じたら戻す
