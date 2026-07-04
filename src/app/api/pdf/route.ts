@@ -1,6 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
 import fs from "fs";
+import { validateForm, COMMON_RULES, type FieldRule } from "../formValidation";
+
+// 受信データの検証ルール（型と長さ上限）。ここに無いキーは無視される
+const RULES: Record<string, FieldRule> = {
+  ...COMMON_RULES,
+  farmAddressSame: { label: "自宅住所と同じ", type: "boolean" },
+  farmPrefecture: { label: "事業所住所（都道府県）", max: 10 },
+  farmCityAddress: { label: "事業所住所（市区町村・番地）", max: 100 },
+  farmName: { label: "農場名", max: 50 },
+  grainTypes: { label: "米穀の種類", type: "strings", max: 30, maxItems: 10 },
+  quantity: { label: "年間取扱予定数量", max: 15 },
+  startDate: { label: "事業開始予定日", max: 20 },
+  submissionDest: { label: "提出先農政局", max: 30 },
+};
 
 function toWareki(y: number, m: number, day: number): string {
   let era = "";
@@ -75,7 +89,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "フォントファイルが見つかりません" }, { status: 500 });
     }
 
-    const form = await request.json();
+    const checked = validateForm(await request.json(), RULES);
+    if (!checked.ok) {
+      return NextResponse.json({ error: checked.error }, { status: 400 });
+    }
+    const form = checked.form;
 
     const nokyo = form.prefecture ? (NOSEI_KYOKU[form.prefecture] ?? "") : "";
     // 画面で利用者が確認・修正した提出先を優先。未入力なら都道府県から自動算出。

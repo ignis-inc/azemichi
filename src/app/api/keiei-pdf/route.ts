@@ -1,6 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
 import fs from "fs";
+import { validateForm, COMMON_RULES, warekiRules, type FieldRule } from "../formValidation";
+
+// 受信データの検証ルール（型と長さ上限）。ここに無いキーは無視される
+const RULES: Record<string, FieldRule> = {
+  ...COMMON_RULES,
+  ...warekiRules("dob", "生年月日"),
+  nenji: { label: "申請年産", max: 4 },
+  applicationStatus: { label: "申請区分", max: 50 },
+  managementType: { label: "経営形態", max: 50 },
+  certificationStatus: { label: "認定状況", max: 50 },
+  applyGeta: { label: "ゲタ対策", max: 20 },
+  applyNarashi: { label: "ナラシ対策", max: 20 },
+  applyWataden: { label: "水田活用の直接支払交付金", max: 20 },
+  watadenSub: { label: "水田活用の申請内容", type: "strings", max: 50, maxItems: 10 },
+  bankStatus: { label: "口座情報", max: 20 },
+  bankName: { label: "金融機関名", max: 50 },
+  branchName: { label: "支店名", max: 50 },
+  accountType: { label: "口座種別", max: 10 },
+  accountNumber: { label: "口座番号", max: 20 },
+  accountHolder: { label: "口座名義", max: 50 },
+  envCheck: { label: "環境と調和のとれた農業生産の実施", type: "boolean" },
+  privacyCheck: { label: "個人情報取扱いへの同意", type: "boolean" },
+};
 
 function toWareki(y: number, m: number, day: number): string {
   let era = "";
@@ -40,7 +63,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "フォントファイルが見つかりません" }, { status: 500 });
     }
 
-    const form = await request.json();
+    const checked = validateForm(await request.json(), RULES);
+    if (!checked.ok) {
+      return NextResponse.json({ error: checked.error }, { status: 400 });
+    }
+    const form = checked.form;
 
     const dobText = (form.dobEra && form.dobYear && form.dobMonth && form.dobDay)
       ? `${form.dobEra}${form.dobYear}年${form.dobMonth}月${form.dobDay}日`

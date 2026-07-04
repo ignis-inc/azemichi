@@ -1,6 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
 import fs from "fs";
+import { validateForm, COMMON_RULES, warekiRules, type FieldRule } from "../formValidation";
+
+// 受信データの検証ルール（型と長さ上限）。ここに無いキーは無視される
+const RULES: Record<string, FieldRule> = {
+  ...COMMON_RULES,
+  ...warekiRules("dob", "生年月日"),
+  ...warekiRules("start", "事業開始年月日"),
+  myNumber: { label: "個人番号", max: 20 },
+  farmName: { label: "屋号（農場名）", max: 50 },
+  farmTypes: { label: "農業の種類", type: "strings", max: 30, maxItems: 10 },
+  taxOffice: { label: "提出先税務署名", max: 50 },
+  bookType: { label: "帳簿の種類", max: 50 },
+};
 
 function toWareki(y: number, m: number, day: number): string {
   let era = "";
@@ -39,7 +52,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "フォントファイルが見つかりません" }, { status: 500 });
     }
 
-    const form = await request.json();
+    const checked = validateForm(await request.json(), RULES);
+    if (!checked.ok) {
+      return NextResponse.json({ error: checked.error }, { status: 400 });
+    }
+    const form = checked.form;
 
     const dobText = (form.dobEra && form.dobYear && form.dobMonth && form.dobDay)
       ? `${form.dobEra}${form.dobYear}年${form.dobMonth}月${form.dobDay}日`

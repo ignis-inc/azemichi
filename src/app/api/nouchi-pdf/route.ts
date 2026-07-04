@@ -1,6 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
 import fs from "fs";
+import { validateForm, COMMON_RULES, warekiRules, type FieldRule } from "../formValidation";
+
+// 受信データの検証ルール（型と長さ上限）。ここに無いキーは無視される
+const RULES: Record<string, FieldRule> = {
+  ...COMMON_RULES,
+  nationality: { label: "国籍", max: 30 },
+  landCity: { label: "所在地（市区町村）", max: 50 },
+  landAza: { label: "所在地（字）", max: 50 },
+  landChiban: { label: "地番", max: 20 },
+  landType: { label: "地目", max: 20 },
+  area: { label: "面積", max: 15 },
+  acquisitionReason: { label: "権利取得の原因", max: 50 },
+  rightType: { label: "権利の種類", max: 50 },
+  ...warekiRules("acq", "権利取得年月日"),
+  committeeName: { label: "提出先農業委員会名", max: 50 },
+};
 
 function toWareki(y: number, m: number, day: number): string {
   let era = "";
@@ -39,7 +55,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "フォントファイルが見つかりません" }, { status: 500 });
     }
 
-    const form = await request.json();
+    const checked = validateForm(await request.json(), RULES);
+    if (!checked.ok) {
+      return NextResponse.json({ error: checked.error }, { status: 400 });
+    }
+    const form = checked.form;
 
     // 地番は慣例どおり「123番」と印字する。
     // 「123」→「123番」／「123番」「123番4」→そのまま／「123番地」→「123番」に直し、二重表記を防ぐ。

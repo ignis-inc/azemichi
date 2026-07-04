@@ -1,6 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
 import fs from "fs";
+import { validateForm, COMMON_RULES, warekiRules, type FieldRule } from "../formValidation";
+
+// 受信データの検証ルール（型と長さ上限）。ここに無いキーは無視される
+const RULES: Record<string, FieldRule> = {
+  ...COMMON_RULES,
+  ...warekiRules("dob", "生年月日"),
+  gender: { label: "性別", max: 5 },
+  farmTypes: { label: "農業の種類", type: "strings", max: 30, maxItems: 10 },
+  workDays: { label: "農業従事日数", max: 15 },
+  farmArea: { label: "農地面積", max: 15 },
+  nenkinType: { label: "国民年金の被保険者種別", max: 20 },
+  submissionDest: { label: "提出先の区分", max: 30 },
+  submissionName: { label: "提出先の名称", max: 50 },
+  monthlyPremium: { label: "月額保険料", type: "number", min: 0, maxNum: 1000000 },
+};
 
 function toWareki(y: number, m: number, day: number): string {
   let era = "";
@@ -43,7 +58,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "フォントファイルが見つかりません" }, { status: 500 });
     }
 
-    const form = await request.json();
+    const checked = validateForm(await request.json(), RULES);
+    if (!checked.ok) {
+      return NextResponse.json({ error: checked.error }, { status: 400 });
+    }
+    const form = checked.form;
 
     const farmTypeText = form.farmTypes?.length > 0 ? form.farmTypes.join("・") : "（未選択）";
 
