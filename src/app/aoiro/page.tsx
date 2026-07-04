@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import DocNav from "../components/DocNav";
 import PDFModal from "../components/PDFModal";
 import { DOC_LAST_CHECKED } from "../site";
@@ -52,6 +52,8 @@ type AoiroFormData = {
 export default function AoiroPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  // モーダルを閉じたときにフォーカスを戻す先（作成ボタン）
+  const pdfButtonRef = useRef<HTMLButtonElement>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState<AoiroFormData>({
     name: "",
@@ -142,7 +144,7 @@ export default function AoiroPage() {
   const startEraYears = ERA_YEARS[form.startEra] ?? [];
 
   const inputClass =
-    "w-full rounded-lg border-2 border-green-200 bg-white px-4 py-3 text-lg focus:border-green-500 focus:outline-none transition-colors";
+    "w-full rounded-lg border-2 border-green-200 bg-white px-4 py-3 text-lg focus:border-green-500 transition-colors";
   const labelClass = "block text-base font-bold text-gray-700 mb-1";
   const sectionClass = "bg-white rounded-2xl shadow-sm border border-green-100 p-6 mb-6";
   const radioClass = (active: boolean) =>
@@ -154,6 +156,7 @@ export default function AoiroPage() {
     <div className="min-h-screen bg-green-50">
       {showModal && (
         <PDFModal
+          returnFocusRef={pdfButtonRef}
           steps={[
             "このPDFを印刷してください",
             "最寄りの税務署に提出してください",
@@ -210,41 +213,41 @@ export default function AoiroPage() {
           </h2>
           <div className="space-y-5">
             <div>
-              <label className={labelClass}>氏名</label>
-              <input type="text" name="name" value={form.name} onChange={handleChange}
+              <label className={labelClass} htmlFor="aoiro-name">氏名</label>
+              <input type="text" id="aoiro-name" name="name" value={form.name} onChange={handleChange}
                 placeholder="例：田中　太郎" className={inputClass} />
               {errors.name && <p className="text-red-600 text-base mt-2">{errors.name}</p>}
             </div>
             <div>
-              <label className={labelClass}>ふりがな</label>
-              <input type="text" name="nameKana" value={form.nameKana} onChange={handleChange}
+              <label className={labelClass} htmlFor="aoiro-nameKana">ふりがな</label>
+              <input type="text" id="aoiro-nameKana" name="nameKana" value={form.nameKana} onChange={handleChange}
                 placeholder="例：たなか　たろう" className={inputClass} />
             </div>
 
             {/* 生年月日 */}
             <div>
-              <label className={labelClass}>生年月日</label>
+              <label className={labelClass} htmlFor="aoiro-dobEra">生年月日</label>
               <div className="flex flex-wrap gap-2 items-center">
-                <select name="dobEra" value={form.dobEra} onChange={handleChange}
-                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500 focus:outline-none">
+                <select id="aoiro-dobEra" aria-label="生年月日（年号）" name="dobEra" value={form.dobEra} onChange={handleChange}
+                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500">
                   {Object.keys(ERA_YEARS).map((era) => (
                     <option key={era} value={era}>{era}</option>
                   ))}
                 </select>
-                <select name="dobYear" value={form.dobYear} onChange={handleChange}
-                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500 focus:outline-none">
+                <select id="aoiro-dobYear" aria-label="生年月日（年）" name="dobYear" value={form.dobYear} onChange={handleChange}
+                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500">
                   {dobEraYears.map((y) => (
                     <option key={y} value={String(y)}>{y}年</option>
                   ))}
                 </select>
-                <select name="dobMonth" value={form.dobMonth} onChange={handleChange}
-                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500 focus:outline-none">
+                <select id="aoiro-dobMonth" aria-label="生年月日（月）" name="dobMonth" value={form.dobMonth} onChange={handleChange}
+                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500">
                   {MONTHS.map((m) => (
                     <option key={m} value={String(m)}>{m}月</option>
                   ))}
                 </select>
-                <select name="dobDay" value={form.dobDay} onChange={handleChange}
-                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500 focus:outline-none">
+                <select id="aoiro-dobDay" aria-label="生年月日（日）" name="dobDay" value={form.dobDay} onChange={handleChange}
+                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500">
                   {DAYS.map((d) => (
                     <option key={d} value={String(d)}>{d}日</option>
                   ))}
@@ -254,8 +257,8 @@ export default function AoiroPage() {
 
             {/* 住所 */}
             <div>
-              <label className={labelClass}>住所</label>
-              <select name="prefecture" value={form.prefecture} onChange={handleChange}
+              <label className={labelClass} htmlFor="aoiro-prefecture">住所</label>
+              <select id="aoiro-prefecture" aria-label="住所（都道府県）" name="prefecture" value={form.prefecture} onChange={handleChange}
                 className={`${inputClass} mb-2`}>
                 <option value="">都道府県を選択</option>
                 {PREFECTURES.map((p) => (
@@ -263,23 +266,24 @@ export default function AoiroPage() {
                 ))}
               </select>
               {errors.prefecture && <p className="text-red-600 text-base mb-2">{errors.prefecture}</p>}
-              <input type="text" name="cityAddress" value={form.cityAddress} onChange={handleChange}
+              <input type="text" id="aoiro-cityAddress" aria-label="住所（市区町村・番地）" name="cityAddress" value={form.cityAddress} onChange={handleChange}
                 placeholder="例：○○市○○町1-2-3" className={inputClass} />
               {errors.cityAddress && <p className="text-red-600 text-base mt-2">{errors.cityAddress}</p>}
             </div>
 
             {/* 電話番号 */}
             <div>
-              <label className={labelClass}>電話番号</label>
-              <input type="tel" name="phone" value={form.phone} onChange={handleChange}
+              <label className={labelClass} htmlFor="aoiro-phone">電話番号</label>
+              <input type="tel" id="aoiro-phone" name="phone" value={form.phone} onChange={handleChange}
                 placeholder="例：090-1234-5678" className={inputClass} />
             </div>
 
             {/* 個人番号 */}
             <div>
-              <label className={labelClass}>個人番号（マイナンバー）</label>
+              <label className={labelClass} htmlFor="aoiro-myNumber">個人番号（マイナンバー）</label>
               <input
                 type="text"
+                id="aoiro-myNumber"
                 inputMode="numeric"
                 maxLength={12}
                 name="myNumber"
@@ -309,8 +313,8 @@ export default function AoiroPage() {
 
             {/* 屋号 */}
             <div>
-              <label className={labelClass}>屋号（農場名）</label>
-              <input type="text" name="farmName" value={form.farmName} onChange={handleChange}
+              <label className={labelClass} htmlFor="aoiro-farmName">屋号（農場名）</label>
+              <input type="text" id="aoiro-farmName" name="farmName" value={form.farmName} onChange={handleChange}
                 placeholder="例：田中農場（任意）" className={inputClass} />
             </div>
 
@@ -335,28 +339,28 @@ export default function AoiroPage() {
 
             {/* 事業開始年月日 */}
             <div>
-              <label className={labelClass}>事業開始年月日</label>
+              <label className={labelClass} htmlFor="aoiro-startEra">事業開始年月日</label>
               <div className="flex flex-wrap gap-2 items-center">
-                <select name="startEra" value={form.startEra} onChange={handleChange}
-                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500 focus:outline-none">
+                <select id="aoiro-startEra" aria-label="事業開始年月日（年号）" name="startEra" value={form.startEra} onChange={handleChange}
+                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500">
                   {Object.keys(ERA_YEARS).map((era) => (
                     <option key={era} value={era}>{era}</option>
                   ))}
                 </select>
-                <select name="startYear" value={form.startYear} onChange={handleChange}
-                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500 focus:outline-none">
+                <select id="aoiro-startYear" aria-label="事業開始年月日（年）" name="startYear" value={form.startYear} onChange={handleChange}
+                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500">
                   {startEraYears.map((y) => (
                     <option key={y} value={String(y)}>{y}年</option>
                   ))}
                 </select>
-                <select name="startMonth" value={form.startMonth} onChange={handleChange}
-                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500 focus:outline-none">
+                <select id="aoiro-startMonth" aria-label="事業開始年月日（月）" name="startMonth" value={form.startMonth} onChange={handleChange}
+                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500">
                   {MONTHS.map((m) => (
                     <option key={m} value={String(m)}>{m}月</option>
                   ))}
                 </select>
-                <select name="startDay" value={form.startDay} onChange={handleChange}
-                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500 focus:outline-none">
+                <select id="aoiro-startDay" aria-label="事業開始年月日（日）" name="startDay" value={form.startDay} onChange={handleChange}
+                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500">
                   {DAYS.map((d) => (
                     <option key={d} value={String(d)}>{d}日</option>
                   ))}
@@ -366,8 +370,8 @@ export default function AoiroPage() {
 
             {/* 提出先税務署名 */}
             <div>
-              <label className={labelClass}>提出先税務署名</label>
-              <input type="text" name="taxOffice" value={form.taxOffice} onChange={handleChange}
+              <label className={labelClass} htmlFor="aoiro-taxOffice">提出先税務署名</label>
+              <input type="text" id="aoiro-taxOffice" name="taxOffice" value={form.taxOffice} onChange={handleChange}
                 placeholder="例：新宿税務署" className={inputClass} />
             </div>
           </div>
@@ -406,6 +410,7 @@ export default function AoiroPage() {
 
         {/* 生成ボタン */}
         <button
+          ref={pdfButtonRef}
           onClick={generatePDF}
           disabled={isGenerating}
           className="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 disabled:bg-green-400 text-white text-xl font-bold py-5 px-6 rounded-2xl shadow-lg transition-colors"

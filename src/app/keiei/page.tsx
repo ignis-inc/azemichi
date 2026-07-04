@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import DocNav from "../components/DocNav";
 import PDFModal from "../components/PDFModal";
 import { DOC_LAST_CHECKED } from "../site";
@@ -61,6 +61,8 @@ type KeieiFormData = {
 export default function KeieiPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  // モーダルを閉じたときにフォーカスを戻す先（作成ボタン）
+  const pdfButtonRef = useRef<HTMLButtonElement>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState<KeieiFormData>({
     nenji: "6",
@@ -155,7 +157,7 @@ export default function KeieiPage() {
   const eraYears = ERA_YEARS[form.dobEra] ?? [];
 
   const inputClass =
-    "w-full rounded-lg border-2 border-green-200 bg-white px-4 py-3 text-lg focus:border-green-500 focus:outline-none transition-colors";
+    "w-full rounded-lg border-2 border-green-200 bg-white px-4 py-3 text-lg focus:border-green-500 transition-colors";
   const labelClass = "block text-base font-bold text-gray-700 mb-1";
   const sectionClass = "bg-white rounded-2xl shadow-sm border border-green-100 p-6 mb-6";
   const radioClass = (active: boolean) =>
@@ -167,6 +169,7 @@ export default function KeieiPage() {
     <div className="min-h-screen bg-green-50">
       {showModal && (
         <PDFModal
+          returnFocusRef={pdfButtonRef}
           steps={[
             "このPDFを印刷してください",
             "地域農業再生協議会に提出してください（提出期限：毎年4月1日〜6月30日）",
@@ -225,9 +228,9 @@ export default function KeieiPage() {
 
             {/* 申請年産 */}
             <div>
-              <label className={labelClass}>申請年産</label>
-              <select name="nenji" value={form.nenji} onChange={handleChange}
-                className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500 focus:outline-none">
+              <label className={labelClass} htmlFor="keiei-nenji">申請年産</label>
+              <select id="keiei-nenji" name="nenji" value={form.nenji} onChange={handleChange}
+                className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500">
                 {["6", "7", "8"].map((y) => (
                   <option key={y} value={y}>令和{y}年産</option>
                 ))}
@@ -251,41 +254,45 @@ export default function KeieiPage() {
 
             {/* 氏名 */}
             <div>
-              <label className={labelClass}>氏名または法人名</label>
-              <input type="text" name="name" value={form.name} onChange={handleChange}
+              <label className={labelClass} htmlFor="keiei-name">氏名または法人名</label>
+              <input type="text" id="keiei-name" name="name" value={form.name} onChange={handleChange}
                 placeholder="例：田中　太郎" className={inputClass} />
               {errors.name && <p className="text-red-600 text-base mt-2">{errors.name}</p>}
             </div>
             <div>
-              <label className={labelClass}>ふりがな</label>
-              <input type="text" name="nameKana" value={form.nameKana} onChange={handleChange}
+              <label className={labelClass} htmlFor="keiei-nameKana">ふりがな</label>
+              <input type="text" id="keiei-nameKana" name="nameKana" value={form.nameKana} onChange={handleChange}
                 placeholder="例：たなか　たろう" className={inputClass} />
             </div>
 
             {/* 生年月日 */}
             <div>
-              <label className={labelClass}>生年月日</label>
+              <label className={labelClass} htmlFor="keiei-dobEra">生年月日</label>
               <div className="flex flex-wrap gap-2 items-center">
-                <select name="dobEra" value={form.dobEra} onChange={handleChange}
-                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500 focus:outline-none">
+                <select id="keiei-dobEra" name="dobEra" value={form.dobEra} onChange={handleChange}
+                  aria-label="生年月日（年号）"
+                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500">
                   {Object.keys(ERA_YEARS).map((era) => (
                     <option key={era} value={era}>{era}</option>
                   ))}
                 </select>
-                <select name="dobYear" value={form.dobYear} onChange={handleChange}
-                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500 focus:outline-none">
+                <select id="keiei-dobYear" name="dobYear" value={form.dobYear} onChange={handleChange}
+                  aria-label="生年月日（年）"
+                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500">
                   {eraYears.map((y) => (
                     <option key={y} value={String(y)}>{y}年</option>
                   ))}
                 </select>
-                <select name="dobMonth" value={form.dobMonth} onChange={handleChange}
-                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500 focus:outline-none">
+                <select id="keiei-dobMonth" name="dobMonth" value={form.dobMonth} onChange={handleChange}
+                  aria-label="生年月日（月）"
+                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500">
                   {MONTHS.map((m) => (
                     <option key={m} value={String(m)}>{m}月</option>
                   ))}
                 </select>
-                <select name="dobDay" value={form.dobDay} onChange={handleChange}
-                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500 focus:outline-none">
+                <select id="keiei-dobDay" name="dobDay" value={form.dobDay} onChange={handleChange}
+                  aria-label="生年月日（日）"
+                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500">
                   {DAYS.map((d) => (
                     <option key={d} value={String(d)}>{d}日</option>
                   ))}
@@ -330,8 +337,9 @@ export default function KeieiPage() {
 
             {/* 住所 */}
             <div>
-              <label className={labelClass}>住所</label>
-              <select name="prefecture" value={form.prefecture} onChange={handleChange}
+              <label className={labelClass} htmlFor="keiei-prefecture">住所</label>
+              <select id="keiei-prefecture" name="prefecture" value={form.prefecture} onChange={handleChange}
+                aria-label="住所（都道府県）"
                 className={`${inputClass} mb-2`}>
                 <option value="">都道府県を選択</option>
                 {PREFECTURES.map((p) => (
@@ -339,15 +347,16 @@ export default function KeieiPage() {
                 ))}
               </select>
               {errors.prefecture && <p className="text-red-600 text-base mb-2">{errors.prefecture}</p>}
-              <input type="text" name="cityAddress" value={form.cityAddress} onChange={handleChange}
+              <input type="text" id="keiei-cityAddress" name="cityAddress" value={form.cityAddress} onChange={handleChange}
+                aria-label="住所（市区町村・番地）"
                 placeholder="例：○○市○○町1-2-3" className={inputClass} />
               {errors.cityAddress && <p className="text-red-600 text-base mt-2">{errors.cityAddress}</p>}
             </div>
 
             {/* 電話番号 */}
             <div>
-              <label className={labelClass}>電話番号</label>
-              <input type="tel" name="phone" value={form.phone} onChange={handleChange}
+              <label className={labelClass} htmlFor="keiei-phone">電話番号</label>
+              <input type="tel" id="keiei-phone" name="phone" value={form.phone} onChange={handleChange}
                 placeholder="例：090-1234-5678" className={inputClass} />
             </div>
           </div>
@@ -496,13 +505,13 @@ export default function KeieiPage() {
             {form.bankStatus === "新規登録・変更" && (
               <div className="space-y-4 mt-2 pl-4 border-l-4 border-green-300">
                 <div>
-                  <label className={labelClass}>金融機関名</label>
-                  <input type="text" name="bankName" value={form.bankName} onChange={handleChange}
+                  <label className={labelClass} htmlFor="keiei-bankName">金融機関名</label>
+                  <input type="text" id="keiei-bankName" name="bankName" value={form.bankName} onChange={handleChange}
                     placeholder="例：○○銀行、○○農業協同組合" className={inputClass} />
                 </div>
                 <div>
-                  <label className={labelClass}>支店名</label>
-                  <input type="text" name="branchName" value={form.branchName} onChange={handleChange}
+                  <label className={labelClass} htmlFor="keiei-branchName">支店名</label>
+                  <input type="text" id="keiei-branchName" name="branchName" value={form.branchName} onChange={handleChange}
                     placeholder="例：○○支店" className={inputClass} />
                 </div>
                 <div>
@@ -519,14 +528,14 @@ export default function KeieiPage() {
                   </div>
                 </div>
                 <div>
-                  <label className={labelClass}>口座番号</label>
-                  <input type="text" name="accountNumber" value={form.accountNumber}
+                  <label className={labelClass} htmlFor="keiei-accountNumber">口座番号</label>
+                  <input type="text" id="keiei-accountNumber" name="accountNumber" value={form.accountNumber}
                     onChange={handleChange} inputMode="numeric"
                     placeholder="例：1234567" className={inputClass} />
                 </div>
                 <div>
-                  <label className={labelClass}>口座名義（カタカナ）</label>
-                  <input type="text" name="accountHolder" value={form.accountHolder}
+                  <label className={labelClass} htmlFor="keiei-accountHolder">口座名義（カタカナ）</label>
+                  <input type="text" id="keiei-accountHolder" name="accountHolder" value={form.accountHolder}
                     onChange={handleChange}
                     placeholder="例：タナカ　タロウ" className={inputClass} />
                 </div>
@@ -559,6 +568,7 @@ export default function KeieiPage() {
 
         {/* 生成ボタン */}
         <button
+          ref={pdfButtonRef}
           onClick={generatePDF}
           disabled={isGenerating}
           className="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 disabled:bg-green-400 text-white text-xl font-bold py-5 px-6 rounded-2xl shadow-lg transition-colors"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import DocNav from "../components/DocNav";
 import PDFModal from "../components/PDFModal";
 import { DOC_LAST_CHECKED } from "../site";
@@ -51,6 +51,8 @@ type FormData = {
 export default function NenkinPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  // モーダルを閉じたときにフォーカスを戻す先（作成ボタン）
+  const pdfButtonRef = useRef<HTMLButtonElement>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState<FormData>({
     name: "",
@@ -128,7 +130,7 @@ export default function NenkinPage() {
   const eraYears = ERA_YEARS[form.dobEra] ?? [];
 
   const inputClass =
-    "w-full rounded-lg border-2 border-green-200 bg-white px-4 py-3 text-lg focus:border-green-500 focus:outline-none transition-colors";
+    "w-full rounded-lg border-2 border-green-200 bg-white px-4 py-3 text-lg focus:border-green-500 transition-colors";
   const labelClass = "block text-base font-bold text-gray-700 mb-1";
   const sectionClass = "bg-white rounded-2xl shadow-sm border border-green-100 p-6 mb-6";
   const radioClass = (active: boolean) =>
@@ -140,6 +142,7 @@ export default function NenkinPage() {
     <div className="min-h-screen bg-green-50">
       {showModal && (
         <PDFModal
+          returnFocusRef={pdfButtonRef}
           steps={[
             "このPDFを印刷してください",
             "最寄りの農協または農業委員会に持参してください",
@@ -194,41 +197,41 @@ export default function NenkinPage() {
           </h2>
           <div className="space-y-5">
             <div>
-              <label className={labelClass}>氏名</label>
-              <input type="text" name="name" value={form.name} onChange={handleChange}
+              <label className={labelClass} htmlFor="nenkin-name">氏名</label>
+              <input type="text" id="nenkin-name" name="name" value={form.name} onChange={handleChange}
                 placeholder="例：田中　太郎" className={inputClass} />
               {errors.name && <p className="text-red-600 text-base mt-2">{errors.name}</p>}
             </div>
             <div>
-              <label className={labelClass}>ふりがな</label>
-              <input type="text" name="nameKana" value={form.nameKana} onChange={handleChange}
+              <label className={labelClass} htmlFor="nenkin-nameKana">ふりがな</label>
+              <input type="text" id="nenkin-nameKana" name="nameKana" value={form.nameKana} onChange={handleChange}
                 placeholder="例：たなか　たろう" className={inputClass} />
             </div>
 
             {/* 生年月日 */}
             <div>
-              <label className={labelClass}>生年月日</label>
+              <label className={labelClass} htmlFor="nenkin-dobEra">生年月日</label>
               <div className="flex flex-wrap gap-2 items-center">
-                <select name="dobEra" value={form.dobEra} onChange={handleChange}
-                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500 focus:outline-none">
+                <select id="nenkin-dobEra" aria-label="生年月日（年号）" name="dobEra" value={form.dobEra} onChange={handleChange}
+                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500">
                   {Object.keys(ERA_YEARS).map((era) => (
                     <option key={era} value={era}>{era}</option>
                   ))}
                 </select>
-                <select name="dobYear" value={form.dobYear} onChange={handleChange}
-                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500 focus:outline-none">
+                <select id="nenkin-dobYear" aria-label="生年月日（年）" name="dobYear" value={form.dobYear} onChange={handleChange}
+                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500">
                   {eraYears.map((y) => (
                     <option key={y} value={String(y)}>{y}年</option>
                   ))}
                 </select>
-                <select name="dobMonth" value={form.dobMonth} onChange={handleChange}
-                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500 focus:outline-none">
+                <select id="nenkin-dobMonth" aria-label="生年月日（月）" name="dobMonth" value={form.dobMonth} onChange={handleChange}
+                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500">
                   {MONTHS.map((m) => (
                     <option key={m} value={String(m)}>{m}月</option>
                   ))}
                 </select>
-                <select name="dobDay" value={form.dobDay} onChange={handleChange}
-                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500 focus:outline-none">
+                <select id="nenkin-dobDay" aria-label="生年月日（日）" name="dobDay" value={form.dobDay} onChange={handleChange}
+                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500">
                   {DAYS.map((d) => (
                     <option key={d} value={String(d)}>{d}日</option>
                   ))}
@@ -252,8 +255,8 @@ export default function NenkinPage() {
 
             {/* 住所 */}
             <div>
-              <label className={labelClass}>住所</label>
-              <select name="prefecture" value={form.prefecture} onChange={handleChange}
+              <label className={labelClass} htmlFor="nenkin-prefecture">住所</label>
+              <select id="nenkin-prefecture" aria-label="住所（都道府県）" name="prefecture" value={form.prefecture} onChange={handleChange}
                 className={`${inputClass} mb-2`}>
                 <option value="">都道府県を選択</option>
                 {PREFECTURES.map((p) => (
@@ -261,15 +264,15 @@ export default function NenkinPage() {
                 ))}
               </select>
               {errors.prefecture && <p className="text-red-600 text-base mb-2">{errors.prefecture}</p>}
-              <input type="text" name="cityAddress" value={form.cityAddress} onChange={handleChange}
+              <input type="text" id="nenkin-cityAddress" aria-label="住所（市区町村・番地）" name="cityAddress" value={form.cityAddress} onChange={handleChange}
                 placeholder="例：○○市○○町1-2-3" className={inputClass} />
               {errors.cityAddress && <p className="text-red-600 text-base mt-2">{errors.cityAddress}</p>}
             </div>
 
             {/* 電話番号 */}
             <div>
-              <label className={labelClass}>電話番号</label>
-              <input type="tel" name="phone" value={form.phone} onChange={handleChange}
+              <label className={labelClass} htmlFor="nenkin-phone">電話番号</label>
+              <input type="tel" id="nenkin-phone" name="phone" value={form.phone} onChange={handleChange}
                 placeholder="例：090-1234-5678" className={inputClass} />
             </div>
           </div>
@@ -302,9 +305,9 @@ export default function NenkinPage() {
 
             {/* 農業従事日数 */}
             <div>
-              <label className={labelClass}>農業従事日数（年間）</label>
+              <label className={labelClass} htmlFor="nenkin-workDays">農業従事日数（年間）</label>
               <div className="flex items-center gap-3">
-                <input type="number" name="workDays" value={form.workDays} onChange={handleChange}
+                <input type="number" id="nenkin-workDays" name="workDays" value={form.workDays} onChange={handleChange}
                   placeholder="0" min="0" max="365"
                   className={`${inputClass} flex-1`} />
                 <span className="text-lg text-gray-600 whitespace-nowrap">日</span>
@@ -313,9 +316,9 @@ export default function NenkinPage() {
 
             {/* 農地面積 */}
             <div>
-              <label className={labelClass}>農地面積</label>
+              <label className={labelClass} htmlFor="nenkin-farmArea">農地面積</label>
               <div className="flex items-center gap-3">
-                <input type="number" name="farmArea" value={form.farmArea} onChange={handleChange}
+                <input type="number" id="nenkin-farmArea" name="farmArea" value={form.farmArea} onChange={handleChange}
                   placeholder="0.00" min="0" step="0.01"
                   className={`${inputClass} flex-1`} />
                 <span className="text-lg text-gray-600 whitespace-nowrap">ha</span>
@@ -349,7 +352,7 @@ export default function NenkinPage() {
             保険料情報
           </h2>
           <div>
-            <label className={labelClass}>月額保険料</label>
+            <label className={labelClass} htmlFor="nenkin-monthlyPremium">月額保険料</label>
             <div className="bg-green-50 rounded-xl p-5 border-2 border-green-200">
               <div className="text-center mb-4">
                 <span className="text-4xl font-bold text-green-700">
@@ -358,6 +361,7 @@ export default function NenkinPage() {
                 <span className="text-lg text-gray-600 ml-2">円 / 月</span>
               </div>
               <input
+                id="nenkin-monthlyPremium"
                 type="range"
                 min="20000"
                 max="67000"
@@ -397,8 +401,8 @@ export default function NenkinPage() {
               </div>
             </div>
             <div>
-              <label className={labelClass}>提出先の名称</label>
-              <input type="text" name="submissionName" value={form.submissionName}
+              <label className={labelClass} htmlFor="nenkin-submissionName">提出先の名称</label>
+              <input type="text" id="nenkin-submissionName" name="submissionName" value={form.submissionName}
                 onChange={handleChange}
                 placeholder="例：○○農業協同組合、○○市農業委員会"
                 className={inputClass} />
@@ -408,6 +412,7 @@ export default function NenkinPage() {
 
         {/* 生成ボタン */}
         <button
+          ref={pdfButtonRef}
           onClick={generatePDF}
           disabled={isGenerating}
           className="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 disabled:bg-green-400 text-white text-xl font-bold py-5 px-6 rounded-2xl shadow-lg transition-colors"

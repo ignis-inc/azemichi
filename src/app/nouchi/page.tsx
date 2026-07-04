@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import DocNav from "../components/DocNav";
 import PDFModal from "../components/PDFModal";
 import { DOC_LAST_CHECKED } from "../site";
@@ -52,6 +52,8 @@ type NouchiFormData = {
 export default function NouchiPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  // モーダルを閉じたときにフォーカスを戻す先（作成ボタン）
+  const pdfButtonRef = useRef<HTMLButtonElement>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState<NouchiFormData>({
     name: "",
@@ -120,7 +122,7 @@ export default function NouchiPage() {
   const acqEraYears = ERA_YEARS[form.acqEra] ?? [];
 
   const inputClass =
-    "w-full rounded-lg border-2 border-green-200 bg-white px-4 py-3 text-lg focus:border-green-500 focus:outline-none transition-colors";
+    "w-full rounded-lg border-2 border-green-200 bg-white px-4 py-3 text-lg focus:border-green-500 transition-colors";
   const labelClass = "block text-base font-bold text-gray-700 mb-1";
   const sectionClass = "bg-white rounded-2xl shadow-sm border border-green-100 p-6 mb-6";
   const radioClass = (active: boolean) =>
@@ -132,6 +134,7 @@ export default function NouchiPage() {
     <div className="min-h-screen bg-green-50">
       {showModal && (
         <PDFModal
+          returnFocusRef={pdfButtonRef}
           steps={[
             "このPDFを印刷してください",
             "農地のある市区町村の農業委員会に提出してください",
@@ -186,21 +189,22 @@ export default function NouchiPage() {
           </h2>
           <div className="space-y-5">
             <div>
-              <label className={labelClass}>氏名</label>
-              <input type="text" name="name" value={form.name} onChange={handleChange}
+              <label className={labelClass} htmlFor="nouchi-name">氏名</label>
+              <input type="text" id="nouchi-name" name="name" value={form.name} onChange={handleChange}
                 placeholder="例：田中　太郎" className={inputClass} />
               {errors.name && <p className="text-red-600 text-base mt-2">{errors.name}</p>}
             </div>
             <div>
-              <label className={labelClass}>ふりがな</label>
-              <input type="text" name="nameKana" value={form.nameKana} onChange={handleChange}
+              <label className={labelClass} htmlFor="nouchi-nameKana">ふりがな</label>
+              <input type="text" id="nouchi-nameKana" name="nameKana" value={form.nameKana} onChange={handleChange}
                 placeholder="例：たなか　たろう" className={inputClass} />
             </div>
 
             {/* 住所 */}
             <div>
-              <label className={labelClass}>住所</label>
-              <select name="prefecture" value={form.prefecture} onChange={handleChange}
+              <label className={labelClass} htmlFor="nouchi-prefecture">住所</label>
+              <select id="nouchi-prefecture" name="prefecture" value={form.prefecture} onChange={handleChange}
+                aria-label="住所（都道府県）"
                 className={`${inputClass} mb-2`}>
                 <option value="">都道府県を選択</option>
                 {PREFECTURES.map((p) => (
@@ -208,15 +212,16 @@ export default function NouchiPage() {
                 ))}
               </select>
               {errors.prefecture && <p className="text-red-600 text-base mb-2">{errors.prefecture}</p>}
-              <input type="text" name="cityAddress" value={form.cityAddress} onChange={handleChange}
+              <input type="text" id="nouchi-cityAddress" name="cityAddress" value={form.cityAddress} onChange={handleChange}
+                aria-label="住所（市区町村・番地）"
                 placeholder="例：○○市○○町1-2-3" className={inputClass} />
               {errors.cityAddress && <p className="text-red-600 text-base mt-2">{errors.cityAddress}</p>}
             </div>
 
             {/* 電話番号 */}
             <div>
-              <label className={labelClass}>電話番号</label>
-              <input type="tel" name="phone" value={form.phone} onChange={handleChange}
+              <label className={labelClass} htmlFor="nouchi-phone">電話番号</label>
+              <input type="tel" id="nouchi-phone" name="phone" value={form.phone} onChange={handleChange}
                 placeholder="例：090-1234-5678" className={inputClass} />
             </div>
 
@@ -246,13 +251,16 @@ export default function NouchiPage() {
 
             {/* 所在地 */}
             <div>
-              <label className={labelClass}>所在地</label>
+              <label className={labelClass} htmlFor="nouchi-landCity">所在地</label>
               <div className="flex gap-2">
-                <input type="text" name="landCity" value={form.landCity} onChange={handleChange}
+                <input type="text" id="nouchi-landCity" name="landCity" value={form.landCity} onChange={handleChange}
+                  aria-label="所在地（市区町村）"
                   placeholder="市区町村" className={inputClass} />
-                <input type="text" name="landAza" value={form.landAza} onChange={handleChange}
+                <input type="text" id="nouchi-landAza" name="landAza" value={form.landAza} onChange={handleChange}
+                  aria-label="所在地（字）"
                   placeholder="字" className={inputClass} />
-                <input type="text" name="landChiban" value={form.landChiban} onChange={handleChange}
+                <input type="text" id="nouchi-landChiban" name="landChiban" value={form.landChiban} onChange={handleChange}
+                  aria-label="所在地（地番）"
                   placeholder="地番" className={inputClass} />
               </div>
             </div>
@@ -274,9 +282,9 @@ export default function NouchiPage() {
 
             {/* 面積 */}
             <div>
-              <label className={labelClass}>面積</label>
+              <label className={labelClass} htmlFor="nouchi-area">面積</label>
               <div className="flex items-center gap-3">
-                <input type="number" name="area" value={form.area} onChange={handleChange}
+                <input type="number" id="nouchi-area" name="area" value={form.area} onChange={handleChange}
                   placeholder="0" min="0"
                   className={`${inputClass} flex-1`} />
                 <span className="text-lg text-gray-600 whitespace-nowrap">㎡</span>
@@ -300,28 +308,32 @@ export default function NouchiPage() {
 
             {/* 権利取得年月日 */}
             <div>
-              <label className={labelClass}>権利取得年月日</label>
+              <label className={labelClass} htmlFor="nouchi-acqEra">権利取得年月日</label>
               <div className="flex flex-wrap gap-2 items-center">
-                <select name="acqEra" value={form.acqEra} onChange={handleChange}
-                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500 focus:outline-none">
+                <select id="nouchi-acqEra" name="acqEra" value={form.acqEra} onChange={handleChange}
+                  aria-label="権利取得年月日（年号）"
+                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500">
                   {Object.keys(ERA_YEARS).map((era) => (
                     <option key={era} value={era}>{era}</option>
                   ))}
                 </select>
-                <select name="acqYear" value={form.acqYear} onChange={handleChange}
-                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500 focus:outline-none">
+                <select id="nouchi-acqYear" name="acqYear" value={form.acqYear} onChange={handleChange}
+                  aria-label="権利取得年月日（年）"
+                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500">
                   {acqEraYears.map((y) => (
                     <option key={y} value={String(y)}>{y}年</option>
                   ))}
                 </select>
-                <select name="acqMonth" value={form.acqMonth} onChange={handleChange}
-                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500 focus:outline-none">
+                <select id="nouchi-acqMonth" name="acqMonth" value={form.acqMonth} onChange={handleChange}
+                  aria-label="権利取得年月日（月）"
+                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500">
                   {MONTHS.map((m) => (
                     <option key={m} value={String(m)}>{m}月</option>
                   ))}
                 </select>
-                <select name="acqDay" value={form.acqDay} onChange={handleChange}
-                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500 focus:outline-none">
+                <select id="nouchi-acqDay" name="acqDay" value={form.acqDay} onChange={handleChange}
+                  aria-label="権利取得年月日（日）"
+                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500">
                   {DAYS.map((d) => (
                     <option key={d} value={String(d)}>{d}日</option>
                   ))}
@@ -352,14 +364,15 @@ export default function NouchiPage() {
             提出先
           </h2>
           <div>
-            <label className={labelClass}>提出先農業委員会名</label>
-            <input type="text" name="committeeName" value={form.committeeName} onChange={handleChange}
+            <label className={labelClass} htmlFor="nouchi-committeeName">提出先農業委員会名</label>
+            <input type="text" id="nouchi-committeeName" name="committeeName" value={form.committeeName} onChange={handleChange}
               placeholder="例：○○市農業委員会" className={inputClass} />
           </div>
         </section>
 
         {/* 生成ボタン */}
         <button
+          ref={pdfButtonRef}
           onClick={generatePDF}
           disabled={isGenerating}
           className="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 disabled:bg-green-400 text-white text-xl font-bold py-5 px-6 rounded-2xl shadow-lg transition-colors"

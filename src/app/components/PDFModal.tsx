@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useRef } from "react";
+
 type ModalButton = {
   label: string;
   href?: string;
@@ -14,18 +16,79 @@ type PDFModalProps = {
   // 別サービス「ちょっくら」への導線（指定された画面でのみ渡す）。琥珀色で別サービスと分かるようにする。
   chokkuraCta?: { text: string; href: string };
   onClose: () => void;
+  // 閉じたときにフォーカスを戻す先（例：「PDFを作成する」ボタン）。
+  // 作成中はボタンが disabled になりフォーカスが body に落ちるため、開く直前の
+  // activeElement では戻り先を特定できない。呼び出し側から明示的に受け取る。
+  returnFocusRef?: { current: HTMLElement | null };
 };
 
-export default function PDFModal({ steps, note, buttons, chokkuraCta, onClose }: PDFModalProps) {
+export default function PDFModal({ steps, note, buttons, chokkuraCta, onClose, returnFocusRef }: PDFModalProps) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  // 親が onClose を毎レンダーで作り直しても副作用が張り直されないよう ref に保持する
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+  const returnFocusHolder = useRef(returnFocusRef);
+  returnFocusHolder.current = returnFocusRef;
+
+  useEffect(() => {
+    // 開く前にフォーカスされていた要素を覚えておき、閉じたら戻す
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const dialog = dialogRef.current;
+    dialog?.focus();
+
+    function handleKeyDown(e: KeyboardEvent) {
+      // Esc で閉じる
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onCloseRef.current();
+        return;
+      }
+      // Tab 移動をモーダル内に閉じ込める（フォーカストラップ）
+      if (e.key === "Tab" && dialog) {
+        const focusables = dialog.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusables.length === 0) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        const active = document.activeElement;
+        if (e.shiftKey) {
+          if (active === first || active === dialog) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else if (active === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      // 指定された戻り先を優先。無ければ開く前の要素（body しか残っていない場合は何もしない）
+      const target = returnFocusHolder.current?.current ?? previous;
+      if (target && target !== document.body) target.focus();
+    };
+  }, []);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center px-4"
       style={{ backgroundColor: "rgba(0,0,0,0.55)" }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="pdf-modal-title"
+        tabIndex={-1}
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6"
+      >
         {/* タイトル */}
-        <h2 className="text-xl font-bold text-gray-900 mb-5 text-center">
+        <h2 id="pdf-modal-title" className="text-xl font-bold text-gray-900 mb-5 text-center">
           ✅ PDFが作成されました
         </h2>
 

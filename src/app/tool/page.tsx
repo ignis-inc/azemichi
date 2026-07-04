@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import DocNav from "../components/DocNav";
 import PDFModal from "../components/PDFModal";
@@ -74,6 +74,8 @@ type FormData = {
 export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  // モーダルを閉じたときにフォーカスを戻す先（作成ボタン）
+  const pdfButtonRef = useRef<HTMLButtonElement>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState<FormData>({
     name: "",
@@ -169,7 +171,7 @@ export default function Home() {
   }
 
   const inputClass =
-    "w-full rounded-lg border-2 border-green-200 bg-white px-4 py-3 text-lg focus:border-green-500 focus:outline-none transition-colors";
+    "w-full rounded-lg border-2 border-green-200 bg-white px-4 py-3 text-lg focus:border-green-500 transition-colors";
   const labelClass = "block text-base font-bold text-gray-700 mb-1";
   const sectionClass = "bg-white rounded-2xl shadow-sm border border-green-100 p-6 mb-6";
 
@@ -177,6 +179,7 @@ export default function Home() {
     <div className="min-h-screen bg-green-50">
       {showModal && (
         <PDFModal
+          returnFocusRef={pdfButtonRef}
           steps={[
             "このPDFを印刷してください",
             "以下のいずれかで農政局に提出してください",
@@ -317,8 +320,9 @@ export default function Home() {
           </h2>
           <div className="space-y-5">
             <div>
-              <label className={labelClass}>氏名</label>
+              <label className={labelClass} htmlFor="tool-name">氏名</label>
               <input
+                id="tool-name"
                 type="text"
                 name="name"
                 value={form.name}
@@ -329,8 +333,9 @@ export default function Home() {
               {errors.name && <p className="text-red-600 text-base mt-2">{errors.name}</p>}
             </div>
             <div>
-              <label className={labelClass}>ふりがな</label>
+              <label className={labelClass} htmlFor="tool-nameKana">ふりがな</label>
               <input
+                id="tool-nameKana"
                 type="text"
                 name="nameKana"
                 value={form.nameKana}
@@ -340,8 +345,10 @@ export default function Home() {
               />
             </div>
             <div>
-              <label className={labelClass}>住所</label>
+              <label className={labelClass} htmlFor="tool-prefecture">住所</label>
               <select
+                id="tool-prefecture"
+                aria-label="住所（都道府県）"
                 name="prefecture"
                 value={form.prefecture}
                 onChange={handlePrefectureChange}
@@ -354,6 +361,8 @@ export default function Home() {
               </select>
               {errors.prefecture && <p className="text-red-600 text-base mb-2">{errors.prefecture}</p>}
               <input
+                id="tool-cityAddress"
+                aria-label="住所（市区町村・番地）"
                 type="text"
                 name="cityAddress"
                 value={form.cityAddress}
@@ -364,8 +373,9 @@ export default function Home() {
               {errors.cityAddress && <p className="text-red-600 text-base mt-2">{errors.cityAddress}</p>}
             </div>
             <div>
-              <label className={labelClass}>電話番号</label>
+              <label className={labelClass} htmlFor="tool-phone">電話番号</label>
               <input
+                id="tool-phone"
                 type="tel"
                 name="phone"
                 value={form.phone}
@@ -384,8 +394,9 @@ export default function Home() {
           </h2>
           <div className="space-y-5">
             <div>
-              <label className={labelClass}>農場名</label>
+              <label className={labelClass} htmlFor="tool-farmName">農場名</label>
               <input
+                id="tool-farmName"
                 type="text"
                 name="farmName"
                 value={form.farmName}
@@ -395,7 +406,7 @@ export default function Home() {
               />
             </div>
             <div>
-              <label className={labelClass}>事業所住所</label>
+              <label className={labelClass} htmlFor="tool-farmPrefecture">事業所住所</label>
               <label className="flex items-center gap-3 mb-3 cursor-pointer">
                 <input
                   type="checkbox"
@@ -408,6 +419,8 @@ export default function Home() {
               {!form.farmAddressSame && (
                 <>
                   <select
+                    id="tool-farmPrefecture"
+                    aria-label="事業所住所（都道府県）"
                     name="farmPrefecture"
                     value={form.farmPrefecture}
                     onChange={handleChange}
@@ -419,6 +432,8 @@ export default function Home() {
                     ))}
                   </select>
                   <input
+                    id="tool-farmCityAddress"
+                    aria-label="事業所住所（市区町村・番地）"
                     type="text"
                     name="farmCityAddress"
                     value={form.farmCityAddress}
@@ -460,9 +475,10 @@ export default function Home() {
               </div>
             </div>
             <div>
-              <label className={labelClass}>年間取扱予定数量</label>
+              <label className={labelClass} htmlFor="tool-quantity">年間取扱予定数量</label>
               <div className="flex items-center gap-3">
                 <input
+                  id="tool-quantity"
                   type="number"
                   name="quantity"
                   value={form.quantity}
@@ -475,8 +491,9 @@ export default function Home() {
               </div>
             </div>
             <div>
-              <label className={labelClass}>事業開始予定日</label>
+              <label className={labelClass} htmlFor="tool-startDate">事業開始予定日</label>
               <input
+                id="tool-startDate"
                 type="date"
                 name="startDate"
                 value={form.startDate}
@@ -485,8 +502,9 @@ export default function Home() {
               />
             </div>
             <div>
-              <label className={labelClass}>提出先農政局</label>
+              <label className={labelClass} htmlFor="tool-submissionDest">提出先農政局</label>
               <input
+                id="tool-submissionDest"
                 type="text"
                 name="submissionDest"
                 value={form.submissionDest}
@@ -503,6 +521,7 @@ export default function Home() {
 
         {/* 生成ボタン */}
         <button
+          ref={pdfButtonRef}
           onClick={generatePDF}
           disabled={isGenerating}
           className="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 disabled:bg-green-400 text-white text-xl font-bold py-5 px-6 rounded-2xl shadow-lg transition-colors"

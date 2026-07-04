@@ -874,7 +874,6 @@ body {
 .landing .field textarea:focus,
 .landing .field input[type="email"]:focus {
   border-color: var(--field);
-  outline: none;
 }
 .landing .field textarea::placeholder,
 .landing .field input::placeholder {
