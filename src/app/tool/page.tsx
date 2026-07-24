@@ -231,6 +231,15 @@ export default function Home() {
               </Link>
             </li>
             <li>
+              <Link href="/senjusha" className="doc-card">
+                <span className="doc-card-body">
+                  <span className="doc-card-purpose">家族に給与を払う方へ</span>
+                  <span className="doc-card-name">青色事業専従者給与に関する届出書</span>
+                </span>
+                <span className="doc-card-arrow" aria-hidden="true">→</span>
+              </Link>
+            </li>
+            <li>
               <Link href="/nouchi" className="doc-card">
                 <span className="doc-card-body">
                   <span className="doc-card-purpose">農地を相続・売買した方へ</span>

@@ -72,6 +72,11 @@ export async function POST(request: NextRequest) {
 
     const address = `${form.prefecture || ""}${form.cityAddress || ""}`;
 
+    // 「新宿税務署」のように末尾に「税務署」を含めて入力されても、
+    // 続く「税務署長　殿」と二重表記にならないよう末尾の「税務署」を取り除く
+    const taxOfficeRaw = typeof form.taxOffice === "string" ? form.taxOffice.trim() : "";
+    const taxOfficeName = taxOfficeRaw.replace(/税務署$/, "");
+
     const tableBody = [
       [
         { text: "項　目", style: "tableHeader", fillColor: "#e8f5e9" },
@@ -108,7 +113,7 @@ export async function POST(request: NextRequest) {
           margin: [0, 0, 0, 12],
         },
         {
-          text: `${form.taxOffice || "○○"}税務署長　殿`,
+          text: `${taxOfficeName || "○○"}税務署長　殿`,
           fontSize: 13,
           margin: [0, 0, 0, 6],
         },

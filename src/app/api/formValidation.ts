@@ -6,15 +6,17 @@
 export type FieldRule = {
   label: string;
   // 省略時は "string"
-  type?: "string" | "strings" | "number" | "boolean";
+  type?: "string" | "strings" | "number" | "boolean" | "objects";
   required?: boolean;
-  // string: 最大文字数 / strings: 各要素の最大文字数
+  // string: 最大文字数 / strings・objects: 各要素の最大文字数（stringsのみ）
   max?: number;
-  // strings: 最大件数
+  // strings・objects: 最大件数
   maxItems?: number;
   // number: 許容範囲
   min?: number;
   maxNum?: number;
+  // objects: 配列の各要素が満たすべきサブスキーマ（例：専従者1人分の項目群）
+  fields?: Record<string, FieldRule>;
 };
 
 export type ValidationResult =
@@ -39,7 +41,7 @@ export function validateForm(raw: unknown, rules: Record<string, FieldRule>): Va
     // 未送信・null は空として扱う（画面側は常に全キーを送るため通常は通らない）
     if (v === undefined || v === null) {
       if (rule.required) return { ok: false, error: `「${label}」を入力してください` };
-      form[key] = type === "strings" ? [] : type === "boolean" ? false : type === "number" ? undefined : "";
+      form[key] = type === "strings" || type === "objects" ? [] : type === "boolean" ? false : type === "number" ? undefined : "";
       continue;
     }
 
@@ -66,6 +68,21 @@ export function validateForm(raw: unknown, rules: Record<string, FieldRule>): Va
         return { ok: false, error: `「${label}」の値が範囲外です` };
       }
       form[key] = v;
+    } else if (type === "objects") {
+      if (!Array.isArray(v)) return { ok: false, error: `「${label}」の形式が正しくありません` };
+      if (v.length > (rule.maxItems ?? 20)) return { ok: false, error: `「${label}」の件数が多すぎます` };
+      const subRules = rule.fields ?? {};
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const items: Record<string, any>[] = [];
+      for (const item of v) {
+        if (typeof item !== "object" || item === null || Array.isArray(item)) {
+          return { ok: false, error: `「${label}」の形式が正しくありません` };
+        }
+        const sub = validateForm(item, subRules);
+        if (!sub.ok) return { ok: false, error: sub.error };
+        items.push(sub.form);
+      }
+      form[key] = items;
     } else {
       if (typeof v !== "boolean") return { ok: false, error: `「${label}」の形式が正しくありません` };
       form[key] = v;
