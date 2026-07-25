@@ -289,6 +289,23 @@ export default function Home() {
         </div>
       </section>
 
+      {/* 農薬・肥料の使用記録ツール案内（書類作成カードの一覧とは別枠） */}
+      <section className="max-w-2xl mx-auto px-4 pb-8">
+        <div className="bg-white rounded-2xl shadow-sm border border-green-100 p-6 text-center">
+          <h2 className="text-xl font-bold text-green-800 mb-2">農薬・肥料の使用を記録する</h2>
+          <p className="text-sm font-bold text-green-700 mb-3">無料・ログイン不要</p>
+          <p className="text-base text-gray-600 leading-relaxed mb-5">
+            使用した農薬・肥料をスマホで記録して、圃場・作物ごとに確認できます。同じ農薬を今年何回使ったかも一覧できる、農薬・肥料専用の記録ツールです。
+          </p>
+          <Link
+            href="/boujo"
+            className="inline-block bg-green-600 hover:bg-green-700 active:bg-green-800 text-white text-lg font-bold py-4 px-8 rounded-2xl shadow-md transition-colors"
+          >
+            使用記録ツールを開く →
+          </Link>
+        </div>
+      </section>
+
       {/* ヘッダー */}
       <header className="bg-green-700 text-white py-6 px-4 text-center shadow-md">
         <h1 className="text-2xl font-bold leading-tight">
