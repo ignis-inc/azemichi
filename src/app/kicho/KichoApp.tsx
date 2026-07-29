@@ -25,6 +25,38 @@ const EXPENSE_CATEGORIES = [
   "土地改良費", "雇人費", "小作料・賃借料", "利子割引料", "租税公課", "委託費用", "雑費", "その他",
 ];
 
+// 青色申告決算書（農業所得用）1ページ目・損益計算書のAPIフィールド名との対応
+// （/api/kessansho-pdf の RULES と一致させる）
+const INCOME_FIELD_MAP: Record<string, string> = {
+  "農産物売上（販売金額）": "incomeSales",
+  "家事消費・事業消費": "incomeHousehold",
+  "雑収入": "incomeMisc",
+  "その他": "incomeOther",
+};
+
+const EXPENSE_FIELD_MAP: Record<string, string> = {
+  "租税公課": "expenseTax",
+  "種苗費": "expenseSeedling",
+  "素畜費": "expenseLivestock",
+  "肥料費": "expenseFertilizer",
+  "飼料費": "expenseFeed",
+  "農具費": "expenseTools",
+  "農薬衛生費": "expensePesticide",
+  "諸材料費": "expenseMaterials",
+  "修繕費": "expenseRepair",
+  "動力光熱費": "expenseUtilities",
+  "作業用衣料費": "expenseWorkwear",
+  "農業共済掛金": "expenseInsurance",
+  "荷造運賃手数料": "expenseShipping",
+  "土地改良費": "expenseLandImprovement",
+  "雇人費": "expenseWages",
+  "小作料・賃借料": "expenseRent",
+  "利子割引料": "expenseInterest",
+  "委託費用": "expenseCommission",
+  "雑費": "expenseMisc",
+  "その他": "expenseOther",
+};
+
 function todayISO(): string {
   const jst = new Date(Date.now() + 9 * 60 * 60 * 1000);
   return jst.toISOString().slice(0, 10);
@@ -127,6 +159,17 @@ export default function KichoApp() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // 青色申告決算書（損益計算書）PDF生成用の入力
+  const [kessanshoYear, setKessanshoYear] = useState(todayISO().slice(0, 4));
+  const [kessanshoName, setKessanshoName] = useState("");
+  const [kessanshoAddress, setKessanshoAddress] = useState("");
+  const [kessanshoFarmName, setKessanshoFarmName] = useState("");
+  const [kessanshoOpening, setKessanshoOpening] = useState("");
+  const [kessanshoClosing, setKessanshoClosing] = useState("");
+  const [kessanshoDepreciation, setKessanshoDepreciation] = useState("");
+  const [kessanshoErrors, setKessanshoErrors] = useState<Record<string, string>>({});
+  const [kessanshoGenerating, setKessanshoGenerating] = useState(false);
+
   const categories = type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
 
   function handleTypeChange(next: EntryType) {
@@ -219,6 +262,68 @@ export default function KichoApp() {
   const monthlyRows = [...monthlyMap.entries()].sort((a, b) => b[0].localeCompare(a[0]));
   const yearlyRows = [...yearlyMap.entries()].sort((a, b) => b[0].localeCompare(a[0]));
   const sortedEntries = [...entries].sort((a, b) => b.date.localeCompare(a.date));
+
+  // 決算書の対象年の選択肢（記録がある年＋今年。今年の記録がまだ無くても選べるようにする）
+  const kessanshoYearOptions = [...new Set([...entries.map((e) => e.date.slice(0, 4)), todayISO().slice(0, 4)])]
+    .filter(Boolean)
+    .sort((a, b) => b.localeCompare(a));
+
+  async function generateKessanshoPDF() {
+    const e: Record<string, string> = {};
+    if (!kessanshoName.trim()) e.name = "氏名を入力してください";
+    setKessanshoErrors(e);
+    if (Object.keys(e).length > 0) return;
+
+    // 選択した年の記録だけを、品目（科目）ごとに集計する
+    const incomeTotals: Record<string, number> = {};
+    const expenseTotals: Record<string, number> = {};
+    for (const entry of entries) {
+      if (entry.date.slice(0, 4) !== kessanshoYear) continue;
+      const totals = entry.type === "income" ? incomeTotals : expenseTotals;
+      totals[entry.category] = (totals[entry.category] ?? 0) + entry.amount;
+    }
+
+    const payload: Record<string, unknown> = {
+      name: kessanshoName.trim(),
+      address: kessanshoAddress.trim(),
+      farmName: kessanshoFarmName.trim(),
+      year: kessanshoYear,
+      openingInventory: Math.max(0, Math.round(Number(kessanshoOpening) || 0)),
+      closingInventory: Math.max(0, Math.round(Number(kessanshoClosing) || 0)),
+      depreciation: Math.max(0, Math.round(Number(kessanshoDepreciation) || 0)),
+    };
+    for (const [category, field] of Object.entries(INCOME_FIELD_MAP)) {
+      payload[field] = incomeTotals[category] ?? 0;
+    }
+    for (const [category, field] of Object.entries(EXPENSE_FIELD_MAP)) {
+      payload[field] = expenseTotals[category] ?? 0;
+    }
+
+    setKessanshoGenerating(true);
+    try {
+      const res = await fetch("/api/kessansho-pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `サーバーエラー (${res.status})`);
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `青色申告決算書_損益計算書_${kessanshoYear}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("決算書PDF生成エラー:", err);
+      alert("PDFの生成に失敗しました。もう一度お試しください。");
+    } finally {
+      setKessanshoGenerating(false);
+    }
+  }
 
   const inputClass =
     "w-full rounded-lg border-2 border-green-200 bg-white px-4 py-3 text-lg focus:border-green-500 transition-colors";
@@ -412,6 +517,70 @@ export default function KichoApp() {
               </table>
             </div>
           )}
+        </section>
+
+        {/* 青色申告決算書（損益計算書）PDF生成 */}
+        <section className={sectionClass}>
+          <h2 className="text-xl font-bold text-green-800 mb-5 pb-2 border-b-2 border-green-200">青色申告決算書（損益計算書）を作る</h2>
+
+          <div className="border-2 border-yellow-300 bg-yellow-50 rounded-xl px-5 py-4 mb-5">
+            <p className="text-sm text-yellow-900 leading-relaxed">
+              この決算書は損益計算書（1ページ目）のみを自動生成します。減価償却費や棚卸高、貸借対照表（4ページ目）が必要な場合は、別途ご自身で記入するか、税理士にご相談ください。65万円・55万円の青色申告特別控除を受けるには複式簿記による貸借対照表の作成が必要です。
+            </p>
+          </div>
+
+          <div className="space-y-5">
+            <div>
+              <label className={labelClass} htmlFor="kessansho-year">対象の年<span className="req">必須</span></label>
+              <select id="kessansho-year" value={kessanshoYear} onChange={(e) => setKessanshoYear(e.target.value)} className={inputClass}>
+                {kessanshoYearOptions.map((y) => (
+                  <option key={y} value={y}>{y}年分</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className={labelClass} htmlFor="kessansho-name">氏名<span className="req">必須</span></label>
+              <input id="kessansho-name" type="text" value={kessanshoName} onChange={(e) => setKessanshoName(e.target.value)} placeholder="例：山田太郎" className={inputClass} />
+              {kessanshoErrors.name && <p className="text-red-600 text-base mt-2">{kessanshoErrors.name}</p>}
+            </div>
+
+            <div>
+              <label className={labelClass} htmlFor="kessansho-address">住所</label>
+              <input id="kessansho-address" type="text" value={kessanshoAddress} onChange={(e) => setKessanshoAddress(e.target.value)} placeholder="例：大分県豊後大野市〇〇" className={inputClass} />
+            </div>
+
+            <div>
+              <label className={labelClass} htmlFor="kessansho-farmname">屋号</label>
+              <input id="kessansho-farmname" type="text" value={kessanshoFarmName} onChange={(e) => setKessanshoFarmName(e.target.value)} placeholder="例：山田農園" className={inputClass} />
+            </div>
+
+            <div>
+              <label className={labelClass} htmlFor="kessansho-opening">期首棚卸高</label>
+              <input id="kessansho-opening" type="number" min="0" step="1" value={kessanshoOpening} onChange={(e) => setKessanshoOpening(e.target.value)} placeholder="0" className={inputClass} />
+              <p className="text-sm text-gray-500 mt-1">{kessanshoYear}年1月1日時点で未販売だった農産物の評価額です。あぜみちの記帳データには含まれないため、手入力してください。</p>
+            </div>
+
+            <div>
+              <label className={labelClass} htmlFor="kessansho-closing">期末棚卸高</label>
+              <input id="kessansho-closing" type="number" min="0" step="1" value={kessanshoClosing} onChange={(e) => setKessanshoClosing(e.target.value)} placeholder="0" className={inputClass} />
+              <p className="text-sm text-gray-500 mt-1">{kessanshoYear}年12月31日時点で未販売の農産物の評価額です。あぜみちの記帳データには含まれないため、手入力してください。</p>
+            </div>
+
+            <div>
+              <label className={labelClass} htmlFor="kessansho-depreciation">減価償却費</label>
+              <input id="kessansho-depreciation" type="number" min="0" step="1" value={kessanshoDepreciation} onChange={(e) => setKessanshoDepreciation(e.target.value)} placeholder="0" className={inputClass} />
+              <p className="text-sm text-gray-500 mt-1">農機具やハウスなどの減価償却費です。あぜみちの記帳データには含まれないため、手入力してください。</p>
+            </div>
+
+            <button
+              onClick={generateKessanshoPDF}
+              disabled={kessanshoGenerating}
+              className="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 disabled:bg-green-300 text-white text-xl font-bold py-4 px-6 rounded-2xl shadow-lg transition-colors"
+            >
+              {kessanshoGenerating ? "作成中…" : "決算書PDF（損益計算書）を作る"}
+            </button>
+          </div>
         </section>
 
         {/* 一覧 */}
