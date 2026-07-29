@@ -22,6 +22,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/senjusha",
     "/boujo",
     "/nisshi",
+    "/kaigyo",
   ];
 
   return paths.map((path) => ({

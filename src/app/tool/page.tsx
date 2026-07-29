@@ -231,6 +231,15 @@ export default function Home() {
               </Link>
             </li>
             <li>
+              <Link href="/kaigyo" className="doc-card">
+                <span className="doc-card-body">
+                  <span className="doc-card-purpose">農業をはじめる方へ</span>
+                  <span className="doc-card-name">個人事業の開業・廃業等届出書（開業）</span>
+                </span>
+                <span className="doc-card-arrow" aria-hidden="true">→</span>
+              </Link>
+            </li>
+            <li>
               <Link href="/senjusha" className="doc-card">
                 <span className="doc-card-body">
                   <span className="doc-card-purpose">家族に給与を払う方へ</span>
