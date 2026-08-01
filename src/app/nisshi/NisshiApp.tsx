@@ -218,10 +218,11 @@ export default function NisshiApp() {
     reader.readAsText(file, "utf-8");
   }
 
-  // 圃場・作物・作業内容の絞り込み用の選択肢（記録されている値からユニークなものを抽出）
+  // 圃場・作物・作業内容の絞り込み用の選択肢、および入力欄の候補（記録されている値からユニークなものを抽出）
   const fieldOptions = [...new Set(entries.map((e) => e.field).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ja"));
   const cropOptions = [...new Set(entries.map((e) => e.crop).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ja"));
   const workTypeOptions = [...new Set(entries.map((e) => e.workType).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ja"));
+  const workerOptions = [...new Set(entries.map((e) => e.worker).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ja"));
 
   const filteredEntries = entries.filter(
     (e) =>
@@ -273,13 +274,19 @@ export default function NisshiApp() {
 
             <div>
               <label className={labelClass} htmlFor="nisshi-field">圃場<span className="req">必須</span></label>
-              <input id="nisshi-field" type="text" value={field} onChange={(e) => setField(e.target.value)} placeholder="例：南の畑" className={inputClass} />
+              <input id="nisshi-field" type="text" list="nisshi-field-list" value={field} onChange={(e) => setField(e.target.value)} placeholder="例：南の畑" className={inputClass} />
+              <datalist id="nisshi-field-list">
+                {fieldOptions.map((f) => (<option key={f} value={f} />))}
+              </datalist>
               {errors.field && <p className="text-red-600 text-base mt-2">{errors.field}</p>}
             </div>
 
             <div>
               <label className={labelClass} htmlFor="nisshi-crop">作物<span className="req">必須</span></label>
-              <input id="nisshi-crop" type="text" value={crop} onChange={(e) => setCrop(e.target.value)} placeholder="例：トマト" className={inputClass} />
+              <input id="nisshi-crop" type="text" list="nisshi-crop-list" value={crop} onChange={(e) => setCrop(e.target.value)} placeholder="例：トマト" className={inputClass} />
+              <datalist id="nisshi-crop-list">
+                {cropOptions.map((c) => (<option key={c} value={c} />))}
+              </datalist>
               {errors.crop && <p className="text-red-600 text-base mt-2">{errors.crop}</p>}
             </div>
 
@@ -331,7 +338,10 @@ export default function NisshiApp() {
 
             <div>
               <label className={labelClass} htmlFor="nisshi-worker">作業者</label>
-              <input id="nisshi-worker" type="text" value={worker} onChange={(e) => setWorker(e.target.value)} placeholder="例：山田太郎" className={inputClass} />
+              <input id="nisshi-worker" type="text" list="nisshi-worker-list" value={worker} onChange={(e) => setWorker(e.target.value)} placeholder="例：山田太郎" className={inputClass} />
+              <datalist id="nisshi-worker-list">
+                {workerOptions.map((w) => (<option key={w} value={w} />))}
+              </datalist>
             </div>
 
             <div>

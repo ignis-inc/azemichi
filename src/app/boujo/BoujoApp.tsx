@@ -215,9 +215,11 @@ export default function BoujoApp() {
     reader.readAsText(file, "utf-8");
   }
 
-  // 圃場・作物の絞り込み用の選択肢（記録されている値からユニークなものを抽出）
+  // 圃場・作物の絞り込み用の選択肢、および各入力欄の候補（記録されている値からユニークなものを抽出）
   const fieldOptions = [...new Set(entries.map((e) => e.field).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ja"));
   const cropOptions = [...new Set(entries.map((e) => e.crop).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ja"));
+  const nameOptions = [...new Set(entries.map((e) => e.name).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ja"));
+  const applicatorOptions = [...new Set(entries.map((e) => e.applicator).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ja"));
 
   const filteredEntries = entries.filter(
     (e) => (fieldFilter === ALL_FILTER || e.field === fieldFilter) && (cropFilter === ALL_FILTER || e.crop === cropFilter)
@@ -299,19 +301,28 @@ export default function BoujoApp() {
 
             <div>
               <label className={labelClass} htmlFor="boujo-field">圃場<span className="req">必須</span></label>
-              <input id="boujo-field" type="text" value={field} onChange={(e) => setField(e.target.value)} placeholder="例：南の畑" className={inputClass} />
+              <input id="boujo-field" type="text" list="boujo-field-list" value={field} onChange={(e) => setField(e.target.value)} placeholder="例：南の畑" className={inputClass} />
+              <datalist id="boujo-field-list">
+                {fieldOptions.map((f) => (<option key={f} value={f} />))}
+              </datalist>
               {errors.field && <p className="text-red-600 text-base mt-2">{errors.field}</p>}
             </div>
 
             <div>
               <label className={labelClass} htmlFor="boujo-crop">作物<span className="req">必須</span></label>
-              <input id="boujo-crop" type="text" value={crop} onChange={(e) => setCrop(e.target.value)} placeholder="例：トマト" className={inputClass} />
+              <input id="boujo-crop" type="text" list="boujo-crop-list" value={crop} onChange={(e) => setCrop(e.target.value)} placeholder="例：トマト" className={inputClass} />
+              <datalist id="boujo-crop-list">
+                {cropOptions.map((c) => (<option key={c} value={c} />))}
+              </datalist>
               {errors.crop && <p className="text-red-600 text-base mt-2">{errors.crop}</p>}
             </div>
 
             <div>
               <label className={labelClass} htmlFor="boujo-name">{type}の名称<span className="req">必須</span></label>
-              <input id="boujo-name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={type === "農薬" ? "例：〇〇water水和剤" : "例：化成肥料〇〇号"} className={inputClass} />
+              <input id="boujo-name" type="text" list="boujo-name-list" value={name} onChange={(e) => setName(e.target.value)} placeholder={type === "農薬" ? "例：〇〇water水和剤" : "例：化成肥料〇〇号"} className={inputClass} />
+              <datalist id="boujo-name-list">
+                {nameOptions.map((n) => (<option key={n} value={n} />))}
+              </datalist>
               {errors.name && <p className="text-red-600 text-base mt-2">{errors.name}</p>}
             </div>
 
@@ -336,7 +347,10 @@ export default function BoujoApp() {
 
             <div>
               <label className={labelClass} htmlFor="boujo-applicator">使用者</label>
-              <input id="boujo-applicator" type="text" value={applicator} onChange={(e) => setApplicator(e.target.value)} placeholder="例：山田太郎" className={inputClass} />
+              <input id="boujo-applicator" type="text" list="boujo-applicator-list" value={applicator} onChange={(e) => setApplicator(e.target.value)} placeholder="例：山田太郎" className={inputClass} />
+              <datalist id="boujo-applicator-list">
+                {applicatorOptions.map((a) => (<option key={a} value={a} />))}
+              </datalist>
             </div>
 
             <div>
