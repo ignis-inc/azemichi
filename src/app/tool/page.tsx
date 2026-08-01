@@ -332,6 +332,23 @@ export default function Home() {
         </div>
       </section>
 
+      {/* 開業時のまとめて作成ツール案内（書類作成カードの一覧とは別枠） */}
+      <section className="max-w-2xl mx-auto px-4 pb-8">
+        <div className="bg-white rounded-2xl shadow-sm border border-green-100 p-6 text-center">
+          <h2 className="text-xl font-bold text-green-800 mb-2">開業時にまとめて書類を作る</h2>
+          <p className="text-sm font-bold text-green-700 mb-3">無料・ログイン不要</p>
+          <p className="text-base text-gray-600 leading-relaxed mb-5">
+            開業届・青色申告承認申請書・専従者給与の届出書を、共通する情報の入力は1回だけでまとめてPDFにできます。農業を新しく始める方向けのツールです。
+          </p>
+          <Link
+            href="/kaigyo-set"
+            className="inline-block bg-green-600 hover:bg-green-700 active:bg-green-800 text-white text-lg font-bold py-4 px-8 rounded-2xl shadow-md transition-colors"
+          >
+            まとめて作成ツールを開く →
+          </Link>
+        </div>
+      </section>
+
       {/* ヘッダー */}
       <header className="bg-green-700 text-white py-6 px-4 text-center shadow-md">
         <h1 className="text-2xl font-bold leading-tight">
