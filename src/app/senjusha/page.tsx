@@ -5,6 +5,33 @@ import Link from "next/link";
 import DocNav from "../components/DocNav";
 import PDFModal from "../components/PDFModal";
 import { DOC_LAST_CHECKED } from "../site";
+import { isValidWarekiDate, warekiToISO } from "../wareki";
+import { recordGeneratedDoc } from "../dashboardStore";
+
+const SHOWA_YEARS  = Array.from({ length: 45 }, (_, i) => i + 20); // 昭和20〜64
+const HEISEI_YEARS = Array.from({ length: 31 }, (_, i) => i + 1);  // 平成1〜31
+const REIWA_YEARS  = Array.from({ length: 8  }, (_, i) => i + 1);  // 令和1〜8
+
+const ERA_YEARS: Record<string, number[]> = {
+  "昭和": SHOWA_YEARS,
+  "平成": HEISEI_YEARS,
+  "令和": REIWA_YEARS,
+};
+
+const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
+const DAYS   = Array.from({ length: 31 }, (_, i) => i + 1);
+
+// 「専従者を採用した日（または開業日）」の初期値を今日の日付（和暦）にする
+// （ダッシュボードの期限計算にのみ使う項目のため、届出書PDFには含まれない）
+function todayWarekiParts(): { era: string; year: number; month: number; day: number } {
+  const jst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  const y = jst.getUTCFullYear();
+  const m = jst.getUTCMonth() + 1;
+  const d = jst.getUTCDate();
+  if (y >= 2019) return { era: "令和", year: y - 2018, month: m, day: d };
+  if (y >= 1989) return { era: "平成", year: y - 1988, month: m, day: d };
+  return { era: "昭和", year: y - 1925, month: m, day: d };
+}
 
 const PREFECTURES = [
   "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
@@ -54,6 +81,11 @@ type FormData = {
   employeeSalaryInfo: string;
   accountantName: string;
   accountantPhone: string;
+  // ダッシュボードの期限計算だけに使う項目（届出書PDFには含めない）
+  startEra: string;
+  startYear: string;
+  startMonth: string;
+  startDay: string;
 };
 
 export default function SenjushaPage() {
@@ -62,6 +94,7 @@ export default function SenjushaPage() {
   // モーダルを閉じたときにフォーカスを戻す先（作成ボタン）
   const pdfButtonRef = useRef<HTMLButtonElement>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const todayParts = todayWarekiParts();
   const [form, setForm] = useState<FormData>({
     name: "",
     nameKana: "",
@@ -75,11 +108,21 @@ export default function SenjushaPage() {
     employeeSalaryInfo: "",
     accountantName: "",
     accountantPhone: "",
+    startEra: todayParts.era,
+    startYear: String(todayParts.year),
+    startMonth: String(todayParts.month),
+    startDay: String(todayParts.day),
   });
   const [senjushaList, setSenjushaList] = useState<SenjushaEntry[]>([newSenjusha()]);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
     const { name, value } = e.target;
+    // 元号が変わったとき年のデフォルトをリセット
+    if (name === "startEra") {
+      const years = ERA_YEARS[value] ?? [];
+      setForm((prev) => ({ ...prev, startEra: value, startYear: String(years[0] ?? 1) }));
+      return;
+    }
     setForm((prev) => ({ ...prev, [name]: value }));
   }
 
@@ -103,6 +146,9 @@ export default function SenjushaPage() {
     if (senjushaList.length === 0 || senjushaList.every((s) => !s.name.trim())) {
       e.senjusha = "専従者を1人以上、氏名を入力して追加してください";
     }
+    if (!isValidWarekiDate(form.startEra, Number(form.startYear), Number(form.startMonth), Number(form.startDay))) {
+      e.startDate = "採用日（または開業日）が実在しない日付です。月と日をご確認ください";
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -111,8 +157,10 @@ export default function SenjushaPage() {
     if (!validate()) return;
     setIsGenerating(true);
     try {
+      // startEra等はダッシュボードの期限計算専用の項目なので、届出書PDFのAPIには送らない
+      const { startEra, startYear, startMonth, startDay, ...apiForm } = form;
       const body = {
-        ...form,
+        ...apiForm,
         senjushaList: senjushaList
           .filter((s) => s.name.trim())
           .map((s) => ({
@@ -146,6 +194,7 @@ export default function SenjushaPage() {
       a.download = "青色事業専従者給与に関する届出書.pdf";
       a.click();
       URL.revokeObjectURL(url);
+      recordGeneratedDoc("senjusha", warekiToISO(startEra, Number(startYear), Number(startMonth), Number(startDay)));
       setShowModal(true);
     } catch (err) {
       console.error("PDF生成エラー:", err);
@@ -278,6 +327,35 @@ export default function SenjushaPage() {
               <label className={labelClass} htmlFor="senjusha-taxOffice">提出先税務署名</label>
               <input type="text" id="senjusha-taxOffice" name="taxOffice" value={form.taxOffice} onChange={handleChange}
                 placeholder="例：新宿税務署" className={inputClass} />
+            </div>
+
+            {/* ダッシュボードの期限計算専用（届出書PDFには含まれません） */}
+            <div>
+              <label className={labelClass} htmlFor="senjusha-startEra">専従者を採用した日（または開業日）</label>
+              <div className="flex flex-wrap gap-2 items-center">
+                <select id="senjusha-startEra" aria-label="採用日（年号）" name="startEra" value={form.startEra} onChange={handleChange}
+                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500">
+                  {Object.keys(ERA_YEARS).map((era) => (<option key={era} value={era}>{era}</option>))}
+                </select>
+                <select id="senjusha-startYear" aria-label="採用日（年）" name="startYear" value={form.startYear} onChange={handleChange}
+                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500">
+                  {(ERA_YEARS[form.startEra] ?? []).map((y) => (<option key={y} value={String(y)}>{y}年</option>))}
+                </select>
+                <select id="senjusha-startMonth" aria-label="採用日（月）" name="startMonth" value={form.startMonth} onChange={handleChange}
+                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500">
+                  {MONTHS.map((m) => (<option key={m} value={String(m)}>{m}月</option>))}
+                </select>
+                <select id="senjusha-startDay" aria-label="採用日（日）" name="startDay" value={form.startDay} onChange={handleChange}
+                  className="rounded-lg border-2 border-green-200 bg-white px-3 py-3 text-lg focus:border-green-500">
+                  {DAYS.map((d) => (<option key={d} value={String(d)}>{d}日</option>))}
+                </select>
+              </div>
+              <p className="text-sm text-gray-500 mt-1">
+                届出書のPDFには印字されません。あぜみちのダッシュボード（
+                <Link href="/dashboard" className="text-green-700 underline underline-offset-2 hover:text-green-800">/dashboard</Link>
+                ）で提出期限の目安を計算するためだけに使います。
+              </p>
+              {errors.startDate && <p className="text-red-600 text-base mt-2">{errors.startDate}</p>}
             </div>
           </div>
         </section>

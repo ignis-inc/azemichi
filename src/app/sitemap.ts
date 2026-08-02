@@ -24,6 +24,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/nisshi",
     "/kaigyo",
     "/kaigyo-set",
+    "/dashboard",
   ];
 
   return paths.map((path) => ({

@@ -5,6 +5,7 @@ import Link from "next/link";
 import DocNav from "../components/DocNav";
 import PDFModal from "../components/PDFModal";
 import { CHOKKURA_NOTIFY_URL, DOC_LAST_CHECKED } from "../site";
+import { recordGeneratedDoc } from "../dashboardStore";
 
 const PREFECTURES = [
   "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
@@ -144,6 +145,7 @@ export default function Home() {
       a.download = "米穀販売届出書.pdf";
       a.click();
       URL.revokeObjectURL(url);
+      recordGeneratedDoc("kome", form.startDate || undefined);
       setShowModal(true);
     } catch (err) {
       console.error("PDF生成エラー:", err);
@@ -345,6 +347,23 @@ export default function Home() {
             className="inline-block bg-green-600 hover:bg-green-700 active:bg-green-800 text-white text-lg font-bold py-4 px-8 rounded-2xl shadow-md transition-colors"
           >
             まとめて作成ツールを開く →
+          </Link>
+        </div>
+      </section>
+
+      {/* ダッシュボード案内（書類作成カードの一覧とは別枠） */}
+      <section className="max-w-2xl mx-auto px-4 pb-8">
+        <div className="bg-white rounded-2xl shadow-sm border border-green-100 p-6 text-center">
+          <h2 className="text-xl font-bold text-green-800 mb-2">作った書類の一覧・期限を確認する</h2>
+          <p className="text-sm font-bold text-green-700 mb-3">無料・ログイン不要</p>
+          <p className="text-base text-gray-600 leading-relaxed mb-5">
+            あぜみちで作成した書類の履歴と、それぞれの提出期限の目安を一覧で確認できます。期限が近い書類は色を変えてお知らせします。
+          </p>
+          <Link
+            href="/dashboard"
+            className="inline-block bg-green-600 hover:bg-green-700 active:bg-green-800 text-white text-lg font-bold py-4 px-8 rounded-2xl shadow-md transition-colors"
+          >
+            ダッシュボードを開く →
           </Link>
         </div>
       </section>

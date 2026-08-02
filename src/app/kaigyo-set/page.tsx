@@ -4,7 +4,8 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import PDFModal from "../components/PDFModal";
 import { DOC_LAST_CHECKED } from "../site";
-import { isValidWarekiDate } from "../wareki";
+import { isValidWarekiDate, warekiToISO } from "../wareki";
+import { recordGeneratedDoc } from "../dashboardStore";
 
 const PREFECTURES = [
   "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
@@ -174,6 +175,8 @@ export default function KaigyoSetPage() {
 
   const needsPersonalDates = docs.kaigyo || docs.aoiro;
   const needsOccupation = docs.kaigyo || docs.senjusha;
+  // 開業年月日は/senjushaの期限計算（採用日の代わり）にも使うため、/senjushaだけにチェックが入っている場合も表示する
+  const needsStartDate = docs.kaigyo || docs.aoiro || docs.senjusha;
 
   function handleCommonChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     const { name, value } = e.target;
@@ -241,6 +244,8 @@ export default function KaigyoSetPage() {
       if (!isValidWarekiDate(common.dobEra, Number(common.dobYear), Number(common.dobMonth), Number(common.dobDay))) {
         e.dob = "生年月日が実在しない日付です。月と日をご確認ください";
       }
+    }
+    if (needsStartDate) {
       if (!isValidWarekiDate(common.startEra, Number(common.startYear), Number(common.startMonth), Number(common.startDay))) {
         e.startDate = "開業年月日が実在しない日付です。月と日をご確認ください";
       }
@@ -357,14 +362,18 @@ export default function KaigyoSetPage() {
         })
       );
 
+      // kaigyo・aoiro・senjushaはいずれも共通項目の開業年月日を期限計算の起点日として使う
+      const startDateISO = warekiToISO(common.startEra, Number(common.startYear), Number(common.startMonth), Number(common.startDay));
+
       for (let i = 0; i < results.length; i++) {
-        const { blob, filename } = results[i];
+        const { key, blob, filename } = results[i];
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
         a.download = filename;
         a.click();
         URL.revokeObjectURL(url);
+        recordGeneratedDoc(key, startDateISO);
         if (i < results.length - 1) {
           await new Promise((resolve) => setTimeout(resolve, 400));
         }
@@ -560,7 +569,7 @@ export default function KaigyoSetPage() {
                 placeholder="例：田中農場（任意）" className={inputClass} />
             </div>
 
-            {needsPersonalDates && (
+            {needsStartDate && (
               <div>
                 <label className={labelClass} htmlFor="set-startEra">開業年月日</label>
                 <div className="flex flex-wrap gap-2 items-center">
@@ -581,7 +590,7 @@ export default function KaigyoSetPage() {
                     {DAYS.map((d) => (<option key={d} value={String(d)}>{d}日</option>))}
                   </select>
                 </div>
-                <p className="text-sm text-gray-500 mt-1">開業届・青色申告承認申請書で使用します。</p>
+                <p className="text-sm text-gray-500 mt-1">開業届・青色申告承認申請書・専従者給与の届出書（採用日の代わり）で使用します。</p>
                 {errors.startDate && <p className="text-red-600 text-base mt-2">{errors.startDate}</p>}
               </div>
             )}

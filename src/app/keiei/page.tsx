@@ -6,6 +6,7 @@ import DocNav from "../components/DocNav";
 import PDFModal from "../components/PDFModal";
 import { DOC_LAST_CHECKED } from "../site";
 import { isValidWarekiDate } from "../wareki";
+import { recordGeneratedDoc } from "../dashboardStore";
 
 const PREFECTURES = [
   "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
@@ -150,6 +151,7 @@ export default function KeieiPage() {
       a.download = "経営所得安定対策等交付金交付申請書.pdf";
       a.click();
       URL.revokeObjectURL(url);
+      recordGeneratedDoc("keiei");
       setShowModal(true);
     } catch (err) {
       console.error("PDF生成エラー:", err);

@@ -6,6 +6,7 @@ import DocNav from "../components/DocNav";
 import PDFModal from "../components/PDFModal";
 import { DOC_LAST_CHECKED } from "../site";
 import { isValidWarekiDate } from "../wareki";
+import { recordGeneratedDoc } from "../dashboardStore";
 
 const PREFECTURES = [
   "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
@@ -123,6 +124,7 @@ export default function NenkinPage() {
       a.download = "農業者年金通常加入申込書.pdf";
       a.click();
       URL.revokeObjectURL(url);
+      recordGeneratedDoc("nenkin");
       setShowModal(true);
     } catch (err) {
       console.error("PDF生成エラー:", err);

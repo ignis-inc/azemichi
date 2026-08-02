@@ -22,6 +22,16 @@ export function toWarekiDate(y: number, m: number, d: number): string {
   return `${era}${eraYear}年${m}月${d}日`;
 }
 
+// 和暦（元号・年・月・日）をISO日付（YYYY-MM-DD）に変換する。
+// 判定材料が揃わない・実在しない日付の場合は undefined を返す（呼び出し側で「起点日なし」として扱う）。
+export function warekiToISO(era: string, year: number, month: number, day: number): string | undefined {
+  const base = ERA_BASE[era];
+  if (!base || !year || !month || !day) return undefined;
+  if (!isValidWarekiDate(era, year, month, day)) return undefined;
+  const y = base + year;
+  return `${y}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
 export function isValidWarekiDate(era: string, year: number, month: number, day: number): boolean {
   const base = ERA_BASE[era];
   // 判定材料が揃わないものはここでは弾かない（未入力の扱いは呼び出し側の責務）
