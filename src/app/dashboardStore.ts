@@ -17,7 +17,7 @@ export const DOC_META: Record<DocType, { title: string; path: string }> = {
   aoiro: { title: "所得税の青色申告承認申請書", path: "/aoiro" },
   senjusha: { title: "青色事業専従者給与に関する届出書", path: "/senjusha" },
   nouchi: { title: "農地法第3条の3の届出書", path: "/nouchi" },
-  kome: { title: "米穀の出荷又は販売の事業開始届出書", path: "/tool" },
+  kome: { title: "米穀の出荷又は販売の事業開始届出書", path: "/kome" },
   keiei: { title: "経営所得安定対策等交付金交付申請書", path: "/keiei" },
   nenkin: { title: "農業者年金通常加入申込書", path: "/nenkin" },
 };
