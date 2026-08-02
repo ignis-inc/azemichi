@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 // この端末のブラウザだけに保存する（サーバーには送信しない）
 const STORAGE_KEY = "azemichi-boujo-v1";
@@ -121,13 +122,20 @@ function parseCSV(text: string): Entry[] {
 const ALL_FILTER = "";
 
 export default function BoujoApp() {
+  // /nisshi から「日付・圃場・作物・区分」を引き継いで開いた場合に読み取る
+  // （例：/boujo?date=2026-07-28&field=南の畑&crop=きゅうり&type=農薬）
+  const searchParams = useSearchParams();
+
   // dynamic(ssr:false) 経由でのみ描画されるため、初回レンダーの時点で
   // 常にブラウザ環境。lazy initializer で読み込めば effect は不要
   const [entries, setEntries] = useState<Entry[]>(() => loadEntries());
-  const [date, setDate] = useState(todayISO());
-  const [type, setType] = useState<EntryType>("農薬");
-  const [field, setField] = useState("");
-  const [crop, setCrop] = useState("");
+  const [date, setDate] = useState(() => searchParams.get("date") || todayISO());
+  const [type, setType] = useState<EntryType>(() => {
+    const t = searchParams.get("type");
+    return t === "農薬" || t === "肥料" ? t : "農薬";
+  });
+  const [field, setField] = useState(() => searchParams.get("field") || "");
+  const [crop, setCrop] = useState(() => searchParams.get("crop") || "");
   const [name, setName] = useState("");
   const [targetPest, setTargetPest] = useState("");
   const [amount, setAmount] = useState("");

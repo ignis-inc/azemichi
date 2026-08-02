@@ -126,6 +126,25 @@ function needsBoujoHint(workType: string): boolean {
   return workType.includes("防除") || workType.includes("施肥");
 }
 
+// 作業内容から /boujo の区分（農薬・肥料）を推測する。どちらでもなければ引き継がない
+function boujoTypeFromWorkType(workType: string): "農薬" | "肥料" | undefined {
+  if (workType.includes("防除")) return "農薬";
+  if (workType.includes("施肥")) return "肥料";
+  return undefined;
+}
+
+// 日付・圃場・作物・区分のうち、値が入っている項目だけをクエリパラメータとして引き継ぐ
+function buildBoujoHref(date: string, field: string, crop: string, workType: string): string {
+  const params = new URLSearchParams();
+  if (date) params.set("date", date);
+  if (field.trim()) params.set("field", field.trim());
+  if (crop.trim()) params.set("crop", crop.trim());
+  const type = boujoTypeFromWorkType(workType);
+  if (type) params.set("type", type);
+  const qs = params.toString();
+  return qs ? `/boujo?${qs}` : "/boujo";
+}
+
 export default function NisshiApp() {
   // dynamic(ssr:false) 経由でのみ描画されるため、初回レンダーの時点で
   // 常にブラウザ環境。lazy initializer で読み込めば effect は不要
@@ -317,7 +336,7 @@ export default function NisshiApp() {
               {needsBoujoHint(workType) && (
                 <p className="text-sm text-green-800 bg-green-50 border border-green-200 rounded-lg px-3 py-2 mt-2 leading-relaxed">
                   農薬・肥料の使用は、記録専用のツール（
-                  <Link href="/boujo" className="underline underline-offset-2 font-bold hover:text-green-900">
+                  <Link href={buildBoujoHref(date, field, crop, workType)} className="underline underline-offset-2 font-bold hover:text-green-900">
                     /boujo
                   </Link>
                   ）にも記録しておくと安心です。
