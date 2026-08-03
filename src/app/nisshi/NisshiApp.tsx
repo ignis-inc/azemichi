@@ -163,6 +163,7 @@ export default function NisshiApp() {
   const [fieldFilter, setFieldFilter] = useState(ALL_FILTER);
   const [cropFilter, setCropFilter] = useState(ALL_FILTER);
   const [workTypeFilter, setWorkTypeFilter] = useState(ALL_FILTER);
+  const [summaryYear, setSummaryYear] = useState(todayISO().slice(0, 4));
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function addEntry() {
@@ -250,6 +251,49 @@ export default function NisshiApp() {
       (workTypeFilter === ALL_FILTER || e.workType === workTypeFilter)
   );
   const sortedEntries = [...filteredEntries].sort((a, b) => b.date.localeCompare(a.date));
+
+  // 年間サマリー：対象の年の選択肢（記録がある年＋今年）
+  const summaryYearOptions = [...new Set([...entries.map((e) => e.date.slice(0, 4)), todayISO().slice(0, 4)])]
+    .filter(Boolean)
+    .sort((a, b) => b.localeCompare(a));
+
+  // 選んだ年の記録だけを対象にする
+  const yearEntries = entries.filter((e) => e.date.slice(0, 4) === summaryYear);
+
+  // 作業内容ごとの月別件数
+  const workTypesInYear = [...new Set(yearEntries.map((e) => e.workType).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ja"));
+  const monthlyWorkTypeCounts = workTypesInYear.map((wt) => {
+    const counts = Array.from({ length: 12 }, () => 0);
+    for (const e of yearEntries) {
+      if (e.workType !== wt) continue;
+      const month = Number(e.date.slice(5, 7));
+      if (month >= 1 && month <= 12) counts[month - 1] += 1;
+    }
+    const total = counts.reduce((sum, c) => sum + c, 0);
+    return { workType: wt, counts, total };
+  });
+
+  // 圃場ごと・作物ごとの作業日数（延べ回数。同じ日に複数記録があれば複数として数える）
+  const fieldWorkCounts = [...new Set(yearEntries.map((e) => e.field).filter(Boolean))]
+    .map((f) => ({ name: f, count: yearEntries.filter((e) => e.field === f).length }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, "ja"));
+  const cropWorkCounts = [...new Set(yearEntries.map((e) => e.crop).filter(Boolean))]
+    .map((c) => ({ name: c, count: yearEntries.filter((e) => e.crop === c).length }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, "ja"));
+
+  // 収穫記録の一覧（時系列順。単位がまちまちなため合計は出さない）
+  const harvestEntries = yearEntries
+    .filter((e) => e.harvestAmount.trim() !== "")
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  // 月ごとの記録日数（同じ日に複数記録があっても1日として数える）
+  const monthlyRecordDays = Array.from({ length: 12 }, (_, i) => {
+    const month = i + 1;
+    const dates = new Set(
+      yearEntries.filter((e) => Number(e.date.slice(5, 7)) === month).map((e) => e.date)
+    );
+    return { month, days: dates.size };
+  });
 
   const inputClass =
     "w-full rounded-lg border-2 border-green-200 bg-white px-4 py-3 text-lg focus:border-green-500 transition-colors";
@@ -495,6 +539,143 @@ export default function NisshiApp() {
                 </tbody>
               </table>
             </div>
+          )}
+        </section>
+
+        {/* 年間サマリー */}
+        <section className={sectionClass}>
+          <h2 className="text-xl font-bold text-green-800 mb-5 pb-2 border-b-2 border-green-200">年間サマリー</h2>
+
+          <div className="mb-5">
+            <label className={labelClass} htmlFor="nisshi-summary-year">対象の年</label>
+            <select id="nisshi-summary-year" value={summaryYear} onChange={(e) => setSummaryYear(e.target.value)} className={inputClass}>
+              {summaryYearOptions.map((y) => (
+                <option key={y} value={y}>{y}年</option>
+              ))}
+            </select>
+          </div>
+
+          {yearEntries.length === 0 ? (
+            <p className="text-base text-gray-500">{summaryYear}年の記録がありません</p>
+          ) : (
+            <>
+              <h3 className="text-lg font-bold text-gray-700 mb-2">作業内容ごとの月別件数</h3>
+              <div className="overflow-x-auto mb-6">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-green-50">
+                      <th className="p-2 border border-green-100 text-sm">作業内容</th>
+                      {Array.from({ length: 12 }, (_, i) => (
+                        <th key={i} className="p-2 border border-green-100 text-sm text-right">{i + 1}月</th>
+                      ))}
+                      <th className="p-2 border border-green-100 text-sm text-right">合計</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {monthlyWorkTypeCounts.map((row) => (
+                      <tr key={row.workType}>
+                        <td className="p-2 border border-green-100 text-sm whitespace-nowrap">{row.workType}</td>
+                        {row.counts.map((c, i) => (
+                          <td key={i} className="p-2 border border-green-100 text-sm text-right whitespace-nowrap">{c > 0 ? `${c}回` : "－"}</td>
+                        ))}
+                        <td className="p-2 border border-green-100 text-sm text-right font-bold whitespace-nowrap">{row.total}回</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <h3 className="text-lg font-bold text-gray-700 mb-2">圃場ごとの作業日数（延べ回数）</h3>
+              <div className="overflow-x-auto mb-6">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-green-50">
+                      <th className="p-2 border border-green-100 text-sm">圃場</th>
+                      <th className="p-2 border border-green-100 text-sm text-right">作業日数（延べ）</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {fieldWorkCounts.map((row) => (
+                      <tr key={row.name}>
+                        <td className="p-2 border border-green-100 text-sm whitespace-nowrap">{row.name}</td>
+                        <td className="p-2 border border-green-100 text-sm text-right font-bold whitespace-nowrap">{row.count}回</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <h3 className="text-lg font-bold text-gray-700 mb-2">作物ごとの作業日数（延べ回数）</h3>
+              <div className="overflow-x-auto mb-6">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-green-50">
+                      <th className="p-2 border border-green-100 text-sm">作物</th>
+                      <th className="p-2 border border-green-100 text-sm text-right">作業日数（延べ）</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {cropWorkCounts.map((row) => (
+                      <tr key={row.name}>
+                        <td className="p-2 border border-green-100 text-sm whitespace-nowrap">{row.name}</td>
+                        <td className="p-2 border border-green-100 text-sm text-right font-bold whitespace-nowrap">{row.count}回</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <h3 className="text-lg font-bold text-gray-700 mb-2">収穫記録の一覧</h3>
+              {harvestEntries.length === 0 ? (
+                <p className="text-base text-gray-500 mb-6">{summaryYear}年の収穫記録はまだありません</p>
+              ) : (
+                <>
+                  <div className="overflow-x-auto mb-2">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-green-50">
+                          <th className="p-2 border border-green-100 text-sm">日付</th>
+                          <th className="p-2 border border-green-100 text-sm">圃場</th>
+                          <th className="p-2 border border-green-100 text-sm">作物</th>
+                          <th className="p-2 border border-green-100 text-sm">収穫量</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {harvestEntries.map((e) => (
+                          <tr key={e.id}>
+                            <td className="p-2 border border-green-100 text-sm whitespace-nowrap">{e.date}</td>
+                            <td className="p-2 border border-green-100 text-sm whitespace-nowrap">{e.field}</td>
+                            <td className="p-2 border border-green-100 text-sm whitespace-nowrap">{e.crop}</td>
+                            <td className="p-2 border border-green-100 text-sm">{e.harvestAmount}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="text-sm text-gray-500 mb-6">収穫量は入力された単位がまちまちのため、合計は表示していません。</p>
+                </>
+              )}
+
+              <h3 className="text-lg font-bold text-gray-700 mb-2">月ごとの記録日数</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-green-50">
+                      {monthlyRecordDays.map((m) => (
+                        <th key={m.month} className="p-2 border border-green-100 text-sm text-right">{m.month}月</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      {monthlyRecordDays.map((m) => (
+                        <td key={m.month} className="p-2 border border-green-100 text-sm text-right whitespace-nowrap">{m.days > 0 ? `${m.days}日` : "－"}</td>
+                      ))}
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </section>
 
