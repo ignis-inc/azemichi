@@ -40,6 +40,29 @@ export const metadata: Metadata = {
   },
 };
 
+// サイト全体の構造化データ（WebSite・Organization）。
+// FAQPage（src/app/page.tsx）と同じ書き方で、全ページ共通のこのレイアウトに1つだけ置く。
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: SITE_NAME,
+  url: SITE_URL,
+};
+
+const organizationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "株式会社IGNIS",
+  url: SITE_URL,
+  logo: `${SITE_URL}${OG_IMAGE}`,
+  address: {
+    "@type": "PostalAddress",
+    addressRegion: "大分県",
+    addressLocality: "豊後大野市",
+    addressCountry: "JP",
+  },
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -48,6 +71,14 @@ export default function RootLayout({
   return (
     <html lang="ja" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
         {children}
         <SiteFooter />
       </body>
