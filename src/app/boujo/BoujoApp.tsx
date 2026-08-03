@@ -147,6 +147,12 @@ export default function BoujoApp() {
   const [cropFilter, setCropFilter] = useState(ALL_FILTER);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // 期間指定PDF出力用
+  const [pdfStartDate, setPdfStartDate] = useState("");
+  const [pdfEndDate, setPdfEndDate] = useState("");
+  const [pdfErrors, setPdfErrors] = useState<Record<string, string>>({});
+  const [pdfGenerating, setPdfGenerating] = useState(false);
+
   function handleTypeChange(next: EntryType) {
     setType(next);
     if (next === "肥料") setTargetPest("");
@@ -233,6 +239,64 @@ export default function BoujoApp() {
     (e) => (fieldFilter === ALL_FILTER || e.field === fieldFilter) && (cropFilter === ALL_FILTER || e.crop === cropFilter)
   );
   const sortedEntries = [...filteredEntries].sort((a, b) => b.date.localeCompare(a.date));
+
+  // 現在の圃場・作物のしぼりこみ状態に、指定した期間をさらに重ねてPDFの対象を絞る
+  const pdfEntries = [...filteredEntries]
+    .filter((e) => (!pdfStartDate || e.date >= pdfStartDate) && (!pdfEndDate || e.date <= pdfEndDate))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  async function generateBoujoReportPDF() {
+    const e: Record<string, string> = {};
+    if (!pdfStartDate) e.pdfStartDate = "開始日を入力してください";
+    if (!pdfEndDate) e.pdfEndDate = "終了日を入力してください";
+    if (pdfStartDate && pdfEndDate && pdfStartDate > pdfEndDate) {
+      e.pdfEndDate = "終了日は開始日より後の日付にしてください";
+    }
+    setPdfErrors(e);
+    if (Object.keys(e).length > 0) return;
+
+    setPdfGenerating(true);
+    try {
+      const res = await fetch("/api/boujo-pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          entries: pdfEntries.map((entry) => ({
+            date: entry.date,
+            type: entry.type,
+            field: entry.field,
+            crop: entry.crop,
+            name: entry.name,
+            targetPest: entry.targetPest,
+            amount: entry.amount,
+            dilution: entry.dilution,
+            applicator: entry.applicator,
+            memo: entry.memo,
+          })),
+          startDate: pdfStartDate,
+          endDate: pdfEndDate,
+          fieldFilter: fieldFilter === ALL_FILTER ? "" : fieldFilter,
+          cropFilter: cropFilter === ALL_FILTER ? "" : cropFilter,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `サーバーエラー (${res.status})`);
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `農薬肥料使用記録_${pdfStartDate}_${pdfEndDate}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("使用記録PDF生成エラー:", err);
+      alert("PDFの生成に失敗しました。もう一度お試しください。");
+    } finally {
+      setPdfGenerating(false);
+    }
+  }
 
   // 今年、同じ圃場・同じ農薬を何回使ったか（基準を満たしているかの判定はしない。回数を見せるだけ）
   const nowYear = todayISO().slice(0, 4);
@@ -471,6 +535,34 @@ export default function BoujoApp() {
                 ))}
               </select>
             </div>
+          </div>
+
+          {/* 期間指定PDF出力（上の圃場・作物のしぼりこみと組み合わせて使う） */}
+          <div className="border-2 border-green-200 rounded-xl p-4 mb-5 bg-green-50/40">
+            <p className="text-base font-bold text-green-800 mb-3">指定期間の記録をPDFに出力する</p>
+            <p className="text-sm text-gray-600 mb-4">
+              上の「圃場・作物でしぼりこむ」の設定と、ここで指定する期間の両方に合う記録だけがPDFになります。
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className={labelClass} htmlFor="boujo-pdf-start">開始日<span className="req">必須</span></label>
+                <input id="boujo-pdf-start" type="date" value={pdfStartDate} onChange={(e) => setPdfStartDate(e.target.value)} className={inputClass} />
+                {pdfErrors.pdfStartDate && <p className="text-red-600 text-base mt-2">{pdfErrors.pdfStartDate}</p>}
+              </div>
+              <div>
+                <label className={labelClass} htmlFor="boujo-pdf-end">終了日<span className="req">必須</span></label>
+                <input id="boujo-pdf-end" type="date" value={pdfEndDate} onChange={(e) => setPdfEndDate(e.target.value)} className={inputClass} />
+                {pdfErrors.pdfEndDate && <p className="text-red-600 text-base mt-2">{pdfErrors.pdfEndDate}</p>}
+              </div>
+            </div>
+            <p className="text-sm text-gray-500 mb-4">対象件数：{pdfEntries.length}件</p>
+            <button
+              onClick={generateBoujoReportPDF}
+              disabled={pdfGenerating}
+              className="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 disabled:bg-green-300 text-white text-lg font-bold py-4 px-6 rounded-2xl shadow-md transition-colors"
+            >
+              {pdfGenerating ? "PDF作成中…" : "PDFを作成する"}
+            </button>
           </div>
 
           {sortedEntries.length === 0 ? (
