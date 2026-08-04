@@ -76,6 +76,24 @@ export default function Home() {
               </Link>
             </li>
             <li>
+              <Link href="/kyuyo-jimusho" className="doc-card">
+                <span className="doc-card-body">
+                  <span className="doc-card-purpose">給与を払い始める方へ</span>
+                  <span className="doc-card-name">給与支払事務所等の開設・移転・廃止届出書</span>
+                </span>
+                <span className="doc-card-arrow" aria-hidden="true">→</span>
+              </Link>
+            </li>
+            <li>
+              <Link href="/gennsen-tokurei" className="doc-card">
+                <span className="doc-card-body">
+                  <span className="doc-card-purpose">源泉所得税の納付をまとめたい方へ</span>
+                  <span className="doc-card-name">源泉所得税の納期の特例の承認に関する申請書</span>
+                </span>
+                <span className="doc-card-arrow" aria-hidden="true">→</span>
+              </Link>
+            </li>
+            <li>
               <Link href="/nouchi" className="doc-card">
                 <span className="doc-card-body">
                   <span className="doc-card-purpose">農地を相続・売買した方へ</span>
@@ -114,7 +132,7 @@ export default function Home() {
           <h2 className="text-xl font-bold text-green-800 mb-2">開業時にまとめて書類を作る</h2>
           <p className="text-sm font-bold text-green-700 mb-3">無料・ログイン不要</p>
           <p className="text-base text-gray-600 leading-relaxed mb-5">
-            開業届・青色申告承認申請書・専従者給与の届出書を、共通する情報の入力は1回だけでまとめてPDFにできます。農業を新しく始める方向けのツールです。
+            開業届・青色申告承認申請書・専従者給与の届出書・給与支払事務所等の開設届出書を、共通する情報の入力は1回だけでまとめてPDFにできます。農業を新しく始める方向けのツールです。
           </p>
           <Link
             href="/kaigyo-set"

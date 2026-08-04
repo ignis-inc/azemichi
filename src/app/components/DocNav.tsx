@@ -13,6 +13,8 @@ const NAV_ITEMS = [
   { href: "/nouchi", label: "農地を相続・売買したときの届出", formal: "農地法第3条の3第1項の規定による届出書" },
   { href: "/aoiro", label: "青色申告をはじめるときの申請書", formal: "所得税の青色申告承認申請書" },
   { href: "/senjusha", label: "家族に給与を払うときの届出書", formal: "青色事業専従者給与に関する届出書" },
+  { href: "/kyuyo-jimusho", label: "給与を払い始めるときの届出", formal: "給与支払事務所等の開設・移転・廃止届出書" },
+  { href: "/gennsen-tokurei", label: "源泉所得税の納期をまとめるときの申請", formal: "源泉所得税の納期の特例の承認に関する申請書" },
   { href: "/keiei", label: "経営所得安定対策（補助金）の申請書", formal: "経営所得安定対策等交付金交付申請書（様式第1号A）" },
 ];
 

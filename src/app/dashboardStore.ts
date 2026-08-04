@@ -3,7 +3,7 @@
 
 const STORAGE_KEY = "azemichi-dashboard-v1";
 
-export type DocType = "kaigyo" | "aoiro" | "senjusha" | "nouchi" | "kome" | "keiei" | "nenkin";
+export type DocType = "kaigyo" | "aoiro" | "senjusha" | "nouchi" | "kome" | "keiei" | "nenkin" | "kyuyoJimusho" | "gennsenTokurei";
 
 export type GeneratedDoc = {
   id: string;
@@ -20,6 +20,8 @@ export const DOC_META: Record<DocType, { title: string; path: string }> = {
   kome: { title: "米穀の出荷又は販売の事業開始届出書", path: "/kome" },
   keiei: { title: "経営所得安定対策等交付金交付申請書", path: "/keiei" },
   nenkin: { title: "農業者年金通常加入申込書", path: "/nenkin" },
+  kyuyoJimusho: { title: "給与支払事務所等の開設届出書", path: "/kyuyo-jimusho" },
+  gennsenTokurei: { title: "源泉所得税の納期の特例の承認に関する申請書", path: "/gennsen-tokurei" },
 };
 
 function todayISO(): string {
@@ -145,6 +147,16 @@ export function computeDeadline(doc: GeneratedDoc): DeadlineInfo {
     }
     case "nenkin": {
       return { kind: "none", dueDate: null, label: "期限なし", status: "n/a" };
+    }
+    case "kyuyoJimusho": {
+      if (!doc.anchorDate) {
+        return { kind: "date", dueDate: null, label: "事実があった日から1か月以内", status: "n/a" };
+      }
+      const dueDate = addMonths(doc.anchorDate, 1);
+      return { kind: "date", dueDate, label: "事実があった日から1か月以内", status: dateStatus(dueDate) };
+    }
+    case "gennsenTokurei": {
+      return { kind: "none", dueDate: null, label: "期限なし（随時提出可）", status: "n/a" };
     }
   }
 }

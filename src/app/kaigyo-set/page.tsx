@@ -71,6 +71,17 @@ type AoiroExtra = {
   bookType: string;
 };
 
+type KyuyoJimushoExtra = {
+  noticeType: string;
+  officeAddressSame: boolean;
+  officePrefecture: string;
+  officeCityAddress: string;
+  officePhone: string;
+  officerCount: string;
+  employeeCount: string;
+  otherCount: string;
+};
+
 type SenjushaEntry = {
   key: string;
   name: string;
@@ -103,12 +114,13 @@ type SenjushaExtra = {
   accountantPhone: string;
 };
 
-type DocKey = "kaigyo" | "aoiro" | "senjusha";
+type DocKey = "kaigyo" | "aoiro" | "senjusha" | "kyuyoJimusho";
 
 const DOC_INFO: Record<DocKey, { title: string; formal: string; filename: string }> = {
   kaigyo: { title: "開業届", formal: "個人事業の開業・廃業等届出書（開業）", filename: "個人事業の開業届出書.pdf" },
   aoiro: { title: "青色申告承認申請書", formal: "所得税の青色申告承認申請書", filename: "青色申告承認申請書.pdf" },
   senjusha: { title: "専従者給与の届出書", formal: "青色事業専従者給与に関する届出書", filename: "青色事業専従者給与に関する届出書.pdf" },
+  kyuyoJimusho: { title: "給与支払事務所等の開設届出書", formal: "給与支払事務所等の開設・移転・廃止届出書", filename: "給与支払事務所等の開設届出書.pdf" },
 };
 
 export default function KaigyoSetPage() {
@@ -122,6 +134,7 @@ export default function KaigyoSetPage() {
     kaigyo: true,
     aoiro: true,
     senjusha: false,
+    kyuyoJimusho: false,
   });
 
   const [common, setCommon] = useState<CommonFormData>({
@@ -165,6 +178,17 @@ export default function KaigyoSetPage() {
     bookType: "",
   });
 
+  const [kyuyoJimushoExtra, setKyuyoJimushoExtra] = useState<KyuyoJimushoExtra>({
+    noticeType: "開設",
+    officeAddressSame: true,
+    officePrefecture: "",
+    officeCityAddress: "",
+    officePhone: "",
+    officerCount: "0",
+    employeeCount: "0",
+    otherCount: "0",
+  });
+
   const [senjushaList, setSenjushaList] = useState<SenjushaEntry[]>([newSenjusha()]);
   const [senjushaExtra, setSenjushaExtra] = useState<SenjushaExtra>({
     otherNotes: "",
@@ -175,8 +199,11 @@ export default function KaigyoSetPage() {
 
   const needsPersonalDates = docs.kaigyo || docs.aoiro;
   const needsOccupation = docs.kaigyo || docs.senjusha;
-  // 開業年月日は/senjushaの期限計算（採用日の代わり）にも使うため、/senjushaだけにチェックが入っている場合も表示する
-  const needsStartDate = docs.kaigyo || docs.aoiro || docs.senjusha;
+  // 個人番号は/kyuyoJimushoでも使う
+  const needsMyNumber = docs.kaigyo || docs.aoiro || docs.kyuyoJimusho;
+  // 開業年月日は/senjushaの期限計算（採用日の代わり）、/kyuyoJimushoの給与支払開始日にも使うため、
+  // それらだけにチェックが入っている場合も表示する
+  const needsStartDate = docs.kaigyo || docs.aoiro || docs.senjusha || docs.kyuyoJimusho;
 
   function handleCommonChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     const { name, value } = e.target;
@@ -215,6 +242,21 @@ export default function KaigyoSetPage() {
     setSenjushaExtra((prev) => ({ ...prev, [name]: value }));
   }
 
+  function handleKyuyoJimushoExtraChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
+    const { name, value } = e.target;
+    setKyuyoJimushoExtra((prev) => ({ ...prev, [name]: value }));
+  }
+
+  function handleKyuyoJimushoSameAddress(e: React.ChangeEvent<HTMLInputElement>) {
+    const checked = e.target.checked;
+    setKyuyoJimushoExtra((prev) => ({
+      ...prev,
+      officeAddressSame: checked,
+      officePrefecture: checked ? common.prefecture : prev.officePrefecture,
+      officeCityAddress: checked ? common.cityAddress : prev.officeCityAddress,
+    }));
+  }
+
   function addSenjusha() {
     setSenjushaList((prev) => [...prev, newSenjusha()]);
   }
@@ -237,7 +279,7 @@ export default function KaigyoSetPage() {
     if (!common.name.trim()) e.name = "氏名を入力してください";
     if (!common.prefecture) e.prefecture = "都道府県を選択してください";
     if (!common.cityAddress.trim()) e.cityAddress = "市区町村・番地を入力してください";
-    if (!docs.kaigyo && !docs.aoiro && !docs.senjusha) {
+    if (!docs.kaigyo && !docs.aoiro && !docs.senjusha && !docs.kyuyoJimusho) {
       e.docs = "作成する書類を1つ以上選んでください";
     }
     if (needsPersonalDates) {
@@ -344,6 +386,28 @@ export default function KaigyoSetPage() {
         });
       }
 
+      if (docs.kyuyoJimusho) {
+        jobs.push({
+          key: "kyuyoJimusho",
+          url: "/api/kyuyo-jimusho-pdf",
+          filename: DOC_INFO.kyuyoJimusho.filename,
+          body: {
+            name: common.name, nameKana: common.nameKana, prefecture: common.prefecture, cityAddress: common.cityAddress, phone: common.phone,
+            myNumber: common.myNumber,
+            farmName: common.farmName,
+            noticeType: kyuyoJimushoExtra.noticeType,
+            startEra: common.startEra, startYear: common.startYear, startMonth: common.startMonth, startDay: common.startDay,
+            officePrefecture: kyuyoJimushoExtra.officeAddressSame ? common.prefecture : kyuyoJimushoExtra.officePrefecture,
+            officeCityAddress: kyuyoJimushoExtra.officeAddressSame ? common.cityAddress : kyuyoJimushoExtra.officeCityAddress,
+            officePhone: kyuyoJimushoExtra.officePhone,
+            officerCount: kyuyoJimushoExtra.officerCount,
+            employeeCount: kyuyoJimushoExtra.employeeCount,
+            otherCount: kyuyoJimushoExtra.otherCount,
+            taxOffice: common.taxOffice,
+          },
+        });
+      }
+
       // 先に全PDFを取得してから、ダウンロードは少し間隔を空けて順番に発火する
       // （複数ファイルを一斉にトリガーするとブラウザに自動ダウンロードとしてブロックされることがあるため）
       const results = await Promise.all(
@@ -431,19 +495,21 @@ export default function KaigyoSetPage() {
           開業時にまとめて書類を作る
         </h1>
         <p className="mt-2 text-green-100 text-base">
-          開業届・青色申告承認申請書・専従者給与の届出書
+          開業届・青色申告承認申請書・専従者給与の届出書・給与支払事務所等の開設届出書
         </p>
       </header>
 
       <div className="max-w-2xl mx-auto px-4 pt-5">
         <div className="bg-white border border-green-100 rounded-xl px-5 py-4">
           <p className="text-base text-gray-600 leading-relaxed">
-            農業を新しく始めるときによく一緒に提出される3つの書類を、共通する情報の入力は1回だけで、まとめてPDFにできます。それぞれの書類は単体でも
+            農業を新しく始めるときによく一緒に提出される4つの書類を、共通する情報の入力は1回だけで、まとめてPDFにできます。それぞれの書類は単体でも
             <Link href="/kaigyo" className="text-green-700 underline underline-offset-2 hover:text-green-800">/kaigyo</Link>
             ・
             <Link href="/aoiro" className="text-green-700 underline underline-offset-2 hover:text-green-800">/aoiro</Link>
             ・
             <Link href="/senjusha" className="text-green-700 underline underline-offset-2 hover:text-green-800">/senjusha</Link>
+            ・
+            <Link href="/kyuyo-jimusho" className="text-green-700 underline underline-offset-2 hover:text-green-800">/kyuyo-jimusho</Link>
             から作成できます。提出期限や要件は、国税庁・税務署の案内をご確認ください。
           </p>
           <p className="mt-3 text-sm text-gray-500 leading-relaxed">
@@ -471,7 +537,7 @@ export default function KaigyoSetPage() {
           </h2>
           {errors.docs && <p className="text-red-600 text-base mb-4">{errors.docs}</p>}
           <div className="space-y-3">
-            {(["kaigyo", "aoiro", "senjusha"] as DocKey[]).map((key) => (
+            {(["kaigyo", "aoiro", "senjusha", "kyuyoJimusho"] as DocKey[]).map((key) => (
               <label key={key} className={radioClass(docs[key])}>
                 <input type="checkbox" checked={docs[key]} onChange={() => toggleDoc(key)}
                   className="w-5 h-5 accent-green-600 shrink-0" />
@@ -547,7 +613,7 @@ export default function KaigyoSetPage() {
                 placeholder="例：090-1234-5678" className={inputClass} />
             </div>
 
-            {needsPersonalDates && (
+            {needsMyNumber && (
               <div>
                 <label className={labelClass} htmlFor="set-myNumber">個人番号（マイナンバー）</label>
                 <input type="text" id="set-myNumber" inputMode="numeric" maxLength={12} name="myNumber"
@@ -887,6 +953,96 @@ export default function KaigyoSetPage() {
                 <label className={labelClass} htmlFor="set-accountantPhone">税理士の電話番号（任意）</label>
                 <input type="tel" id="set-accountantPhone" name="accountantPhone" value={senjushaExtra.accountantPhone} onChange={handleSenjushaExtraChange}
                   placeholder="依頼している場合のみ" className={inputClass} />
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* /kyuyoJimusho 固有項目 */}
+        {docs.kyuyoJimusho && (
+          <section className={sectionClass}>
+            <h2 className="text-xl font-bold text-green-800 mb-5 pb-2 border-b-2 border-green-200">
+              給与支払事務所等の開設届出書の固有項目
+            </h2>
+            <div className="space-y-5">
+              <div>
+                <label className={labelClass}>届出区分</label>
+                <div className="grid grid-cols-3 gap-3">
+                  {["開設", "移転", "廃止"].map((t) => (
+                    <label key={t} className={radioClass(kyuyoJimushoExtra.noticeType === t)}>
+                      <input type="radio" name="noticeType" value={t} checked={kyuyoJimushoExtra.noticeType === t}
+                        onChange={handleKyuyoJimushoExtraChange} className="w-5 h-5 accent-green-600 shrink-0" />
+                      <span className="text-base text-gray-800">{t}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className={labelClass}>事務所等の所在地</label>
+                <label className="flex items-center gap-3 mb-3 cursor-pointer">
+                  <input type="checkbox" checked={kyuyoJimushoExtra.officeAddressSame} onChange={handleKyuyoJimushoSameAddress}
+                    className="w-5 h-5 accent-green-600" />
+                  <span className="text-base text-gray-700">共通項目の住所と同じ</span>
+                </label>
+                {!kyuyoJimushoExtra.officeAddressSame && (
+                  <>
+                    <select
+                      aria-label="事務所の所在地（都道府県）"
+                      name="officePrefecture"
+                      value={kyuyoJimushoExtra.officePrefecture}
+                      onChange={handleKyuyoJimushoExtraChange}
+                      className={`${inputClass} mb-2`}
+                    >
+                      <option value="">都道府県を選択</option>
+                      {PREFECTURES.map((p) => (
+                        <option key={p} value={p}>{p}</option>
+                      ))}
+                    </select>
+                    <input
+                      aria-label="事務所の所在地（市区町村・番地）"
+                      type="text"
+                      name="officeCityAddress"
+                      value={kyuyoJimushoExtra.officeCityAddress}
+                      onChange={handleKyuyoJimushoExtraChange}
+                      placeholder="例：○○市○○町1-2-3"
+                      className={inputClass}
+                    />
+                  </>
+                )}
+                {kyuyoJimushoExtra.officeAddressSame && (
+                  <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-base text-gray-600">
+                    {common.prefecture}{common.cityAddress || "（共通項目の住所が反映されます）"}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className={labelClass} htmlFor="set-officePhone">事務所等の電話番号</label>
+                <input type="tel" id="set-officePhone" name="officePhone" value={kyuyoJimushoExtra.officePhone} onChange={handleKyuyoJimushoExtraChange}
+                  placeholder="例：090-1234-5678（住所と同じ場合は空欄可）" className={inputClass} />
+              </div>
+
+              <div>
+                <label className={labelClass}>従事員数</label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-600 mb-1" htmlFor="set-officerCount">役員</label>
+                    <input type="number" min="0" step="1" id="set-officerCount" name="officerCount"
+                      value={kyuyoJimushoExtra.officerCount} onChange={handleKyuyoJimushoExtraChange} className={inputClass} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-600 mb-1" htmlFor="set-employeeCount">従業員</label>
+                    <input type="number" min="0" step="1" id="set-employeeCount" name="employeeCount"
+                      value={kyuyoJimushoExtra.employeeCount} onChange={handleKyuyoJimushoExtraChange} className={inputClass} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-600 mb-1" htmlFor="set-otherCount">その他</label>
+                    <input type="number" min="0" step="1" id="set-otherCount" name="otherCount"
+                      value={kyuyoJimushoExtra.otherCount} onChange={handleKyuyoJimushoExtraChange} className={inputClass} />
+                  </div>
+                </div>
+                <p className="text-sm text-gray-500 mt-1">専従者給与を受ける家族従業員は「従業員」に含めて構いません。</p>
               </div>
             </div>
           </section>

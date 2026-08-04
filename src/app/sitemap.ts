@@ -21,6 +21,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/privacy",
     "/kicho",
     "/senjusha",
+    "/kyuyo-jimusho",
+    "/gennsen-tokurei",
     "/boujo",
     "/nisshi",
     "/kaigyo",
