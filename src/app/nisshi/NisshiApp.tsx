@@ -15,13 +15,33 @@ type Entry = {
   temperature: string;
   workType: string;
   workTime: string;
-  harvestAmount: string;
+  harvestAmount: string; // 旧形式（自由入力）。過去データの表示のためだけに残し、新規入力では使わない
+  harvestQuantity: string; // 新形式：収穫量の数値
+  harvestUnit: string; // 新形式：単位（kg・箱・個・俵・袋・その他）
+  harvestUnitOther: string; // 単位が「その他」のときの単位名
   worker: string;
   memo: string;
 };
 
 const WEATHER_SUGGESTIONS = ["晴れ", "曇り", "雨", "雪", "晴れのち曇り", "曇りのち雨", "雨のち晴れ"];
 const WORK_TYPE_SUGGESTIONS = ["種まき", "定植", "施肥", "防除", "除草", "潅水", "収穫", "片付け・その他"];
+
+// 収穫量の単位（全品目共通）。
+// 将来的な拡張候補：品目（crop）ごとに単位の選択肢を出し分ける（例：米→俵・kg、野菜→箱・kg）。
+// 今回は品目との連携は見送り、全品目共通のリストで統一する。
+const HARVEST_UNITS = ["kg", "箱", "個", "俵", "袋", "その他"];
+
+// 年間サマリーの「収穫量の合計」機能を追加した日（注記の表示に使う）
+const HARVEST_STRUCTURED_SINCE_LABEL = "2026年8月6日";
+
+// 表示用の収穫量（新形式があればそちらを優先し、無ければ旧形式の自由入力をそのまま表示する）
+function harvestDisplay(e: Entry): string {
+  if (e.harvestQuantity.trim()) {
+    const unit = e.harvestUnit === "その他" ? (e.harvestUnitOther || "その他") : e.harvestUnit;
+    return `${e.harvestQuantity}${unit}`;
+  }
+  return e.harvestAmount;
+}
 
 function todayISO(): string {
   const jst = new Date(Date.now() + 9 * 60 * 60 * 1000);
@@ -53,7 +73,9 @@ function escapeCSV(v: string): string {
 }
 
 function toCSV(entries: Entry[]): string {
-  const header = ["日付", "圃場", "作物", "天候", "気温", "作業内容", "作業時間", "収穫量", "作業者", "メモ"];
+  // 「収穫量」列は表示用（新形式なら数値+単位、旧形式なら自由入力）。
+  // 末尾の3列は新形式データの構造化された値そのもの（再読み込み時の復元用）。
+  const header = ["日付", "圃場", "作物", "天候", "気温", "作業内容", "作業時間", "収穫量", "作業者", "メモ", "収穫量(数値)", "収穫量(単位)", "収穫量(単位その他)"];
   const rows = entries.map((e) => [
     e.date,
     e.field,
@@ -62,9 +84,12 @@ function toCSV(entries: Entry[]): string {
     e.temperature,
     e.workType,
     e.workTime,
-    e.harvestAmount,
+    harvestDisplay(e),
     e.worker,
     e.memo,
+    e.harvestQuantity,
+    e.harvestUnit,
+    e.harvestUnitOther,
   ]);
   return [header, ...rows].map((cols) => cols.map(escapeCSV).join(",")).join("\r\n");
 }
@@ -100,7 +125,7 @@ function parseCSV(text: string): Entry[] {
   const rows = lines.slice(1); // ヘッダー行を除く
   const result: Entry[] = [];
   for (const line of rows) {
-    const [date, field, crop, weather, temperature, workType, workTime, harvestAmount, worker, memo] = parseCSVLine(line);
+    const [date, field, crop, weather, temperature, workType, workTime, harvestAmount, worker, memo, harvestQuantity, harvestUnit, harvestUnitOther] = parseCSVLine(line);
     if (!date || !workType) continue;
     result.push({
       id: crypto.randomUUID(),
@@ -112,6 +137,9 @@ function parseCSV(text: string): Entry[] {
       workType: workType ?? "",
       workTime: workTime ?? "",
       harvestAmount: harvestAmount ?? "",
+      harvestQuantity: harvestQuantity ?? "",
+      harvestUnit: harvestUnit ?? "",
+      harvestUnitOther: harvestUnitOther ?? "",
       worker: worker ?? "",
       memo: memo ?? "",
     });
@@ -156,7 +184,9 @@ export default function NisshiApp() {
   const [temperature, setTemperature] = useState("");
   const [workType, setWorkType] = useState("");
   const [workTime, setWorkTime] = useState("");
-  const [harvestAmount, setHarvestAmount] = useState("");
+  const [harvestQuantity, setHarvestQuantity] = useState("");
+  const [harvestUnit, setHarvestUnit] = useState("");
+  const [harvestUnitOther, setHarvestUnitOther] = useState("");
   const [worker, setWorker] = useState("");
   const [memo, setMemo] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -172,6 +202,8 @@ export default function NisshiApp() {
     if (!field.trim()) e.field = "圃場を入力してください";
     if (!crop.trim()) e.crop = "作物を入力してください";
     if (!workType.trim()) e.workType = "作業内容を入力してください";
+    if (harvestQuantity.trim() && !harvestUnit) e.harvestUnit = "単位を選択してください";
+    if (harvestUnit === "その他" && !harvestUnitOther.trim()) e.harvestUnitOther = "単位名を入力してください";
     setErrors(e);
     if (Object.keys(e).length > 0) return;
 
@@ -184,7 +216,10 @@ export default function NisshiApp() {
       temperature: temperature.trim(),
       workType: workType.trim(),
       workTime: workTime.trim(),
-      harvestAmount: harvestAmount.trim(),
+      harvestAmount: "", // 新規入力は数値＋単位（下記3項目）に一本化する
+      harvestQuantity: harvestQuantity.trim(),
+      harvestUnit,
+      harvestUnitOther: harvestUnitOther.trim(),
       worker: worker.trim(),
       memo: memo.trim(),
     };
@@ -197,7 +232,9 @@ export default function NisshiApp() {
     setTemperature("");
     setWorkType("");
     setWorkTime("");
-    setHarvestAmount("");
+    setHarvestQuantity("");
+    setHarvestUnit("");
+    setHarvestUnitOther("");
     setWorker("");
     setMemo("");
   }
@@ -281,10 +318,27 @@ export default function NisshiApp() {
     .map((c) => ({ name: c, count: yearEntries.filter((e) => e.crop === c).length }))
     .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, "ja"));
 
-  // 収穫記録の一覧（時系列順。単位がまちまちなため合計は出さない）
+  // 収穫記録の一覧（時系列順。新形式・旧形式どちらの記録も表示するが、合計は新形式のみで別途計算する）
   const harvestEntries = yearEntries
-    .filter((e) => e.harvestAmount.trim() !== "")
+    .filter((e) => e.harvestAmount.trim() !== "" || e.harvestQuantity.trim() !== "")
     .sort((a, b) => a.date.localeCompare(b.date));
+
+  // 収穫量の合計（新形式＝数値＋単位で入力された記録のみが対象。作物・単位ごとに集計する。
+  // 単位が異なるものは合算できないため、作物×単位の組み合わせごとに分けて合計する）
+  const harvestTotals = (() => {
+    const map = new Map<string, { crop: string; unit: string; total: number }>();
+    for (const e of yearEntries) {
+      const qty = Number(e.harvestQuantity);
+      if (!e.harvestQuantity.trim() || !Number.isFinite(qty) || qty <= 0) continue;
+      if (!e.harvestUnit) continue;
+      const unitLabel = e.harvestUnit === "その他" ? (e.harvestUnitOther || "その他") : e.harvestUnit;
+      const key = `${e.crop}__${unitLabel}`;
+      const cur = map.get(key) ?? { crop: e.crop, unit: unitLabel, total: 0 };
+      cur.total += qty;
+      map.set(key, cur);
+    }
+    return [...map.values()].sort((a, b) => a.crop.localeCompare(b.crop, "ja") || a.unit.localeCompare(b.unit, "ja"));
+  })();
 
   // 月ごとの記録日数（同じ日に複数記録があっても1日として数える）
   const monthlyRecordDays = Array.from({ length: 12 }, (_, i) => {
@@ -394,8 +448,47 @@ export default function NisshiApp() {
             </div>
 
             <div>
-              <label className={labelClass} htmlFor="nisshi-harvest">収穫量</label>
-              <input id="nisshi-harvest" type="text" value={harvestAmount} onChange={(e) => setHarvestAmount(e.target.value)} placeholder="例：コンテナ3箱" className={inputClass} />
+              <label className={labelClass} htmlFor="nisshi-harvest-quantity">収穫量</label>
+              <div className="flex gap-3">
+                <input
+                  id="nisshi-harvest-quantity"
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  value={harvestQuantity}
+                  onChange={(e) => setHarvestQuantity(e.target.value)}
+                  placeholder="例：20"
+                  className={`${inputClass} flex-1`}
+                />
+                <select
+                  id="nisshi-harvest-unit"
+                  aria-label="収穫量の単位"
+                  value={harvestUnit}
+                  onChange={(e) => setHarvestUnit(e.target.value)}
+                  className={inputClass}
+                  style={{ maxWidth: "9.5rem" }}
+                >
+                  <option value="">単位を選択</option>
+                  {HARVEST_UNITS.map((u) => (
+                    <option key={u} value={u}>{u}</option>
+                  ))}
+                </select>
+              </div>
+              {errors.harvestUnit && <p className="text-red-600 text-base mt-2">{errors.harvestUnit}</p>}
+              {harvestUnit === "その他" && (
+                <div className="mt-3">
+                  <label className={labelClass} htmlFor="nisshi-harvest-unit-other">単位名</label>
+                  <input
+                    id="nisshi-harvest-unit-other"
+                    type="text"
+                    value={harvestUnitOther}
+                    onChange={(e) => setHarvestUnitOther(e.target.value)}
+                    placeholder="例：束"
+                    className={inputClass}
+                  />
+                  {errors.harvestUnitOther && <p className="text-red-600 text-base mt-2">{errors.harvestUnitOther}</p>}
+                </div>
+              )}
               <p className="text-sm text-gray-500 mt-1">収穫作業のときに入力してください。他の作業では空欄で構いません。</p>
             </div>
 
@@ -526,7 +619,7 @@ export default function NisshiApp() {
                       <td className="p-2 border border-green-100 text-sm whitespace-nowrap">{e.temperature}</td>
                       <td className="p-2 border border-green-100 text-sm whitespace-nowrap">{e.workType}</td>
                       <td className="p-2 border border-green-100 text-sm whitespace-nowrap">{e.workTime}</td>
-                      <td className="p-2 border border-green-100 text-sm whitespace-nowrap">{e.harvestAmount}</td>
+                      <td className="p-2 border border-green-100 text-sm whitespace-nowrap">{harvestDisplay(e)}</td>
                       <td className="p-2 border border-green-100 text-sm whitespace-nowrap">{e.worker}</td>
                       <td className="p-2 border border-green-100 text-sm">{e.memo}</td>
                       <td className="p-2 border border-green-100 text-sm whitespace-nowrap">
@@ -625,35 +718,61 @@ export default function NisshiApp() {
                 </table>
               </div>
 
+              <h3 className="text-lg font-bold text-gray-700 mb-2">収穫量の合計</h3>
+              <p className="text-sm text-gray-500 mb-2">
+                {HARVEST_STRUCTURED_SINCE_LABEL}以降に、数値＋単位で入力した記録だけを、作物・単位ごとに合計しています。それより前の自由入力の記録は単位がまちまちなため、合計には含まれません。
+              </p>
+              {harvestTotals.length === 0 ? (
+                <p className="text-base text-gray-500 mb-6">{summaryYear}年の新形式の収穫記録はまだありません</p>
+              ) : (
+                <div className="overflow-x-auto mb-6">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-green-50">
+                        <th className="p-2 border border-green-100 text-sm">作物</th>
+                        <th className="p-2 border border-green-100 text-sm">単位</th>
+                        <th className="p-2 border border-green-100 text-sm text-right">合計</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {harvestTotals.map((row) => (
+                        <tr key={`${row.crop}__${row.unit}`}>
+                          <td className="p-2 border border-green-100 text-sm whitespace-nowrap">{row.crop}</td>
+                          <td className="p-2 border border-green-100 text-sm whitespace-nowrap">{row.unit}</td>
+                          <td className="p-2 border border-green-100 text-sm text-right font-bold whitespace-nowrap">{row.total}{row.unit}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
               <h3 className="text-lg font-bold text-gray-700 mb-2">収穫記録の一覧</h3>
               {harvestEntries.length === 0 ? (
                 <p className="text-base text-gray-500 mb-6">{summaryYear}年の収穫記録はまだありません</p>
               ) : (
-                <>
-                  <div className="overflow-x-auto mb-2">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="bg-green-50">
-                          <th className="p-2 border border-green-100 text-sm">日付</th>
-                          <th className="p-2 border border-green-100 text-sm">圃場</th>
-                          <th className="p-2 border border-green-100 text-sm">作物</th>
-                          <th className="p-2 border border-green-100 text-sm">収穫量</th>
+                <div className="overflow-x-auto mb-6">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-green-50">
+                        <th className="p-2 border border-green-100 text-sm">日付</th>
+                        <th className="p-2 border border-green-100 text-sm">圃場</th>
+                        <th className="p-2 border border-green-100 text-sm">作物</th>
+                        <th className="p-2 border border-green-100 text-sm">収穫量</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {harvestEntries.map((e) => (
+                        <tr key={e.id}>
+                          <td className="p-2 border border-green-100 text-sm whitespace-nowrap">{e.date}</td>
+                          <td className="p-2 border border-green-100 text-sm whitespace-nowrap">{e.field}</td>
+                          <td className="p-2 border border-green-100 text-sm whitespace-nowrap">{e.crop}</td>
+                          <td className="p-2 border border-green-100 text-sm">{harvestDisplay(e)}</td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {harvestEntries.map((e) => (
-                          <tr key={e.id}>
-                            <td className="p-2 border border-green-100 text-sm whitespace-nowrap">{e.date}</td>
-                            <td className="p-2 border border-green-100 text-sm whitespace-nowrap">{e.field}</td>
-                            <td className="p-2 border border-green-100 text-sm whitespace-nowrap">{e.crop}</td>
-                            <td className="p-2 border border-green-100 text-sm">{e.harvestAmount}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <p className="text-sm text-gray-500 mb-6">収穫量は入力された単位がまちまちのため、合計は表示していません。</p>
-                </>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
 
               <h3 className="text-lg font-bold text-gray-700 mb-2">月ごとの記録日数</h3>
