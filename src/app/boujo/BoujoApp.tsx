@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { loadFieldOptions, loadCropOptions, registerFieldCrop } from "../fieldCropStore";
 
 // この端末のブラウザだけに保存する（サーバーには送信しない）
 const STORAGE_KEY = "azemichi-boujo-v1";
@@ -17,11 +18,35 @@ type Entry = {
   crop: string;
   name: string;
   targetPest: string;
-  amount: string;
-  dilution: string;
+  amount: string; // 旧形式（自由入力）。過去データの表示のためだけに残し、新規入力では使わない
+  amountQuantity: string; // 新形式：使用量の数値
+  amountUnit: string; // 新形式：単位（L・kg・a・その他）
+  amountUnitOther: string; // 単位が「その他」のときの単位名
+  dilution: string; // 旧形式（自由入力）
+  dilutionQuantity: string; // 新形式：希釈倍率の数値（単位は「倍」固定）
   applicator: string;
   memo: string;
 };
+
+// 使用量の単位（全品目共通）
+const AMOUNT_UNITS = ["L", "kg", "a", "その他"];
+
+// 表示用の使用量（新形式があればそちらを優先し、無ければ旧形式の自由入力をそのまま表示する）
+function amountDisplay(e: Entry): string {
+  if (e.amountQuantity.trim()) {
+    const unit = e.amountUnit === "その他" ? (e.amountUnitOther || "その他") : e.amountUnit;
+    return `${e.amountQuantity}${unit}`;
+  }
+  return e.amount;
+}
+
+// 表示用の希釈倍率（新形式があれば「◯◯倍」、無ければ旧形式の自由入力をそのまま表示する）
+function dilutionDisplay(e: Entry): string {
+  if (e.dilutionQuantity.trim()) {
+    return `${e.dilutionQuantity}倍`;
+  }
+  return e.dilution;
+}
 
 function todayISO(): string {
   const jst = new Date(Date.now() + 9 * 60 * 60 * 1000);
@@ -53,7 +78,12 @@ function escapeCSV(v: string): string {
 }
 
 function toCSV(entries: Entry[]): string {
-  const header = ["日付", "区分", "圃場", "作物", "名称", "対象病害虫", "使用量", "希釈倍率", "使用者", "メモ"];
+  // 「使用量」「希釈倍率」列は表示用（新形式なら数値+単位/倍、旧形式なら自由入力）。
+  // 末尾の4列は新形式データの構造化された値そのもの（再読み込み時の復元用）。
+  const header = [
+    "日付", "区分", "圃場", "作物", "名称", "対象病害虫", "使用量", "希釈倍率", "使用者", "メモ",
+    "使用量(数値)", "使用量(単位)", "使用量(単位その他)", "希釈倍率(数値)",
+  ];
   const rows = entries.map((e) => [
     e.date,
     e.type,
@@ -61,10 +91,14 @@ function toCSV(entries: Entry[]): string {
     e.crop,
     e.name,
     e.targetPest,
-    e.amount,
-    e.dilution,
+    amountDisplay(e),
+    dilutionDisplay(e),
     e.applicator,
     e.memo,
+    e.amountQuantity,
+    e.amountUnit,
+    e.amountUnitOther,
+    e.dilutionQuantity,
   ]);
   return [header, ...rows].map((cols) => cols.map(escapeCSV).join(",")).join("\r\n");
 }
@@ -100,7 +134,7 @@ function parseCSV(text: string): Entry[] {
   const rows = lines.slice(1); // ヘッダー行を除く
   const result: Entry[] = [];
   for (const line of rows) {
-    const [date, typeLabel, field, crop, name, targetPest, amount, dilution, applicator, memo] = parseCSVLine(line);
+    const [date, typeLabel, field, crop, name, targetPest, amount, dilution, applicator, memo, amountQuantity, amountUnit, amountUnitOther, dilutionQuantity] = parseCSVLine(line);
     if (!date || !name) continue;
     result.push({
       id: crypto.randomUUID(),
@@ -111,7 +145,11 @@ function parseCSV(text: string): Entry[] {
       name: name ?? "",
       targetPest: targetPest ?? "",
       amount: amount ?? "",
+      amountQuantity: amountQuantity ?? "",
+      amountUnit: amountUnit ?? "",
+      amountUnitOther: amountUnitOther ?? "",
       dilution: dilution ?? "",
+      dilutionQuantity: dilutionQuantity ?? "",
       applicator: applicator ?? "",
       memo: memo ?? "",
     });
@@ -138,13 +176,18 @@ export default function BoujoApp() {
   const [crop, setCrop] = useState(() => searchParams.get("crop") || "");
   const [name, setName] = useState("");
   const [targetPest, setTargetPest] = useState("");
-  const [amount, setAmount] = useState("");
-  const [dilution, setDilution] = useState("");
+  const [amountQuantity, setAmountQuantity] = useState("");
+  const [amountUnit, setAmountUnit] = useState("");
+  const [amountUnitOther, setAmountUnitOther] = useState("");
+  const [dilutionQuantity, setDilutionQuantity] = useState("");
   const [applicator, setApplicator] = useState("");
   const [memo, setMemo] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [fieldFilter, setFieldFilter] = useState(ALL_FILTER);
   const [cropFilter, setCropFilter] = useState(ALL_FILTER);
+  // /boujo・/nisshi で共有する圃場名・作物名の候補（入力欄のdatalist用。フィルタ用の一覧とは別）
+  const [fieldSuggestions, setFieldSuggestions] = useState<string[]>(() => loadFieldOptions());
+  const [cropSuggestions, setCropSuggestions] = useState<string[]>(() => loadCropOptions());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 期間指定PDF出力用
@@ -164,6 +207,8 @@ export default function BoujoApp() {
     if (!field.trim()) e.field = "圃場を入力してください";
     if (!crop.trim()) e.crop = "作物を入力してください";
     if (!name.trim()) e.name = `${type}の名称を入力してください`;
+    if (amountQuantity.trim() && !amountUnit) e.amountUnit = "単位を選択してください";
+    if (amountUnit === "その他" && !amountUnitOther.trim()) e.amountUnitOther = "単位名を入力してください";
     setErrors(e);
     if (Object.keys(e).length > 0) return;
 
@@ -175,20 +220,29 @@ export default function BoujoApp() {
       crop: crop.trim(),
       name: name.trim(),
       targetPest: type === "農薬" ? targetPest.trim() : "",
-      amount: amount.trim(),
-      dilution: dilution.trim(),
+      amount: "", // 新規入力は数値＋単位（下記3項目）に一本化する
+      amountQuantity: amountQuantity.trim(),
+      amountUnit,
+      amountUnitOther: amountUnitOther.trim(),
+      dilution: "", // 新規入力は数値（下記1項目・単位は「倍」固定）に一本化する
+      dilutionQuantity: dilutionQuantity.trim(),
       applicator: applicator.trim(),
       memo: memo.trim(),
     };
     const next = [...entries, entry];
     setEntries(next);
     saveEntries(next);
+    registerFieldCrop(entry.field, entry.crop);
+    setFieldSuggestions(loadFieldOptions());
+    setCropSuggestions(loadCropOptions());
     setField("");
     setCrop("");
     setName("");
     setTargetPest("");
-    setAmount("");
-    setDilution("");
+    setAmountQuantity("");
+    setAmountUnit("");
+    setAmountUnitOther("");
+    setDilutionQuantity("");
     setApplicator("");
     setMemo("");
   }
@@ -225,6 +279,9 @@ export default function BoujoApp() {
       }
       setEntries(imported);
       saveEntries(imported);
+      for (const entry of imported) registerFieldCrop(entry.field, entry.crop);
+      setFieldSuggestions(loadFieldOptions());
+      setCropSuggestions(loadCropOptions());
     };
     reader.readAsText(file, "utf-8");
   }
@@ -268,8 +325,8 @@ export default function BoujoApp() {
             crop: entry.crop,
             name: entry.name,
             targetPest: entry.targetPest,
-            amount: entry.amount,
-            dilution: entry.dilution,
+            amount: amountDisplay(entry),
+            dilution: dilutionDisplay(entry),
             applicator: entry.applicator,
             memo: entry.memo,
           })),
@@ -375,7 +432,7 @@ export default function BoujoApp() {
               <label className={labelClass} htmlFor="boujo-field">圃場<span className="req">必須</span></label>
               <input id="boujo-field" type="text" list="boujo-field-list" value={field} onChange={(e) => setField(e.target.value)} placeholder="例：南の畑" className={inputClass} />
               <datalist id="boujo-field-list">
-                {fieldOptions.map((f) => (<option key={f} value={f} />))}
+                {fieldSuggestions.map((f) => (<option key={f} value={f} />))}
               </datalist>
               {errors.field && <p className="text-red-600 text-base mt-2">{errors.field}</p>}
             </div>
@@ -384,7 +441,7 @@ export default function BoujoApp() {
               <label className={labelClass} htmlFor="boujo-crop">作物<span className="req">必須</span></label>
               <input id="boujo-crop" type="text" list="boujo-crop-list" value={crop} onChange={(e) => setCrop(e.target.value)} placeholder="例：トマト" className={inputClass} />
               <datalist id="boujo-crop-list">
-                {cropOptions.map((c) => (<option key={c} value={c} />))}
+                {cropSuggestions.map((c) => (<option key={c} value={c} />))}
               </datalist>
               {errors.crop && <p className="text-red-600 text-base mt-2">{errors.crop}</p>}
             </div>
@@ -406,14 +463,65 @@ export default function BoujoApp() {
             )}
 
             <div>
-              <label className={labelClass} htmlFor="boujo-amount">使用量</label>
-              <input id="boujo-amount" type="text" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="例：10a あたり 100L" className={inputClass} />
-              <p className="text-sm text-gray-500 mt-1">単位面積あたりの使用量、または施肥量を自由に入力してください。</p>
+              <label className={labelClass} htmlFor="boujo-amount-quantity">使用量</label>
+              <div className="flex gap-3">
+                <input
+                  id="boujo-amount-quantity"
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  value={amountQuantity}
+                  onChange={(e) => setAmountQuantity(e.target.value)}
+                  placeholder="例：100"
+                  className={`${inputClass} flex-1`}
+                />
+                <select
+                  id="boujo-amount-unit"
+                  aria-label="使用量の単位"
+                  value={amountUnit}
+                  onChange={(e) => setAmountUnit(e.target.value)}
+                  className={inputClass}
+                  style={{ maxWidth: "9.5rem" }}
+                >
+                  <option value="">単位を選択</option>
+                  {AMOUNT_UNITS.map((u) => (
+                    <option key={u} value={u}>{u}</option>
+                  ))}
+                </select>
+              </div>
+              {errors.amountUnit && <p className="text-red-600 text-base mt-2">{errors.amountUnit}</p>}
+              {amountUnit === "その他" && (
+                <div className="mt-3">
+                  <label className={labelClass} htmlFor="boujo-amount-unit-other">単位名</label>
+                  <input
+                    id="boujo-amount-unit-other"
+                    type="text"
+                    value={amountUnitOther}
+                    onChange={(e) => setAmountUnitOther(e.target.value)}
+                    placeholder="例：袋"
+                    className={inputClass}
+                  />
+                  {errors.amountUnitOther && <p className="text-red-600 text-base mt-2">{errors.amountUnitOther}</p>}
+                </div>
+              )}
+              <p className="text-sm text-gray-500 mt-1">単位面積あたりの使用量、または施肥量を入力してください。</p>
             </div>
 
             <div>
-              <label className={labelClass} htmlFor="boujo-dilution">希釈倍率</label>
-              <input id="boujo-dilution" type="text" value={dilution} onChange={(e) => setDilution(e.target.value)} placeholder="例：1000倍" className={inputClass} />
+              <label className={labelClass} htmlFor="boujo-dilution-quantity">希釈倍率</label>
+              <div className="flex items-center gap-3">
+                <input
+                  id="boujo-dilution-quantity"
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  value={dilutionQuantity}
+                  onChange={(e) => setDilutionQuantity(e.target.value)}
+                  placeholder="例：1000"
+                  className={`${inputClass} flex-1`}
+                />
+                <span className="text-lg text-gray-600 whitespace-nowrap">倍</span>
+              </div>
               <p className="text-sm text-gray-500 mt-1">薄めて使う農薬・液肥のときに入力してください。</p>
             </div>
 
@@ -598,8 +706,8 @@ export default function BoujoApp() {
                       <td className="p-2 border border-green-100 text-sm whitespace-nowrap">{e.crop}</td>
                       <td className="p-2 border border-green-100 text-sm">{e.name}</td>
                       <td className="p-2 border border-green-100 text-sm">{e.targetPest}</td>
-                      <td className="p-2 border border-green-100 text-sm whitespace-nowrap">{e.amount}</td>
-                      <td className="p-2 border border-green-100 text-sm whitespace-nowrap">{e.dilution}</td>
+                      <td className="p-2 border border-green-100 text-sm whitespace-nowrap">{amountDisplay(e)}</td>
+                      <td className="p-2 border border-green-100 text-sm whitespace-nowrap">{dilutionDisplay(e)}</td>
                       <td className="p-2 border border-green-100 text-sm whitespace-nowrap">{e.applicator}</td>
                       <td className="p-2 border border-green-100 text-sm">{e.memo}</td>
                       <td className="p-2 border border-green-100 text-sm whitespace-nowrap">

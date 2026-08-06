@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
+import { loadFieldOptions, loadCropOptions, registerFieldCrop } from "../fieldCropStore";
 
 // この端末のブラウザだけに保存する（サーバーには送信しない）
 const STORAGE_KEY = "azemichi-nisshi-v1";
@@ -194,6 +195,9 @@ export default function NisshiApp() {
   const [cropFilter, setCropFilter] = useState(ALL_FILTER);
   const [workTypeFilter, setWorkTypeFilter] = useState(ALL_FILTER);
   const [summaryYear, setSummaryYear] = useState(todayISO().slice(0, 4));
+  // /boujo・/nisshi で共有する圃場名・作物名の候補（入力欄のdatalist用。フィルタ用の一覧とは別）
+  const [fieldSuggestions, setFieldSuggestions] = useState<string[]>(() => loadFieldOptions());
+  const [cropSuggestions, setCropSuggestions] = useState<string[]>(() => loadCropOptions());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function addEntry() {
@@ -226,6 +230,9 @@ export default function NisshiApp() {
     const next = [...entries, entry];
     setEntries(next);
     saveEntries(next);
+    registerFieldCrop(entry.field, entry.crop);
+    setFieldSuggestions(loadFieldOptions());
+    setCropSuggestions(loadCropOptions());
     setField("");
     setCrop("");
     setWeather("");
@@ -271,6 +278,9 @@ export default function NisshiApp() {
       }
       setEntries(imported);
       saveEntries(imported);
+      for (const entry of imported) registerFieldCrop(entry.field, entry.crop);
+      setFieldSuggestions(loadFieldOptions());
+      setCropSuggestions(loadCropOptions());
     };
     reader.readAsText(file, "utf-8");
   }
@@ -393,7 +403,7 @@ export default function NisshiApp() {
               <label className={labelClass} htmlFor="nisshi-field">圃場<span className="req">必須</span></label>
               <input id="nisshi-field" type="text" list="nisshi-field-list" value={field} onChange={(e) => setField(e.target.value)} placeholder="例：南の畑" className={inputClass} />
               <datalist id="nisshi-field-list">
-                {fieldOptions.map((f) => (<option key={f} value={f} />))}
+                {fieldSuggestions.map((f) => (<option key={f} value={f} />))}
               </datalist>
               {errors.field && <p className="text-red-600 text-base mt-2">{errors.field}</p>}
             </div>
@@ -402,7 +412,7 @@ export default function NisshiApp() {
               <label className={labelClass} htmlFor="nisshi-crop">作物<span className="req">必須</span></label>
               <input id="nisshi-crop" type="text" list="nisshi-crop-list" value={crop} onChange={(e) => setCrop(e.target.value)} placeholder="例：トマト" className={inputClass} />
               <datalist id="nisshi-crop-list">
-                {cropOptions.map((c) => (<option key={c} value={c} />))}
+                {cropSuggestions.map((c) => (<option key={c} value={c} />))}
               </datalist>
               {errors.crop && <p className="text-red-600 text-base mt-2">{errors.crop}</p>}
             </div>
