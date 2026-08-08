@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 // 全ページ共通フッター（ルートの layout.tsx から全ページに表示）。
@@ -7,7 +8,16 @@ export default function SiteFooter() {
     <footer className="site-footer">
       <div className="footer-inner">
         <div className="ftop">
-          <div className="fbrand">あぜみち ／ ちょっくら</div>
+          <div className="fbrand">
+            <Image
+              src="/azemichi-logo.png"
+              alt=""
+              width={668}
+              height={618}
+              className="fbrand-logo"
+            />
+            あぜみち ／ ちょっくら
+          </div>
           <nav className="fnav">
             <Link href="/#omoi">想い</Link>
             <Link href="/tool">あぜみち</Link>

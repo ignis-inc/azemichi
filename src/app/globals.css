@@ -582,6 +582,13 @@ body {
   font-family: var(--serif);
   font-size: 1.3rem;
   color: #e7ecdf;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.site-footer .fbrand-logo {
+  height: 36px;
+  width: auto;
 }
 .site-footer .fnav a {
   /* スマホで押しやすいよう余白でタップ領域を確保（高さ44px以上） */

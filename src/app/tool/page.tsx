@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { CHOKKURA_NOTIFY_URL } from "../site";
 
@@ -8,6 +9,14 @@ export default function Home() {
     <div className="min-h-screen bg-green-50">
       {/* あぜみち サービス紹介 */}
       <div className="bg-white border-b-2 border-green-100 px-4 py-8 text-center">
+        <Image
+          src="/azemichi-logo.png"
+          alt="あぜみち"
+          width={668}
+          height={618}
+          className="mx-auto mb-2 h-24 w-auto sm:h-28"
+          priority
+        />
         <h2 className="text-4xl font-bold text-green-800 mb-2">あぜみち</h2>
         <p className="text-lg font-bold text-green-700 mb-3">農家の手続きを、もっと簡単に。</p>
         <p className="text-xl font-medium text-gray-700 mb-4">農業の手続き書類を、スマホで簡単に作れます</p>
