@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
+import { trackEvent } from "../lib/analytics";
 
 // この端末のブラウザだけに保存する（サーバーには送信しない）
 const STORAGE_KEY = "azemichi-kicho-v1";
@@ -201,6 +202,7 @@ export default function KichoApp() {
     const next = [...entries, entry];
     setEntries(next);
     saveEntries(next);
+    trackEvent("record_save", "kicho");
     setCategory("");
     setAmount("");
     setMemo("");

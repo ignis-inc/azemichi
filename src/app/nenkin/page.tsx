@@ -8,6 +8,7 @@ import { DOC_LAST_CHECKED } from "../site";
 import { isValidWarekiDate } from "../wareki";
 import { recordGeneratedDoc } from "../dashboardStore";
 import { createFuriganaTracker } from "../furiganaAutofill";
+import { trackEvent } from "../lib/analytics";
 
 const PREFECTURES = [
   "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
@@ -129,6 +130,7 @@ export default function NenkinPage() {
       a.click();
       URL.revokeObjectURL(url);
       recordGeneratedDoc("nenkin");
+      trackEvent("pdf_create", "nenkin");
       setShowModal(true);
     } catch (err) {
       console.error("PDF生成エラー:", err);

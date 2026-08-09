@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import SiteFooter from "./components/SiteFooter";
+import PageViewTracker from "./components/PageViewTracker";
 import { OG_IMAGE, SITE_NAME, SITE_URL } from "./site";
 
 const DEFAULT_TITLE =
@@ -79,6 +80,7 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
+        <PageViewTracker />
         {children}
         <SiteFooter />
       </body>

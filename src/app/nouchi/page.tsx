@@ -8,6 +8,7 @@ import { DOC_LAST_CHECKED } from "../site";
 import { isValidWarekiDate, warekiToISO } from "../wareki";
 import { recordGeneratedDoc } from "../dashboardStore";
 import { createFuriganaTracker } from "../furiganaAutofill";
+import { trackEvent } from "../lib/analytics";
 
 const PREFECTURES = [
   "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
@@ -121,6 +122,7 @@ export default function NouchiPage() {
       a.click();
       URL.revokeObjectURL(url);
       recordGeneratedDoc("nouchi", warekiToISO(form.acqEra, Number(form.acqYear), Number(form.acqMonth), Number(form.acqDay)));
+      trackEvent("pdf_create", "nouchi");
       setShowModal(true);
     } catch (err) {
       console.error("PDF生成エラー:", err);

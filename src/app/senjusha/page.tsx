@@ -8,6 +8,7 @@ import { DOC_LAST_CHECKED } from "../site";
 import { isValidWarekiDate, warekiToISO } from "../wareki";
 import { recordGeneratedDoc } from "../dashboardStore";
 import { createFuriganaTracker } from "../furiganaAutofill";
+import { trackEvent } from "../lib/analytics";
 
 const SHOWA_YEARS  = Array.from({ length: 45 }, (_, i) => i + 20); // 昭和20〜64
 const HEISEI_YEARS = Array.from({ length: 31 }, (_, i) => i + 1);  // 平成1〜31
@@ -209,6 +210,7 @@ export default function SenjushaPage() {
       a.click();
       URL.revokeObjectURL(url);
       recordGeneratedDoc("senjusha", warekiToISO(startEra, Number(startYear), Number(startMonth), Number(startDay)));
+      trackEvent("pdf_create", "senjusha");
       setShowModal(true);
     } catch (err) {
       console.error("PDF生成エラー:", err);

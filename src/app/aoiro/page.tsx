@@ -8,6 +8,7 @@ import { DOC_LAST_CHECKED } from "../site";
 import { isValidWarekiDate, warekiToISO } from "../wareki";
 import { recordGeneratedDoc } from "../dashboardStore";
 import { createFuriganaTracker } from "../furiganaAutofill";
+import { trackEvent } from "../lib/analytics";
 
 const PREFECTURES = [
   "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
@@ -145,6 +146,7 @@ export default function AoiroPage() {
       a.click();
       URL.revokeObjectURL(url);
       recordGeneratedDoc("aoiro", warekiToISO(form.startEra, Number(form.startYear), Number(form.startMonth), Number(form.startDay)));
+      trackEvent("pdf_create", "aoiro");
       setShowModal(true);
     } catch (err) {
       console.error("PDF生成エラー:", err);

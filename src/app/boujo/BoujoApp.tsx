@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { loadFieldOptions, loadCropOptions, registerFieldCrop } from "../fieldCropStore";
+import { trackEvent } from "../lib/analytics";
 
 // この端末のブラウザだけに保存する（サーバーには送信しない）
 const STORAGE_KEY = "azemichi-boujo-v1";
@@ -232,6 +233,7 @@ export default function BoujoApp() {
     const next = [...entries, entry];
     setEntries(next);
     saveEntries(next);
+    trackEvent("record_save", "boujo");
     registerFieldCrop(entry.field, entry.crop);
     setFieldSuggestions(loadFieldOptions());
     setCropSuggestions(loadCropOptions());

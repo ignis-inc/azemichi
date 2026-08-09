@@ -7,6 +7,7 @@ import { DOC_LAST_CHECKED } from "../site";
 import { isValidWarekiDate, warekiToISO } from "../wareki";
 import { recordGeneratedDoc } from "../dashboardStore";
 import { createFuriganaTracker } from "../furiganaAutofill";
+import { trackEvent } from "../lib/analytics";
 
 const PREFECTURES = [
   "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
@@ -452,6 +453,7 @@ export default function KaigyoSetPage() {
         a.click();
         URL.revokeObjectURL(url);
         recordGeneratedDoc(key, startDateISO);
+        trackEvent("pdf_create", key);
         if (i < results.length - 1) {
           await new Promise((resolve) => setTimeout(resolve, 400));
         }
