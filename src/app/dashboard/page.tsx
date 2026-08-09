@@ -1,7 +1,6 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import AuthBar from "../components/AuthBar";
 
 // localStorage を読むため、サーバー側では描画せずブラウザでのみ描画する
 const DashboardApp = dynamic(() => import("./DashboardApp"), {
@@ -10,10 +9,5 @@ const DashboardApp = dynamic(() => import("./DashboardApp"), {
 });
 
 export default function DashboardPage() {
-  return (
-    <>
-      <AuthBar />
-      <DashboardApp />
-    </>
-  );
+  return <DashboardApp />;
 }

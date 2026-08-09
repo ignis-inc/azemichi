@@ -1,7 +1,6 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import AuthBar from "../components/AuthBar";
 
 // localStorage を読むため、サーバー側では描画せずブラウザでのみ描画する
 const BoujoApp = dynamic(() => import("./BoujoApp"), {
@@ -10,10 +9,5 @@ const BoujoApp = dynamic(() => import("./BoujoApp"), {
 });
 
 export default function BoujoPage() {
-  return (
-    <>
-      <AuthBar />
-      <BoujoApp />
-    </>
-  );
+  return <BoujoApp />;
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import AuthBar from "../components/AuthBar";
 
 // localStorage を読むため、サーバー側では描画せずブラウザでのみ描画する
 const KichoApp = dynamic(() => import("./KichoApp"), {
@@ -10,10 +9,5 @@ const KichoApp = dynamic(() => import("./KichoApp"), {
 });
 
 export default function KichoPage() {
-  return (
-    <>
-      <AuthBar />
-      <KichoApp />
-    </>
-  );
+  return <KichoApp />;
 }

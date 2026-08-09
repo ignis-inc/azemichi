@@ -14,8 +14,8 @@ const labelClass = "block text-base font-bold text-gray-700 mb-1";
 function LoginInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  // ログイン後に戻る先。指定がなければダッシュボードへ。
-  const redirectTo = searchParams.get("redirect") || "/dashboard";
+  // ログイン後に戻る先。指定がなければログイン版ダッシュボードへ。
+  const redirectTo = searchParams.get("redirect") || "/app/dashboard";
 
   const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");

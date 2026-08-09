@@ -1,8 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-// ログイン版の4ツール（記帳・農薬肥料記録・農作業日誌・ダッシュボード）だけを守る。
-// 書類作成系の9ツールや紹介ページはこれまで通りログイン不要なので、ここには入れない。
+// ログイン版の4ツール（/app/kicho・/app/boujo・/app/nisshi・/app/dashboard）だけを守る。
+// 元の /kicho・/boujo・/nisshi・/dashboard は無料・ログイン不要のまま変更しない。
+// 書類作成系の9ツールや紹介ページも、これまで通りログイン不要なので対象外。
 //
 // やっていること：
 //   1. Supabaseのログイン情報（Cookie）を最新に保つ
@@ -48,15 +49,15 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // 対象は4ツールのみ（トップページ・書類作成ツールなどは対象外）
+  // 対象は /app 配下の4ツールのみ（元の /kicho 等・トップページ・書類作成ツールは対象外）
   matcher: [
-    "/kicho",
-    "/kicho/:path*",
-    "/boujo",
-    "/boujo/:path*",
-    "/nisshi",
-    "/nisshi/:path*",
-    "/dashboard",
-    "/dashboard/:path*",
+    "/app/kicho",
+    "/app/kicho/:path*",
+    "/app/boujo",
+    "/app/boujo/:path*",
+    "/app/nisshi",
+    "/app/nisshi/:path*",
+    "/app/dashboard",
+    "/app/dashboard/:path*",
   ],
 };
