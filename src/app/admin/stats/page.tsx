@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { DOC_META, type DocType } from "../../dashboardStore";
+import { BarChart } from "../../components/BarChart";
 
 type EventType = "page_view" | "pdf_create" | "record_save";
 
@@ -55,29 +56,6 @@ function lastNMonths(n: number): string[] {
     months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
   }
   return months;
-}
-
-function BarChart({
-  points,
-  formatTitle,
-}: {
-  points: { label: string; value: number }[];
-  formatTitle: (label: string, value: number) => string;
-}) {
-  const max = Math.max(1, ...points.map((p) => p.value));
-  return (
-    <div className="flex items-end gap-[3px] h-40 overflow-x-auto pb-1">
-      {points.map((p, i) => (
-        <div key={`${p.label}-${i}`} className="flex flex-col items-end justify-end h-full shrink-0" style={{ width: 10 }}>
-          <div
-            className="w-full bg-green-500 rounded-t hover:bg-green-600 transition-colors"
-            style={{ height: `${(p.value / max) * 100}%`, minHeight: p.value > 0 ? 2 : 0 }}
-            title={formatTitle(p.label, p.value)}
-          />
-        </div>
-      ))}
-    </div>
-  );
 }
 
 export default function AdminStatsPage() {

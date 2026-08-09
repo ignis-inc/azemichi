@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { loadFieldOptions, loadCropOptions, registerFieldCrop } from "../fieldCropStore";
 import { trackEvent } from "../lib/analytics";
 import { createCloudStore, type CloudStore } from "../lib/cloudStore";
+import { BarChart, type BarChartPoint } from "../components/BarChart";
 
 // この端末のブラウザだけに保存する（サーバーには送信しない）
 const STORAGE_KEY = "azemichi-boujo-v1";
@@ -53,6 +54,15 @@ function dilutionDisplay(e: Entry): string {
 function todayISO(): string {
   const jst = new Date(Date.now() + 9 * 60 * 60 * 1000);
   return jst.toISOString().slice(0, 10);
+}
+
+// グラフ用：今月から遡ってn か月分の「YYYY-MM」を古い順に並べる（記録が無い月も0として表示するため）
+function lastNMonths(n: number): string[] {
+  const [y, m] = todayISO().slice(0, 7).split("-").map(Number);
+  return Array.from({ length: n }, (_, i) => {
+    const d = new Date(y, m - 1 - (n - 1 - i), 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  });
 }
 
 // このコンポーネントは next/dynamic({ ssr: false }) 経由でのみ描画される（常にブラウザ環境）
@@ -414,6 +424,33 @@ export default function BoujoApp({ cloud }: { cloud?: { reloadKey: number } } = 
     (a, b) => b.count - a.count || a.field.localeCompare(b.field, "ja")
   );
 
+  // グラフ（ログイン版のみ）：直近12か月の記録件数（農薬・肥料）と、使用量の合計推移
+  const chartMonths = isCloud ? lastNMonths(12) : [];
+  const pesticideCountChartPoints: BarChartPoint[] = chartMonths.map((m) => ({
+    label: m,
+    value: entries.filter((e) => e.type === "農薬" && e.date.slice(0, 7) === m).length,
+  }));
+  const fertilizerCountChartPoints: BarChartPoint[] = chartMonths.map((m) => ({
+    label: m,
+    value: entries.filter((e) => e.type === "肥料" && e.date.slice(0, 7) === m).length,
+  }));
+  // 使用量は単位（L・kg・a・その他の単位名）が違うと合算できないため、単位ごとに分けて月別合計を出す
+  function unitLabelOf(e: Entry): string {
+    return e.amountUnit === "その他" ? (e.amountUnitOther || "その他") : e.amountUnit;
+  }
+  const quantityUnitsInUse = [...new Set(
+    entries.filter((e) => e.amountQuantity.trim() && e.amountUnit).map(unitLabelOf)
+  )].sort((a, b) => a.localeCompare(b, "ja"));
+  const quantityChartsByUnit = quantityUnitsInUse.map((unit) => ({
+    unit,
+    points: chartMonths.map((m) => ({
+      label: m,
+      value: entries
+        .filter((e) => e.date.slice(0, 7) === m && e.amountQuantity.trim() && unitLabelOf(e) === unit)
+        .reduce((sum, e) => sum + (Number(e.amountQuantity) || 0), 0),
+    })) as BarChartPoint[],
+  }));
+
   const inputClass =
     "w-full rounded-lg border-2 border-green-200 bg-white px-4 py-3 text-lg focus:border-green-500 transition-colors";
   const labelClass = "block text-base font-bold text-gray-700 mb-1";
@@ -677,6 +714,41 @@ export default function BoujoApp({ cloud }: { cloud?: { reloadKey: number } } = 
             </div>
           )}
         </section>
+
+        {/* グラフ（ログイン版のみ） */}
+        {isCloud && (
+          <section className={sectionClass}>
+            <h2 className="text-xl font-bold text-green-800 mb-5 pb-2 border-b-2 border-green-200">
+              グラフ（直近12か月）
+            </h2>
+
+            <h3 className="text-lg font-bold text-gray-700 mb-2">月ごとの記録件数</h3>
+            <p className="text-sm text-gray-500 mb-3">農薬</p>
+            <BarChart
+              points={pesticideCountChartPoints}
+              formatTitle={(l, v) => `${l}：${v}件`}
+              defaultColor="bg-rose-500"
+              hoverColor="hover:bg-rose-600"
+            />
+            <p className="text-sm text-gray-500 mb-3 mt-4">肥料</p>
+            <BarChart points={fertilizerCountChartPoints} formatTitle={(l, v) => `${l}：${v}件`} />
+
+            <h3 className="text-lg font-bold text-gray-700 mb-2 mt-6">月ごとの使用量の合計</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              単位（L・kg・aなど）が異なると合算できないため、単位ごとに分けて表示しています。数値で入力した記録だけが対象です。
+            </p>
+            {quantityChartsByUnit.length === 0 ? (
+              <p className="text-base text-gray-500">数値で入力された使用量の記録がまだありません</p>
+            ) : (
+              quantityChartsByUnit.map(({ unit, points }) => (
+                <div key={unit} className="mb-5">
+                  <p className="text-sm text-gray-500 mb-3">単位：{unit}</p>
+                  <BarChart points={points} formatTitle={(l, v) => `${l}：${v}${unit}`} />
+                </div>
+              ))
+            )}
+          </section>
+        )}
 
         {/* 一覧 */}
         <section className={sectionClass}>

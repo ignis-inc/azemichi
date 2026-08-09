@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { trackEvent } from "../lib/analytics";
 import { createCloudStore, type CloudStore } from "../lib/cloudStore";
+import { BarChart, type BarChartPoint } from "../components/BarChart";
 
 // この端末のブラウザだけに保存する（サーバーには送信しない）
 const STORAGE_KEY = "azemichi-kicho-v1";
@@ -62,6 +63,15 @@ const EXPENSE_FIELD_MAP: Record<string, string> = {
 function todayISO(): string {
   const jst = new Date(Date.now() + 9 * 60 * 60 * 1000);
   return jst.toISOString().slice(0, 10);
+}
+
+// グラフ用：今月から遡ってn か月分の「YYYY-MM」を古い順に並べる（記録が無い月も0として表示するため）
+function lastNMonths(n: number): string[] {
+  const [y, m] = todayISO().slice(0, 7).split("-").map(Number);
+  return Array.from({ length: n }, (_, i) => {
+    const d = new Date(y, m - 1 - (n - 1 - i), 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  });
 }
 
 // このコンポーネントは next/dynamic({ ssr: false }) 経由でのみ描画される（常にブラウザ環境）
@@ -308,6 +318,22 @@ export default function KichoApp({ cloud }: { cloud?: { reloadKey: number } } = 
   const yearlyRows = [...yearlyMap.entries()].sort((a, b) => b[0].localeCompare(a[0]));
   const sortedEntries = [...entries].sort((a, b) => b.date.localeCompare(a.date));
 
+  // グラフ（ログイン版のみ）：直近12か月の収入・支出・差引の推移
+  const chartMonths = isCloud ? lastNMonths(12) : [];
+  const incomeChartPoints: BarChartPoint[] = chartMonths.map((m) => ({
+    label: m,
+    value: monthlyMap.get(m)?.income ?? 0,
+  }));
+  const expenseChartPoints: BarChartPoint[] = chartMonths.map((m) => ({
+    label: m,
+    value: monthlyMap.get(m)?.expense ?? 0,
+  }));
+  const netChartPoints: BarChartPoint[] = chartMonths.map((m) => {
+    const v = monthlyMap.get(m);
+    const net = v ? v.income - v.expense : 0;
+    return { label: m, value: net, color: net >= 0 ? "bg-green-500 hover:bg-green-600" : "bg-rose-500 hover:bg-rose-600" };
+  });
+
   // 決算書の対象年の選択肢（記録がある年＋今年。今年の記録がまだ無くても選べるようにする）
   const kessanshoYearOptions = [...new Set([...entries.map((e) => e.date.slice(0, 4)), todayISO().slice(0, 4)])]
     .filter(Boolean)
@@ -520,6 +546,23 @@ export default function KichoApp({ cloud }: { cloud?: { reloadKey: number } } = 
         {/* 集計 */}
         <section className={sectionClass}>
           <h2 className="text-xl font-bold text-green-800 mb-5 pb-2 border-b-2 border-green-200">集計</h2>
+
+          {isCloud && (
+            <div className="mb-6">
+              <h3 className="text-lg font-bold text-gray-700 mb-2">月別グラフ（直近12か月）</h3>
+              <p className="text-sm text-gray-500 mb-3">収入</p>
+              <BarChart points={incomeChartPoints} formatTitle={(l, v) => `${l}：${formatYen(v)}円`} />
+              <p className="text-sm text-gray-500 mb-3 mt-4">支出</p>
+              <BarChart
+                points={expenseChartPoints}
+                formatTitle={(l, v) => `${l}：${formatYen(v)}円`}
+                defaultColor="bg-rose-500"
+                hoverColor="hover:bg-rose-600"
+              />
+              <p className="text-sm text-gray-500 mb-3 mt-4">差引（緑＝黒字・赤＝赤字）</p>
+              <BarChart points={netChartPoints} formatTitle={(l, v) => `${l}：${formatYen(v)}円`} />
+            </div>
+          )}
 
           <h3 className="text-lg font-bold text-gray-700 mb-2">月ごと</h3>
           {monthlyRows.length === 0 ? (
