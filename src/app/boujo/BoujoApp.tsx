@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { loadFieldOptions, loadCropOptions, registerFieldCrop } from "../fieldCropStore";
 import { trackEvent } from "../lib/analytics";
+import { createCloudStore, type CloudStore } from "../lib/cloudStore";
 
 // この端末のブラウザだけに保存する（サーバーには送信しない）
 const STORAGE_KEY = "azemichi-boujo-v1";
@@ -160,14 +161,20 @@ function parseCSV(text: string): Entry[] {
 
 const ALL_FILTER = "";
 
-export default function BoujoApp() {
+// cloud を渡すとクラウド保存モード（/app/boujo）。渡さなければ従来通りの無料版（localStorage）。
+export default function BoujoApp({ cloud }: { cloud?: { reloadKey: number } } = {}) {
+  const isCloud = !!cloud;
+  const reloadKey = cloud?.reloadKey ?? 0;
+  const [cloudStore] = useState<CloudStore<Entry>>(() => createCloudStore<Entry>("boujo"));
+  const [cloudLoading, setCloudLoading] = useState(isCloud);
+  const [cloudError, setCloudError] = useState(false);
+
   // /nisshi から「日付・圃場・作物・区分」を引き継いで開いた場合に読み取る
   // （例：/boujo?date=2026-07-28&field=南の畑&crop=きゅうり&type=農薬）
   const searchParams = useSearchParams();
 
-  // dynamic(ssr:false) 経由でのみ描画されるため、初回レンダーの時点で
-  // 常にブラウザ環境。lazy initializer で読み込めば effect は不要
-  const [entries, setEntries] = useState<Entry[]>(() => loadEntries());
+  // 無料版は従来通り初回同期読み込み。クラウド版は空で始めて下のeffectで読み込む。
+  const [entries, setEntries] = useState<Entry[]>(() => (isCloud ? [] : loadEntries()));
   const [date, setDate] = useState(() => searchParams.get("date") || todayISO());
   const [type, setType] = useState<EntryType>(() => {
     const t = searchParams.get("type");
@@ -196,6 +203,41 @@ export default function BoujoApp() {
   const [pdfEndDate, setPdfEndDate] = useState("");
   const [pdfErrors, setPdfErrors] = useState<Record<string, string>>({});
   const [pdfGenerating, setPdfGenerating] = useState(false);
+
+  // クラウド保存モードでは、ログイン中の自分の記録をSupabaseから読み込む。
+  useEffect(() => {
+    if (!isCloud) return;
+    let active = true;
+    cloudStore
+      .load()
+      .then((rows) => {
+        if (!active) return;
+        setEntries(rows);
+        setCloudError(false);
+        setCloudLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        if (!active) return;
+        setCloudError(true);
+        setCloudLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [isCloud, cloudStore, reloadKey]);
+
+  // 保存先を切り替える：クラウド版はSupabase、無料版はlocalStorage（従来通り全件を書き込む）
+  function persist(cloudOp: (s: CloudStore<Entry>) => Promise<void>, all: Entry[]) {
+    if (isCloud) {
+      cloudOp(cloudStore).catch((err) => {
+        console.error(err);
+        alert("クラウドへの保存に失敗しました。通信環境をご確認のうえ、画面を再読み込みしてください。");
+      });
+    } else {
+      saveEntries(all);
+    }
+  }
 
   function handleTypeChange(next: EntryType) {
     setType(next);
@@ -232,7 +274,7 @@ export default function BoujoApp() {
     };
     const next = [...entries, entry];
     setEntries(next);
-    saveEntries(next);
+    persist((s) => s.add(entry), next);
     trackEvent("record_save", "boujo");
     registerFieldCrop(entry.field, entry.crop);
     setFieldSuggestions(loadFieldOptions());
@@ -253,7 +295,7 @@ export default function BoujoApp() {
     if (!window.confirm("この記録を削除します。よろしいですか？")) return;
     const next = entries.filter((e) => e.id !== id);
     setEntries(next);
-    saveEntries(next);
+    persist((s) => s.remove(id), next);
   }
 
   function exportCSV() {
@@ -280,7 +322,7 @@ export default function BoujoApp() {
         return;
       }
       setEntries(imported);
-      saveEntries(imported);
+      persist((s) => s.replaceAll(imported), imported);
       for (const entry of imported) registerFieldCrop(entry.field, entry.crop);
       setFieldSuggestions(loadFieldOptions());
       setCropSuggestions(loadCropOptions());
@@ -386,18 +428,32 @@ export default function BoujoApp() {
       {/* ヘッダー */}
       <header className="bg-green-700 text-white py-6 px-4 text-center shadow-md">
         <h1 className="text-2xl font-bold leading-tight">農薬・肥料の使用を記録する</h1>
-        <p className="mt-2 text-green-100 text-base">使用記録シート（無料・ログイン不要）</p>
+        <p className="mt-2 text-green-100 text-base">
+          {isCloud ? "使用記録シート（クラウド保存）" : "使用記録シート（無料・ログイン不要）"}
+        </p>
       </header>
 
       <div className="max-w-2xl mx-auto px-4 pt-5">
-        <div className="border-2 border-yellow-300 bg-yellow-50 rounded-xl px-5 py-4">
-          <p className="text-base font-bold text-yellow-900 leading-relaxed">
-            このデータはこの端末のこのブラウザだけに保存されます。
-          </p>
-          <p className="text-sm text-yellow-800 leading-relaxed mt-1">
-            ブラウザのデータ削除や機種変更で消えてしまいます。定期的に「ファイルに保存する」からバックアップしてください。
-          </p>
-        </div>
+        {isCloud ? (
+          <div className="border-2 border-green-300 bg-green-50 rounded-xl px-5 py-4">
+            <p className="text-base font-bold text-green-900 leading-relaxed">
+              ログイン中のため、記録はクラウド（あぜみちのサーバー）に保存されます。
+            </p>
+            <p className="text-sm text-green-800 leading-relaxed mt-1">
+              別の端末でも、同じアカウントでログインすれば同じ記録を見られます。
+              {cloudError && "（いまクラウドからの読み込みに失敗しています。画面を再読み込みしてお試しください。）"}
+            </p>
+          </div>
+        ) : (
+          <div className="border-2 border-yellow-300 bg-yellow-50 rounded-xl px-5 py-4">
+            <p className="text-base font-bold text-yellow-900 leading-relaxed">
+              このデータはこの端末のこのブラウザだけに保存されます。
+            </p>
+            <p className="text-sm text-yellow-800 leading-relaxed mt-1">
+              ブラウザのデータ削除や機種変更で消えてしまいます。定期的に「ファイルに保存する」からバックアップしてください。
+            </p>
+          </div>
+        )}
         <div className="mt-4">
           <Link href="/tool" className="text-base font-bold text-green-700 underline underline-offset-4 hover:text-green-800">
             ← あぜみちの書類作成ツールへ
@@ -676,7 +732,7 @@ export default function BoujoApp() {
           </div>
 
           {sortedEntries.length === 0 ? (
-            <p className="text-base text-gray-500">まだ記録がありません</p>
+            <p className="text-base text-gray-500">{cloudLoading ? "クラウドから読み込み中…" : "まだ記録がありません"}</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">

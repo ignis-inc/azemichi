@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { loadFieldOptions, loadCropOptions, registerFieldCrop } from "../fieldCropStore";
 import { trackEvent } from "../lib/analytics";
+import { createCloudStore, type CloudStore } from "../lib/cloudStore";
 
 // この端末のブラウザだけに保存する（サーバーには送信しない）
 const STORAGE_KEY = "azemichi-nisshi-v1";
@@ -163,8 +164,9 @@ function boujoTypeFromWorkType(workType: string): "農薬" | "肥料" | undefine
   return undefined;
 }
 
-// 日付・圃場・作物・区分のうち、値が入っている項目だけをクエリパラメータとして引き継ぐ
-function buildBoujoHref(date: string, field: string, crop: string, workType: string): string {
+// 日付・圃場・作物・区分のうち、値が入っている項目だけをクエリパラメータとして引き継ぐ。
+// basePath はリンク先（無料版は /boujo、ログイン版は /app/boujo）。
+function buildBoujoHref(date: string, field: string, crop: string, workType: string, basePath: string): string {
   const params = new URLSearchParams();
   if (date) params.set("date", date);
   if (field.trim()) params.set("field", field.trim());
@@ -172,13 +174,20 @@ function buildBoujoHref(date: string, field: string, crop: string, workType: str
   const type = boujoTypeFromWorkType(workType);
   if (type) params.set("type", type);
   const qs = params.toString();
-  return qs ? `/boujo?${qs}` : "/boujo";
+  return qs ? `${basePath}?${qs}` : basePath;
 }
 
-export default function NisshiApp() {
-  // dynamic(ssr:false) 経由でのみ描画されるため、初回レンダーの時点で
-  // 常にブラウザ環境。lazy initializer で読み込めば effect は不要
-  const [entries, setEntries] = useState<Entry[]>(() => loadEntries());
+// cloud を渡すとクラウド保存モード（/app/nisshi）。渡さなければ従来通りの無料版（localStorage）。
+export default function NisshiApp({ cloud }: { cloud?: { reloadKey: number } } = {}) {
+  const isCloud = !!cloud;
+  const reloadKey = cloud?.reloadKey ?? 0;
+  const boujoBasePath = isCloud ? "/app/boujo" : "/boujo";
+  const [cloudStore] = useState<CloudStore<Entry>>(() => createCloudStore<Entry>("nisshi"));
+  const [cloudLoading, setCloudLoading] = useState(isCloud);
+  const [cloudError, setCloudError] = useState(false);
+
+  // 無料版は従来通り初回同期読み込み。クラウド版は空で始めて下のeffectで読み込む。
+  const [entries, setEntries] = useState<Entry[]>(() => (isCloud ? [] : loadEntries()));
   const [date, setDate] = useState(todayISO());
   const [field, setField] = useState("");
   const [crop, setCrop] = useState("");
@@ -200,6 +209,41 @@ export default function NisshiApp() {
   const [fieldSuggestions, setFieldSuggestions] = useState<string[]>(() => loadFieldOptions());
   const [cropSuggestions, setCropSuggestions] = useState<string[]>(() => loadCropOptions());
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // クラウド保存モードでは、ログイン中の自分の記録をSupabaseから読み込む。
+  useEffect(() => {
+    if (!isCloud) return;
+    let active = true;
+    cloudStore
+      .load()
+      .then((rows) => {
+        if (!active) return;
+        setEntries(rows);
+        setCloudError(false);
+        setCloudLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        if (!active) return;
+        setCloudError(true);
+        setCloudLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [isCloud, cloudStore, reloadKey]);
+
+  // 保存先を切り替える：クラウド版はSupabase、無料版はlocalStorage（従来通り全件を書き込む）
+  function persist(cloudOp: (s: CloudStore<Entry>) => Promise<void>, all: Entry[]) {
+    if (isCloud) {
+      cloudOp(cloudStore).catch((err) => {
+        console.error(err);
+        alert("クラウドへの保存に失敗しました。通信環境をご確認のうえ、画面を再読み込みしてください。");
+      });
+    } else {
+      saveEntries(all);
+    }
+  }
 
   function addEntry() {
     const e: Record<string, string> = {};
@@ -230,7 +274,7 @@ export default function NisshiApp() {
     };
     const next = [...entries, entry];
     setEntries(next);
-    saveEntries(next);
+    persist((s) => s.add(entry), next);
     trackEvent("record_save", "nisshi");
     registerFieldCrop(entry.field, entry.crop);
     setFieldSuggestions(loadFieldOptions());
@@ -252,7 +296,7 @@ export default function NisshiApp() {
     if (!window.confirm("この記録を削除します。よろしいですか？")) return;
     const next = entries.filter((e) => e.id !== id);
     setEntries(next);
-    saveEntries(next);
+    persist((s) => s.remove(id), next);
   }
 
   function exportCSV() {
@@ -279,7 +323,7 @@ export default function NisshiApp() {
         return;
       }
       setEntries(imported);
-      saveEntries(imported);
+      persist((s) => s.replaceAll(imported), imported);
       for (const entry of imported) registerFieldCrop(entry.field, entry.crop);
       setFieldSuggestions(loadFieldOptions());
       setCropSuggestions(loadCropOptions());
@@ -371,18 +415,32 @@ export default function NisshiApp() {
       {/* ヘッダー */}
       <header className="bg-green-700 text-white py-6 px-4 text-center shadow-md">
         <h1 className="text-2xl font-bold leading-tight">日々の作業を記録する</h1>
-        <p className="mt-2 text-green-100 text-base">農作業日誌（無料・ログイン不要）</p>
+        <p className="mt-2 text-green-100 text-base">
+          {isCloud ? "農作業日誌（クラウド保存）" : "農作業日誌（無料・ログイン不要）"}
+        </p>
       </header>
 
       <div className="max-w-2xl mx-auto px-4 pt-5">
-        <div className="border-2 border-yellow-300 bg-yellow-50 rounded-xl px-5 py-4">
-          <p className="text-base font-bold text-yellow-900 leading-relaxed">
-            このデータはこの端末のこのブラウザだけに保存されます。
-          </p>
-          <p className="text-sm text-yellow-800 leading-relaxed mt-1">
-            ブラウザのデータ削除や機種変更で消えてしまいます。定期的に「ファイルに保存する」からバックアップしてください。
-          </p>
-        </div>
+        {isCloud ? (
+          <div className="border-2 border-green-300 bg-green-50 rounded-xl px-5 py-4">
+            <p className="text-base font-bold text-green-900 leading-relaxed">
+              ログイン中のため、記録はクラウド（あぜみちのサーバー）に保存されます。
+            </p>
+            <p className="text-sm text-green-800 leading-relaxed mt-1">
+              別の端末でも、同じアカウントでログインすれば同じ記録を見られます。
+              {cloudError && "（いまクラウドからの読み込みに失敗しています。画面を再読み込みしてお試しください。）"}
+            </p>
+          </div>
+        ) : (
+          <div className="border-2 border-yellow-300 bg-yellow-50 rounded-xl px-5 py-4">
+            <p className="text-base font-bold text-yellow-900 leading-relaxed">
+              このデータはこの端末のこのブラウザだけに保存されます。
+            </p>
+            <p className="text-sm text-yellow-800 leading-relaxed mt-1">
+              ブラウザのデータ削除や機種変更で消えてしまいます。定期的に「ファイルに保存する」からバックアップしてください。
+            </p>
+          </div>
+        )}
         <div className="mt-4">
           <Link href="/tool" className="text-base font-bold text-green-700 underline underline-offset-4 hover:text-green-800">
             ← あぜみちの書類作成ツールへ
@@ -446,8 +504,8 @@ export default function NisshiApp() {
               {needsBoujoHint(workType) && (
                 <p className="text-sm text-green-800 bg-green-50 border border-green-200 rounded-lg px-3 py-2 mt-2 leading-relaxed">
                   農薬・肥料の使用は、記録専用のツール（
-                  <Link href={buildBoujoHref(date, field, crop, workType)} className="underline underline-offset-2 font-bold hover:text-green-900">
-                    /boujo
+                  <Link href={buildBoujoHref(date, field, crop, workType, boujoBasePath)} className="underline underline-offset-2 font-bold hover:text-green-900">
+                    {boujoBasePath}
                   </Link>
                   ）にも記録しておくと安心です。
                 </p>
@@ -602,7 +660,7 @@ export default function NisshiApp() {
           </div>
 
           {sortedEntries.length === 0 ? (
-            <p className="text-base text-gray-500">まだ記録がありません</p>
+            <p className="text-base text-gray-500">{cloudLoading ? "クラウドから読み込み中…" : "まだ記録がありません"}</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
