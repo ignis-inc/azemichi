@@ -13,7 +13,7 @@ export default function DashboardLoginPage() {
   return (
     <>
       <AuthBar />
-      <DashboardApp />
+      <DashboardApp cloud />
     </>
   );
 }

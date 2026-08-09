@@ -12,8 +12,11 @@ import {
   type GeneratedDoc,
 } from "../dashboardStore";
 
+// cloud=true はログイン版（/app/dashboard）。無料版（/dashboard）はこれまで通りfalse相当で、
+// 期限が近い書類のバナー通知は表示しない（データの持ち方自体はどちらも同じlocalStorage）。
 // このコンポーネントは next/dynamic({ ssr: false }) 経由でのみ描画される（常にブラウザ環境）
-export default function DashboardApp() {
+export default function DashboardApp({ cloud }: { cloud?: boolean } = {}) {
+  const isCloud = !!cloud;
   const [docs, setDocs] = useState<GeneratedDoc[]>(() => loadGeneratedDocs());
 
   function deleteDoc(id: string) {
@@ -28,6 +31,16 @@ export default function DashboardApp() {
 
   const rows = sortedDocs.map((doc) => ({ doc, deadline: computeDeadline(doc) }));
   const urgentCount = rows.filter((r) => r.deadline.status === "soon" || r.deadline.status === "overdue").length;
+
+  // ログイン版だけに出す「期限が近い書類」バナー。7日以内（超過分を含む）を対象に、期限が近い順に並べる。
+  const DEADLINE_BANNER_THRESHOLD_DAYS = 7;
+  const bannerRows = isCloud
+    ? rows
+        .filter((r) => r.deadline.kind === "date" && r.deadline.dueDate)
+        .map((r) => ({ ...r, days: daysUntil(r.deadline.dueDate as string) }))
+        .filter((r) => r.days <= DEADLINE_BANNER_THRESHOLD_DAYS)
+        .sort((a, b) => a.days - b.days)
+    : [];
 
   const sectionClass = "bg-white rounded-2xl shadow-sm border border-green-100 p-6 mb-6";
 
@@ -63,6 +76,46 @@ export default function DashboardApp() {
       </div>
 
       <main className="max-w-2xl mx-auto px-4 py-6">
+        {isCloud && bannerRows.length > 0 && (
+          <section className="border-2 border-rose-400 bg-rose-50 rounded-2xl p-5 mb-6 shadow-md">
+            <p className="text-lg font-bold text-rose-900 mb-3">
+              ⚠ 期限が近い書類が{bannerRows.length}件あります
+            </p>
+            <ul className="space-y-2">
+              {bannerRows.map(({ doc, deadline, days }, i) => {
+                const meta = DOC_META[doc.docType];
+                const dueDate = deadline.dueDate as string;
+                const daysText =
+                  days < 0
+                    ? `期限を${Math.abs(days)}日超過しています`
+                    : days === 0
+                    ? "本日が期限です"
+                    : `期限まであと${days}日です`;
+                return (
+                  <li key={doc.id}>
+                    <Link
+                      href={meta.path}
+                      className={`block rounded-lg px-3 py-2 transition-colors ${
+                        i === 0
+                          ? "bg-rose-100 border-2 border-rose-400 hover:bg-rose-200"
+                          : "bg-white border border-rose-200 hover:bg-rose-50"
+                      }`}
+                    >
+                      <span className={`font-bold ${i === 0 ? "text-rose-900 text-lg" : "text-rose-800 text-base"}`}>
+                        {meta.title}
+                      </span>
+                      <span className="block text-sm text-rose-700 mt-0.5">
+                        {daysText}（期限：{formatDateJP(dueDate)}
+                        {deadline.approx ? "・目安" : ""}）
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
+
         {urgentCount > 0 && (
           <section className="bg-amber-50 border-2 border-amber-400 rounded-2xl p-5 mb-6">
             <p className="text-lg font-bold text-amber-900">
