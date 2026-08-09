@@ -537,7 +537,7 @@ export default function BoujoApp() {
 
             <div>
               <label className={labelClass} htmlFor="boujo-memo">メモ</label>
-              <input id="boujo-memo" type="text" value={memo} onChange={(e) => setMemo(e.target.value)} placeholder="例：JAで購入" className={inputClass} />
+              <input id="boujo-memo" type="text" value={memo} onChange={(e) => setMemo(e.target.value)} placeholder="例：資材店で購入" className={inputClass} />
             </div>
 
             <button

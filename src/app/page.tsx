@@ -167,7 +167,7 @@ export default function Home() {
             </h2>
             <div className="voices">
               <p>
-                「JAに出しても、いくら手元に残るかわからない」
+                「出荷しても、いくら手元に残るかわからない」
                 <br />
                 「直接売りたいけど、どうすればいいかわからない」
                 <br />
