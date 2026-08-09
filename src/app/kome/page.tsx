@@ -6,6 +6,7 @@ import DocNav from "../components/DocNav";
 import PDFModal from "../components/PDFModal";
 import { CHOKKURA_NOTIFY_URL, DOC_LAST_CHECKED } from "../site";
 import { recordGeneratedDoc } from "../dashboardStore";
+import { createFuriganaTracker } from "../furiganaAutofill";
 
 const PREFECTURES = [
   "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
@@ -76,6 +77,9 @@ export default function KomePage() {
     startDate: "",
     submissionDest: "",
   });
+  const [nameTracker] = useState(() =>
+    createFuriganaTracker((kana) => setForm((prev) => ({ ...prev, nameKana: kana })))
+  );
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     const { name, value } = e.target;
@@ -238,6 +242,9 @@ export default function KomePage() {
                 name="name"
                 value={form.name}
                 onChange={handleChange}
+                onCompositionUpdate={nameTracker.handleCompositionUpdate}
+                onCompositionEnd={nameTracker.handleCompositionEnd}
+                onInput={nameTracker.handleInput}
                 placeholder="例：田中　太郎"
                 className={inputClass}
               />
@@ -250,7 +257,7 @@ export default function KomePage() {
                 type="text"
                 name="nameKana"
                 value={form.nameKana}
-                onChange={handleChange}
+                onChange={(e) => { handleChange(e); nameTracker.notifyManualKanaEdit(); }}
                 placeholder="例：たなか　たろう"
                 className={inputClass}
               />

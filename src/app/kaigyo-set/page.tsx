@@ -6,6 +6,7 @@ import PDFModal from "../components/PDFModal";
 import { DOC_LAST_CHECKED } from "../site";
 import { isValidWarekiDate, warekiToISO } from "../wareki";
 import { recordGeneratedDoc } from "../dashboardStore";
+import { createFuriganaTracker } from "../furiganaAutofill";
 
 const PREFECTURES = [
   "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
@@ -196,6 +197,19 @@ export default function KaigyoSetPage() {
     accountantName: "",
     accountantPhone: "",
   });
+  const [nameTracker] = useState(() =>
+    createFuriganaTracker((kana) => setCommon((prev) => ({ ...prev, nameKana: kana })))
+  );
+  // 専従者は行の追加・削除があるため、専従者ごとにトラッカーをkeyで管理する
+  const [senjushaTrackers] = useState(() => new Map<string, ReturnType<typeof createFuriganaTracker>>());
+  function getSenjushaTracker(key: string) {
+    let t = senjushaTrackers.get(key);
+    if (!t) {
+      t = createFuriganaTracker((kana) => updateSenjusha(key, "nameKana", kana));
+      senjushaTrackers.set(key, t);
+    }
+    return t;
+  }
 
   const needsPersonalDates = docs.kaigyo || docs.aoiro;
   const needsOccupation = docs.kaigyo || docs.senjusha;
@@ -559,12 +573,16 @@ export default function KaigyoSetPage() {
             <div>
               <label className={labelClass} htmlFor="set-name">氏名<span className="req">必須</span></label>
               <input type="text" id="set-name" name="name" aria-required="true" value={common.name} onChange={handleCommonChange}
+                onCompositionUpdate={nameTracker.handleCompositionUpdate}
+                onCompositionEnd={nameTracker.handleCompositionEnd}
+                onInput={nameTracker.handleInput}
                 placeholder="例：田中　太郎" className={inputClass} />
               {errors.name && <p className="text-red-600 text-base mt-2">{errors.name}</p>}
             </div>
             <div>
               <label className={labelClass} htmlFor="set-nameKana">ふりがな</label>
-              <input type="text" id="set-nameKana" name="nameKana" value={common.nameKana} onChange={handleCommonChange}
+              <input type="text" id="set-nameKana" name="nameKana" value={common.nameKana}
+                onChange={(e) => { handleCommonChange(e); nameTracker.notifyManualKanaEdit(); }}
                 placeholder="例：たなか　たろう" className={inputClass} />
             </div>
 
@@ -861,11 +879,18 @@ export default function KaigyoSetPage() {
                     <div>
                       <label className={smallLabelClass}>氏名</label>
                       <input type="text" value={s.name} onChange={(e) => updateSenjusha(s.key, "name", e.target.value)}
+                        onCompositionUpdate={getSenjushaTracker(s.key).handleCompositionUpdate}
+                        onCompositionEnd={getSenjushaTracker(s.key).handleCompositionEnd}
+                        onInput={getSenjushaTracker(s.key).handleInput}
                         placeholder="例：田中　花子" className={smallInputClass} />
                     </div>
                     <div>
                       <label className={smallLabelClass}>ふりがな</label>
-                      <input type="text" value={s.nameKana} onChange={(e) => updateSenjusha(s.key, "nameKana", e.target.value)}
+                      <input type="text" value={s.nameKana}
+                        onChange={(e) => {
+                          updateSenjusha(s.key, "nameKana", e.target.value);
+                          getSenjushaTracker(s.key).notifyManualKanaEdit();
+                        }}
                         placeholder="例：たなか　はなこ" className={smallInputClass} />
                     </div>
                   </div>

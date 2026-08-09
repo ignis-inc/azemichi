@@ -6,6 +6,7 @@ import DocNav from "../components/DocNav";
 import PDFModal from "../components/PDFModal";
 import { DOC_LAST_CHECKED } from "../site";
 import { recordGeneratedDoc } from "../dashboardStore";
+import { createFuriganaTracker } from "../furiganaAutofill";
 
 const PREFECTURES = [
   "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
@@ -68,6 +69,9 @@ export default function GennsenTokureiPage() {
     taxOffice: "",
   });
   const [sixMonths, setSixMonths] = useState<MonthRow[]>(() => newSixMonths());
+  const [nameTracker] = useState(() =>
+    createFuriganaTracker((kana) => setForm((prev) => ({ ...prev, nameKana: kana })))
+  );
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     const { name, value } = e.target;
@@ -216,12 +220,16 @@ export default function GennsenTokureiPage() {
             <div>
               <label className={labelClass} htmlFor="gt-name">氏名<span className="req">必須</span></label>
               <input type="text" id="gt-name" name="name" aria-required="true" value={form.name} onChange={handleChange}
+                onCompositionUpdate={nameTracker.handleCompositionUpdate}
+                onCompositionEnd={nameTracker.handleCompositionEnd}
+                onInput={nameTracker.handleInput}
                 placeholder="例：田中　太郎" className={inputClass} />
               {errors.name && <p className="text-red-600 text-base mt-2">{errors.name}</p>}
             </div>
             <div>
               <label className={labelClass} htmlFor="gt-nameKana">ふりがな</label>
-              <input type="text" id="gt-nameKana" name="nameKana" value={form.nameKana} onChange={handleChange}
+              <input type="text" id="gt-nameKana" name="nameKana" value={form.nameKana}
+                onChange={(e) => { handleChange(e); nameTracker.notifyManualKanaEdit(); }}
                 placeholder="例：たなか　たろう" className={inputClass} />
             </div>
 
