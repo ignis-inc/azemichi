@@ -9,6 +9,7 @@ import { isValidWarekiDate } from "../wareki";
 import { recordGeneratedDoc } from "../dashboardStore";
 import { createFuriganaTracker } from "../furiganaAutofill";
 import { trackEvent } from "../lib/analytics";
+import { saveGeneratedPdfToCloud } from "../lib/documentCloud";
 
 const PREFECTURES = [
   "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
@@ -129,6 +130,7 @@ export default function NenkinPage() {
       a.download = "農業者年金通常加入申込書.pdf";
       a.click();
       URL.revokeObjectURL(url);
+      void saveGeneratedPdfToCloud("nenkin", "農業者年金通常加入申込書.pdf", blob);
       recordGeneratedDoc("nenkin");
       trackEvent("pdf_create", "nenkin");
       setShowModal(true);

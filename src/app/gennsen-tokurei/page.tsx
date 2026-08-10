@@ -8,6 +8,7 @@ import { DOC_LAST_CHECKED } from "../site";
 import { recordGeneratedDoc } from "../dashboardStore";
 import { createFuriganaTracker } from "../furiganaAutofill";
 import { trackEvent } from "../lib/analytics";
+import { saveGeneratedPdfToCloud } from "../lib/documentCloud";
 
 const PREFECTURES = [
   "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
@@ -130,6 +131,7 @@ export default function GennsenTokureiPage() {
       a.download = "源泉所得税の納期の特例の承認に関する申請書.pdf";
       a.click();
       URL.revokeObjectURL(url);
+      void saveGeneratedPdfToCloud("gennsenTokurei", "源泉所得税の納期の特例の承認に関する申請書.pdf", blob);
       recordGeneratedDoc("gennsenTokurei");
       trackEvent("pdf_create", "gennsenTokurei");
       setShowModal(true);

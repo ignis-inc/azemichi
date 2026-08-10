@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-// ログイン版の4ツール（/app/kicho・/app/boujo・/app/nisshi・/app/dashboard）だけを守る。
+// ログイン版の5ページ（/app/kicho・/app/boujo・/app/nisshi・/app/dashboard・/app/documents）だけを守る。
 // 元の /kicho・/boujo・/nisshi・/dashboard は無料・ログイン不要のまま変更しない。
 // 書類作成系の9ツールや紹介ページも、これまで通りログイン不要なので対象外。
 //
@@ -49,7 +49,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // 対象は /app 配下の4ツールのみ（元の /kicho 等・トップページ・書類作成ツールは対象外）
+  // 対象は /app 配下の5ページのみ（元の /kicho 等・トップページ・書類作成ツールは対象外）
   matcher: [
     "/app/kicho",
     "/app/kicho/:path*",
@@ -59,5 +59,7 @@ export const config = {
     "/app/nisshi/:path*",
     "/app/dashboard",
     "/app/dashboard/:path*",
+    "/app/documents",
+    "/app/documents/:path*",
   ],
 };

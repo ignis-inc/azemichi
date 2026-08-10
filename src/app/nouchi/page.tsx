@@ -9,6 +9,7 @@ import { isValidWarekiDate, warekiToISO } from "../wareki";
 import { recordGeneratedDoc } from "../dashboardStore";
 import { createFuriganaTracker } from "../furiganaAutofill";
 import { trackEvent } from "../lib/analytics";
+import { saveGeneratedPdfToCloud } from "../lib/documentCloud";
 
 const PREFECTURES = [
   "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
@@ -121,6 +122,7 @@ export default function NouchiPage() {
       a.download = "農地法第3条の3届出書.pdf";
       a.click();
       URL.revokeObjectURL(url);
+      void saveGeneratedPdfToCloud("nouchi", "農地法第3条の3届出書.pdf", blob);
       recordGeneratedDoc("nouchi", warekiToISO(form.acqEra, Number(form.acqYear), Number(form.acqMonth), Number(form.acqDay)));
       trackEvent("pdf_create", "nouchi");
       setShowModal(true);

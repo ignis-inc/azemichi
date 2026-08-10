@@ -8,6 +8,7 @@ import { CHOKKURA_NOTIFY_URL, DOC_LAST_CHECKED } from "../site";
 import { recordGeneratedDoc } from "../dashboardStore";
 import { createFuriganaTracker } from "../furiganaAutofill";
 import { trackEvent } from "../lib/analytics";
+import { saveGeneratedPdfToCloud } from "../lib/documentCloud";
 
 const PREFECTURES = [
   "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
@@ -150,6 +151,7 @@ export default function KomePage() {
       a.download = "米穀販売届出書.pdf";
       a.click();
       URL.revokeObjectURL(url);
+      void saveGeneratedPdfToCloud("kome", "米穀販売届出書.pdf", blob);
       recordGeneratedDoc("kome", form.startDate || undefined);
       trackEvent("pdf_create", "kome");
       setShowModal(true);

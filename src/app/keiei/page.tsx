@@ -9,6 +9,7 @@ import { isValidWarekiDate } from "../wareki";
 import { recordGeneratedDoc } from "../dashboardStore";
 import { createFuriganaTracker } from "../furiganaAutofill";
 import { trackEvent } from "../lib/analytics";
+import { saveGeneratedPdfToCloud } from "../lib/documentCloud";
 
 const PREFECTURES = [
   "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
@@ -156,6 +157,7 @@ export default function KeieiPage() {
       a.download = "経営所得安定対策等交付金交付申請書.pdf";
       a.click();
       URL.revokeObjectURL(url);
+      void saveGeneratedPdfToCloud("keiei", "経営所得安定対策等交付金交付申請書.pdf", blob);
       recordGeneratedDoc("keiei");
       trackEvent("pdf_create", "keiei");
       setShowModal(true);

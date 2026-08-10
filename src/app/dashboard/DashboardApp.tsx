@@ -73,6 +73,13 @@ export default function DashboardApp({ cloud }: { cloud?: boolean } = {}) {
             ← あぜみちの書類作成ツールへ
           </Link>
         </div>
+        {isCloud && (
+          <div className="mt-3">
+            <Link href="/app/documents" className="text-base font-bold text-green-700 underline underline-offset-4 hover:text-green-800">
+              作成したPDFの保存先（/app/documents）を見る →
+            </Link>
+          </div>
+        )}
       </div>
 
       <main className="max-w-2xl mx-auto px-4 py-6">

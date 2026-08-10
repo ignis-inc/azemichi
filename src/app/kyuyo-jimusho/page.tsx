@@ -9,6 +9,7 @@ import { isValidWarekiDate, warekiToISO } from "../wareki";
 import { recordGeneratedDoc } from "../dashboardStore";
 import { createFuriganaTracker } from "../furiganaAutofill";
 import { trackEvent } from "../lib/analytics";
+import { saveGeneratedPdfToCloud } from "../lib/documentCloud";
 
 const PREFECTURES = [
   "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
@@ -141,6 +142,7 @@ export default function KyuyoJimushoPage() {
       a.download = "給与支払事務所等の開設届出書.pdf";
       a.click();
       URL.revokeObjectURL(url);
+      void saveGeneratedPdfToCloud("kyuyoJimusho", "給与支払事務所等の開設届出書.pdf", blob);
       recordGeneratedDoc("kyuyoJimusho", warekiToISO(form.startEra, Number(form.startYear), Number(form.startMonth), Number(form.startDay)));
       trackEvent("pdf_create", "kyuyoJimusho");
       setShowModal(true);

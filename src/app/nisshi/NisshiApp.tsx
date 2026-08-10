@@ -5,6 +5,7 @@ import Link from "next/link";
 import { loadFieldOptions, loadCropOptions, registerFieldCrop } from "../fieldCropStore";
 import { trackEvent } from "../lib/analytics";
 import { createCloudStore, type CloudStore } from "../lib/cloudStore";
+import { BarChart, type BarChartPoint } from "../components/BarChart";
 
 // この端末のブラウザだけに保存する（サーバーには送信しない）
 const STORAGE_KEY = "azemichi-nisshi-v1";
@@ -49,6 +50,15 @@ function harvestDisplay(e: Entry): string {
 function todayISO(): string {
   const jst = new Date(Date.now() + 9 * 60 * 60 * 1000);
   return jst.toISOString().slice(0, 10);
+}
+
+// グラフ用：今月から遡ってn か月分の「YYYY-MM」を古い順に並べる（記録が無い月も0として表示するため）
+function lastNMonths(n: number): string[] {
+  const [y, m] = todayISO().slice(0, 7).split("-").map(Number);
+  return Array.from({ length: n }, (_, i) => {
+    const d = new Date(y, m - 1 - (n - 1 - i), 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  });
 }
 
 // このコンポーネントは next/dynamic({ ssr: false }) 経由でのみ描画される（常にブラウザ環境）
@@ -344,6 +354,15 @@ export default function NisshiApp({ cloud }: { cloud?: { reloadKey: number } } =
       (workTypeFilter === ALL_FILTER || e.workType === workTypeFilter)
   );
   const sortedEntries = [...filteredEntries].sort((a, b) => b.date.localeCompare(a.date));
+
+  // グラフ（ログイン版のみ）：直近12か月の作業件数の推移
+  // 作業時間(workTime)は「9:00〜11:30」等の自由入力で書式が統一されていないため、
+  // 合計時間の集計は行わず、件数の推移のみを表示する。
+  const chartMonths = isCloud ? lastNMonths(12) : [];
+  const workCountChartPoints: BarChartPoint[] = chartMonths.map((m) => ({
+    label: m,
+    value: entries.filter((e) => e.date.slice(0, 7) === m).length,
+  }));
 
   // 年間サマリー：対象の年の選択肢（記録がある年＋今年）
   const summaryYearOptions = [...new Set([...entries.map((e) => e.date.slice(0, 4)), todayISO().slice(0, 4)])]
@@ -704,6 +723,17 @@ export default function NisshiApp({ cloud }: { cloud?: { reloadKey: number } } =
             </div>
           )}
         </section>
+
+        {/* グラフ（ログイン版のみ） */}
+        {isCloud && (
+          <section className={sectionClass}>
+            <h2 className="text-xl font-bold text-green-800 mb-5 pb-2 border-b-2 border-green-200">
+              グラフ（直近12か月）
+            </h2>
+            <h3 className="text-lg font-bold text-gray-700 mb-2">月ごとの作業件数</h3>
+            <BarChart points={workCountChartPoints} formatTitle={(l, v) => `${l}：${v}件`} />
+          </section>
+        )}
 
         {/* 年間サマリー */}
         <section className={sectionClass}>
