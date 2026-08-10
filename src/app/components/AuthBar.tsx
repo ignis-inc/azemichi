@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowser } from "../lib/supabaseBrowser";
@@ -41,16 +42,28 @@ export default function AuthBar() {
   return (
     <div className="bg-green-800 text-green-50 text-sm">
       <div className="max-w-5xl mx-auto px-4 py-2 flex items-center justify-between gap-3">
-        <span className="truncate">
-          {email ? (
-            <>
-              <span className="opacity-80">ログイン中：</span>
-              {email}
-            </>
-          ) : (
-            <span className="opacity-80">ログイン中</span>
-          )}
-        </span>
+        <div className="flex items-center gap-2 min-w-0">
+          {/* ロゴを押すとダッシュボードに戻る */}
+          <Link
+            href="/app/dashboard"
+            title="ダッシュボードに戻る"
+            aria-label="あぜみちのダッシュボードに戻る"
+            className="shrink-0 flex items-center gap-1.5 rounded-lg px-1.5 py-1 hover:bg-green-50/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-50 transition-colors"
+          >
+            <Image src="/azemichi-logo.png" alt="あぜみち" width={668} height={618} className="h-7 w-auto" priority />
+            <span className="hidden sm:inline font-bold">ホーム</span>
+          </Link>
+          <span className="truncate">
+            {email ? (
+              <>
+                <span className="opacity-80">ログイン中：</span>
+                {email}
+              </>
+            ) : (
+              <span className="opacity-80">ログイン中</span>
+            )}
+          </span>
+        </div>
         <div className="shrink-0 flex items-center gap-2">
           <Link
             href="/app/settings"

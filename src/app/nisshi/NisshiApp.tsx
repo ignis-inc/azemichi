@@ -6,6 +6,7 @@ import { loadFieldOptions, loadCropOptions, registerFieldCrop } from "../fieldCr
 import { trackEvent } from "../lib/analytics";
 import { createCloudStore, type CloudStore } from "../lib/cloudStore";
 import { BarChart, type BarChartPoint } from "../components/BarChart";
+import { QuickChips } from "../components/QuickChips";
 
 // この端末のブラウザだけに保存する（サーバーには送信しない）
 const STORAGE_KEY = "azemichi-nisshi-v1";
@@ -167,6 +168,22 @@ function needsBoujoHint(workType: string): boolean {
   return workType.includes("防除") || workType.includes("施肥");
 }
 
+// 時刻ピッカーの値（"09:00"）を「9:00」のように先頭の0を外して読みやすくする
+function prettyTime(t: string): string {
+  const [h, m] = t.split(":");
+  if (h === undefined || m === undefined) return t;
+  return `${Number(h)}:${m}`;
+}
+
+// 開始・終了の時刻から、保存用の作業時間文字列（例：「9:00〜11:30」）を作る。
+// 両方あれば「開始〜終了」、片方だけならその時刻だけ、どちらも空なら空文字。
+function combineWorkTime(start: string, end: string): string {
+  const s = start ? prettyTime(start) : "";
+  const e = end ? prettyTime(end) : "";
+  if (s && e) return `${s}〜${e}`;
+  return s || e;
+}
+
 // 作業内容から /boujo の区分（農薬・肥料）を推測する。どちらでもなければ引き継がない
 function boujoTypeFromWorkType(workType: string): "農薬" | "肥料" | undefined {
   if (workType.includes("防除")) return "農薬";
@@ -204,7 +221,9 @@ export default function NisshiApp({ cloud }: { cloud?: { reloadKey: number } } =
   const [weather, setWeather] = useState("");
   const [temperature, setTemperature] = useState("");
   const [workType, setWorkType] = useState("");
-  const [workTime, setWorkTime] = useState("");
+  // 作業時間は「開始・終了」を時刻ピッカーで選ぶ（保存は従来どおり「9:00〜11:30」の文字列）
+  const [workStart, setWorkStart] = useState("");
+  const [workEnd, setWorkEnd] = useState("");
   const [harvestQuantity, setHarvestQuantity] = useState("");
   const [harvestUnit, setHarvestUnit] = useState("");
   const [harvestUnitOther, setHarvestUnitOther] = useState("");
@@ -272,9 +291,10 @@ export default function NisshiApp({ cloud }: { cloud?: { reloadKey: number } } =
       field: field.trim(),
       crop: crop.trim(),
       weather: weather.trim(),
-      temperature: temperature.trim(),
+      // 気温は数値だけを入力してもらい、保存時に「℃」を付ける（従来の表示・CSVと同じ形）
+      temperature: temperature.trim() ? `${temperature.trim()}℃` : "",
       workType: workType.trim(),
-      workTime: workTime.trim(),
+      workTime: combineWorkTime(workStart, workEnd),
       harvestAmount: "", // 新規入力は数値＋単位（下記3項目）に一本化する
       harvestQuantity: harvestQuantity.trim(),
       harvestUnit,
@@ -294,7 +314,8 @@ export default function NisshiApp({ cloud }: { cloud?: { reloadKey: number } } =
     setWeather("");
     setTemperature("");
     setWorkType("");
-    setWorkTime("");
+    setWorkStart("");
+    setWorkEnd("");
     setHarvestQuantity("");
     setHarvestUnit("");
     setHarvestUnitOther("");
@@ -480,6 +501,7 @@ export default function NisshiApp({ cloud }: { cloud?: { reloadKey: number } } =
 
             <div>
               <label className={labelClass} htmlFor="nisshi-field">圃場<span className="req">必須</span></label>
+              <QuickChips options={fieldSuggestions.slice(0, 12)} value={field} onPick={setField} />
               <input id="nisshi-field" type="text" list="nisshi-field-list" value={field} onChange={(e) => setField(e.target.value)} placeholder="例：南の畑" className={inputClass} />
               <datalist id="nisshi-field-list">
                 {fieldSuggestions.map((f) => (<option key={f} value={f} />))}
@@ -489,6 +511,7 @@ export default function NisshiApp({ cloud }: { cloud?: { reloadKey: number } } =
 
             <div>
               <label className={labelClass} htmlFor="nisshi-crop">作物<span className="req">必須</span></label>
+              <QuickChips options={cropSuggestions.slice(0, 12)} value={crop} onPick={setCrop} />
               <input id="nisshi-crop" type="text" list="nisshi-crop-list" value={crop} onChange={(e) => setCrop(e.target.value)} placeholder="例：トマト" className={inputClass} />
               <datalist id="nisshi-crop-list">
                 {cropSuggestions.map((c) => (<option key={c} value={c} />))}
@@ -498,7 +521,8 @@ export default function NisshiApp({ cloud }: { cloud?: { reloadKey: number } } =
 
             <div>
               <label className={labelClass} htmlFor="nisshi-weather">天候</label>
-              <input id="nisshi-weather" type="text" list="nisshi-weather-list" value={weather} onChange={(e) => setWeather(e.target.value)} placeholder="例：晴れ" className={inputClass} />
+              <QuickChips options={WEATHER_SUGGESTIONS} value={weather} onPick={setWeather} />
+              <input id="nisshi-weather" type="text" list="nisshi-weather-list" value={weather} onChange={(e) => setWeather(e.target.value)} placeholder="上から選ぶか、自由に入力" className={inputClass} />
               <datalist id="nisshi-weather-list">
                 {WEATHER_SUGGESTIONS.map((w) => (
                   <option key={w} value={w} />
@@ -508,12 +532,25 @@ export default function NisshiApp({ cloud }: { cloud?: { reloadKey: number } } =
 
             <div>
               <label className={labelClass} htmlFor="nisshi-temperature">気温</label>
-              <input id="nisshi-temperature" type="text" value={temperature} onChange={(e) => setTemperature(e.target.value)} placeholder="例：28℃" className={inputClass} />
+              <div className="flex items-center gap-3">
+                <input
+                  id="nisshi-temperature"
+                  type="number"
+                  inputMode="decimal"
+                  step="0.1"
+                  value={temperature}
+                  onChange={(e) => setTemperature(e.target.value)}
+                  placeholder="例：28"
+                  className={`${inputClass} flex-1`}
+                />
+                <span className="text-lg text-gray-600 whitespace-nowrap">℃</span>
+              </div>
             </div>
 
             <div>
               <label className={labelClass} htmlFor="nisshi-worktype">作業内容<span className="req">必須</span></label>
-              <input id="nisshi-worktype" type="text" list="nisshi-worktype-list" value={workType} onChange={(e) => setWorkType(e.target.value)} placeholder="例：防除" className={inputClass} />
+              <QuickChips options={WORK_TYPE_SUGGESTIONS} value={workType} onPick={setWorkType} />
+              <input id="nisshi-worktype" type="text" list="nisshi-worktype-list" value={workType} onChange={(e) => setWorkType(e.target.value)} placeholder="上から選ぶか、自由に入力" className={inputClass} />
               <datalist id="nisshi-worktype-list">
                 {WORK_TYPE_SUGGESTIONS.map((w) => (
                   <option key={w} value={w} />
@@ -532,8 +569,27 @@ export default function NisshiApp({ cloud }: { cloud?: { reloadKey: number } } =
             </div>
 
             <div>
-              <label className={labelClass} htmlFor="nisshi-worktime">作業時間</label>
-              <input id="nisshi-worktime" type="text" value={workTime} onChange={(e) => setWorkTime(e.target.value)} placeholder="例：9:00〜11:30" className={inputClass} />
+              <label className={labelClass}>作業時間</label>
+              <div className="flex items-center gap-2">
+                <input
+                  id="nisshi-worktime-start"
+                  type="time"
+                  aria-label="作業の開始時刻"
+                  value={workStart}
+                  onChange={(e) => setWorkStart(e.target.value)}
+                  className={`${inputClass} flex-1`}
+                />
+                <span className="text-lg text-gray-600 shrink-0">〜</span>
+                <input
+                  id="nisshi-worktime-end"
+                  type="time"
+                  aria-label="作業の終了時刻"
+                  value={workEnd}
+                  onChange={(e) => setWorkEnd(e.target.value)}
+                  className={`${inputClass} flex-1`}
+                />
+              </div>
+              <p className="text-sm text-gray-500 mt-1">開始と終了の時刻を選んでください（片方だけでも構いません）。</p>
             </div>
 
             <div>

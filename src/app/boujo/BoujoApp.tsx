@@ -7,6 +7,7 @@ import { loadFieldOptions, loadCropOptions, registerFieldCrop } from "../fieldCr
 import { trackEvent } from "../lib/analytics";
 import { createCloudStore, type CloudStore } from "../lib/cloudStore";
 import { BarChart, type BarChartPoint } from "../components/BarChart";
+import { QuickChips } from "../components/QuickChips";
 
 // この端末のブラウザだけに保存する（サーバーには送信しない）
 const STORAGE_KEY = "azemichi-boujo-v1";
@@ -344,6 +345,8 @@ export default function BoujoApp({ cloud }: { cloud?: { reloadKey: number } } = 
   const fieldOptions = [...new Set(entries.map((e) => e.field).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ja"));
   const cropOptions = [...new Set(entries.map((e) => e.crop).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ja"));
   const nameOptions = [...new Set(entries.map((e) => e.name).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ja"));
+  // 名称のワンタップ候補は、いま選んでいる区分（農薬／肥料）で過去に使った名称だけに絞る
+  const nameOptionsForType = [...new Set(entries.filter((e) => e.type === type).map((e) => e.name).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ja"));
   const applicatorOptions = [...new Set(entries.map((e) => e.applicator).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ja"));
 
   const filteredEntries = entries.filter(
@@ -525,6 +528,7 @@ export default function BoujoApp({ cloud }: { cloud?: { reloadKey: number } } = 
 
             <div>
               <label className={labelClass} htmlFor="boujo-field">圃場<span className="req">必須</span></label>
+              <QuickChips options={fieldSuggestions.slice(0, 12)} value={field} onPick={setField} />
               <input id="boujo-field" type="text" list="boujo-field-list" value={field} onChange={(e) => setField(e.target.value)} placeholder="例：南の畑" className={inputClass} />
               <datalist id="boujo-field-list">
                 {fieldSuggestions.map((f) => (<option key={f} value={f} />))}
@@ -534,6 +538,7 @@ export default function BoujoApp({ cloud }: { cloud?: { reloadKey: number } } = 
 
             <div>
               <label className={labelClass} htmlFor="boujo-crop">作物<span className="req">必須</span></label>
+              <QuickChips options={cropSuggestions.slice(0, 12)} value={crop} onPick={setCrop} />
               <input id="boujo-crop" type="text" list="boujo-crop-list" value={crop} onChange={(e) => setCrop(e.target.value)} placeholder="例：トマト" className={inputClass} />
               <datalist id="boujo-crop-list">
                 {cropSuggestions.map((c) => (<option key={c} value={c} />))}
@@ -543,6 +548,7 @@ export default function BoujoApp({ cloud }: { cloud?: { reloadKey: number } } = 
 
             <div>
               <label className={labelClass} htmlFor="boujo-name">{type}の名称<span className="req">必須</span></label>
+              <QuickChips options={nameOptionsForType.slice(0, 12)} value={name} onPick={setName} />
               <input id="boujo-name" type="text" list="boujo-name-list" value={name} onChange={(e) => setName(e.target.value)} placeholder={type === "農薬" ? "例：〇〇water水和剤" : "例：化成肥料〇〇号"} className={inputClass} />
               <datalist id="boujo-name-list">
                 {nameOptions.map((n) => (<option key={n} value={n} />))}
