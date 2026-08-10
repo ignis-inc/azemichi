@@ -50,10 +50,15 @@ export function createCloudStore<T extends WithId>(tool: ToolName): CloudStore<T
       if (error) throw error;
     },
 
-    // 全件を入れ替える（CSV読み込み用）。自分の行を全部消してから入れ直す。
+    // 全件を入れ替える（CSV読み込み用）。「自分が入れた記録」だけを消してから入れ直す。
+    // 世帯共有では他のメンバーの記録も同じテーブルにあるため、user_idで自分の分に限定し、
+    // CSV読み込みで家族全員のデータを消してしまわないようにする。
     async replaceAll(entries) {
-      // deleteはWHERE必須。idは常に非nullなので、これで「自分の全行」を消す（RLSで自分の行に限定される）
-      const { error: delError } = await supabase.from(table).delete().not("id", "is", null);
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData.user?.id;
+      const del = supabase.from(table).delete();
+      // 自分のuser_idの行だけを削除（uidが取れない場合のみ、従来通り自分が触れる全行）
+      const { error: delError } = uid ? await del.eq("user_id", uid) : await del.not("id", "is", null);
       if (delError) throw delError;
       if (entries.length > 0) {
         const rows = entries.map((e) => ({ id: e.id, data: e }));

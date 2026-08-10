@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowser } from "../lib/supabaseBrowser";
 
@@ -50,14 +51,22 @@ export default function AuthBar() {
             <span className="opacity-80">ログイン中</span>
           )}
         </span>
-        <button
-          type="button"
-          onClick={handleLogout}
-          disabled={busy}
-          className="shrink-0 rounded-lg border border-green-50/50 px-3 py-1.5 font-bold hover:bg-green-50/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-50 disabled:opacity-60 transition-colors"
-        >
-          {busy ? "処理中…" : "ログアウト"}
-        </button>
+        <div className="shrink-0 flex items-center gap-2">
+          <Link
+            href="/app/settings"
+            className="rounded-lg border border-green-50/50 px-3 py-1.5 font-bold hover:bg-green-50/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-50 transition-colors"
+          >
+            共有設定
+          </Link>
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={busy}
+            className="rounded-lg border border-green-50/50 px-3 py-1.5 font-bold hover:bg-green-50/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-50 disabled:opacity-60 transition-colors"
+          >
+            {busy ? "処理中…" : "ログアウト"}
+          </button>
+        </div>
       </div>
     </div>
   );

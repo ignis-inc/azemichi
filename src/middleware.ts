@@ -61,5 +61,7 @@ export const config = {
     "/app/dashboard/:path*",
     "/app/documents",
     "/app/documents/:path*",
+    "/app/settings",
+    "/app/settings/:path*",
   ],
 };
