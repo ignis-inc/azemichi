@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   loadGeneratedDocs,
@@ -11,6 +11,29 @@ import {
   DOC_META,
   type GeneratedDoc,
 } from "../dashboardStore";
+import { createCloudStore } from "../lib/cloudStore";
+
+function todayISO(): string {
+  const jst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  return jst.toISOString().slice(0, 10);
+}
+
+function formatYen(n: number): string {
+  return n.toLocaleString("ja-JP");
+}
+
+// 今年の振り返り（ログイン版のみ）で使う最小限の型。
+// /app/kicho・/app/boujo・/app/nisshi と同じクラウドのデータ（cloudStore.ts）を読み、
+// 各ツールがそれぞれ内部で行っている集計（年ごとの収支合計・件数集計）と同じ考え方で計算する。
+type KichoEntryMin = { id: string; date: string; type: "income" | "expense"; amount: number };
+type BoujoEntryMin = { id: string; date: string; type: "農薬" | "肥料" };
+type NisshiEntryMin = { id: string; date: string };
+
+type YearlyReview = {
+  kicho: { status: "ok" | "error"; income: number; expense: number };
+  boujo: { status: "ok" | "error"; pesticide: number; fertilizer: number };
+  nisshi: { status: "ok" | "error"; count: number };
+};
 
 // cloud=true はログイン版（/app/dashboard）。無料版（/dashboard）はこれまで通りfalse相当で、
 // 期限が近い書類のバナー通知は表示しない（データの持ち方自体はどちらも同じlocalStorage）。
@@ -18,6 +41,50 @@ import {
 export default function DashboardApp({ cloud }: { cloud?: boolean } = {}) {
   const isCloud = !!cloud;
   const [docs, setDocs] = useState<GeneratedDoc[]>(() => loadGeneratedDocs());
+  const [yearlyReview, setYearlyReview] = useState<YearlyReview | null>(null);
+  const currentYear = todayISO().slice(0, 4); // 年が明けたら自動的にこの値も切り替わる
+
+  // 今年の振り返り（ログイン版のみ）：/app/kicho・/app/boujo・/app/nisshiのクラウドデータを読み、
+  // 今年（1月〜現在）分だけを集計する。1つのツールの読み込みに失敗しても、他は表示を続ける。
+  useEffect(() => {
+    if (!isCloud) return;
+    let active = true;
+    Promise.allSettled([
+      createCloudStore<KichoEntryMin>("kicho").load(),
+      createCloudStore<BoujoEntryMin>("boujo").load(),
+      createCloudStore<NisshiEntryMin>("nisshi").load(),
+    ]).then(([kichoRes, boujoRes, nisshiRes]) => {
+      if (!active) return;
+
+      const kichoYear = kichoRes.status === "fulfilled" ? kichoRes.value.filter((e) => e.date.slice(0, 4) === currentYear) : [];
+      const boujoYear = boujoRes.status === "fulfilled" ? boujoRes.value.filter((e) => e.date.slice(0, 4) === currentYear) : [];
+      const nisshiYear = nisshiRes.status === "fulfilled" ? nisshiRes.value.filter((e) => e.date.slice(0, 4) === currentYear) : [];
+
+      if (kichoRes.status === "rejected") console.error(kichoRes.reason);
+      if (boujoRes.status === "rejected") console.error(boujoRes.reason);
+      if (nisshiRes.status === "rejected") console.error(nisshiRes.reason);
+
+      setYearlyReview({
+        kicho: {
+          status: kichoRes.status === "fulfilled" ? "ok" : "error",
+          income: kichoYear.filter((e) => e.type === "income").reduce((sum, e) => sum + e.amount, 0),
+          expense: kichoYear.filter((e) => e.type === "expense").reduce((sum, e) => sum + e.amount, 0),
+        },
+        boujo: {
+          status: boujoRes.status === "fulfilled" ? "ok" : "error",
+          pesticide: boujoYear.filter((e) => e.type === "農薬").length,
+          fertilizer: boujoYear.filter((e) => e.type === "肥料").length,
+        },
+        nisshi: {
+          status: nisshiRes.status === "fulfilled" ? "ok" : "error",
+          count: nisshiYear.length,
+        },
+      });
+    });
+    return () => {
+      active = false;
+    };
+  }, [isCloud, currentYear]);
 
   function deleteDoc(id: string) {
     if (!window.confirm("この記録を削除します。よろしいですか？")) return;
@@ -120,6 +187,90 @@ export default function DashboardApp({ cloud }: { cloud?: boolean } = {}) {
                 );
               })}
             </ul>
+          </section>
+        )}
+
+        {isCloud && (
+          <section className={sectionClass}>
+            <h2 className="text-xl font-bold text-green-800 mb-5 pb-2 border-b-2 border-green-200">
+              今年の振り返り（{currentYear}年）
+            </h2>
+
+            {yearlyReview === null ? (
+              <p className="text-base text-gray-500">読み込み中…</p>
+            ) : (
+              <div className="space-y-4">
+                <div className="border-2 border-green-100 rounded-xl p-4">
+                  <p className="text-base font-bold text-gray-800 mb-3">記帳（収支）</p>
+                  {yearlyReview.kicho.status === "error" ? (
+                    <p className="text-sm text-gray-500">読み込みに失敗しました。画面を再読み込みしてお試しください。</p>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div>
+                        <p className="text-xs text-gray-500">収入</p>
+                        <p className="text-lg font-bold text-green-700 whitespace-nowrap">{formatYen(yearlyReview.kicho.income)}円</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">支出</p>
+                        <p className="text-lg font-bold text-rose-700 whitespace-nowrap">{formatYen(yearlyReview.kicho.expense)}円</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">差引</p>
+                        <p
+                          className={`text-lg font-bold whitespace-nowrap ${
+                            yearlyReview.kicho.income - yearlyReview.kicho.expense >= 0 ? "text-green-700" : "text-rose-700"
+                          }`}
+                        >
+                          {formatYen(yearlyReview.kicho.income - yearlyReview.kicho.expense)}円
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  <Link href="/app/kicho" className="text-sm text-green-700 underline underline-offset-2 hover:text-green-800 mt-3 inline-block">
+                    記帳ツールを開く →
+                  </Link>
+                </div>
+
+                <div className="border-2 border-green-100 rounded-xl p-4">
+                  <p className="text-base font-bold text-gray-800 mb-3">農薬・肥料の記録件数</p>
+                  {yearlyReview.boujo.status === "error" ? (
+                    <p className="text-sm text-gray-500">読み込みに失敗しました。画面を再読み込みしてお試しください。</p>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div>
+                        <p className="text-xs text-gray-500">農薬</p>
+                        <p className="text-lg font-bold text-rose-700">{yearlyReview.boujo.pesticide}件</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">肥料</p>
+                        <p className="text-lg font-bold text-green-700">{yearlyReview.boujo.fertilizer}件</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">合計</p>
+                        <p className="text-lg font-bold text-gray-800">
+                          {yearlyReview.boujo.pesticide + yearlyReview.boujo.fertilizer}件
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  <Link href="/app/boujo" className="text-sm text-green-700 underline underline-offset-2 hover:text-green-800 mt-3 inline-block">
+                    農薬・肥料記録ツールを開く →
+                  </Link>
+                </div>
+
+                <div className="border-2 border-green-100 rounded-xl p-4">
+                  <p className="text-base font-bold text-gray-800 mb-3">農作業日誌の記録件数</p>
+                  {yearlyReview.nisshi.status === "error" ? (
+                    <p className="text-sm text-gray-500">読み込みに失敗しました。画面を再読み込みしてお試しください。</p>
+                  ) : (
+                    <p className="text-lg font-bold text-gray-800 text-center">{yearlyReview.nisshi.count}件</p>
+                  )}
+                  <Link href="/app/nisshi" className="text-sm text-green-700 underline underline-offset-2 hover:text-green-800 mt-3 inline-block">
+                    農作業日誌を開く →
+                  </Link>
+                </div>
+              </div>
+            )}
           </section>
         )}
 
