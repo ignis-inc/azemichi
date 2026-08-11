@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { DOC_META, type DocType } from "../../dashboardStore";
 import { BarChart } from "../../components/BarChart";
+import { setNoTrack } from "../../lib/analytics";
 
 type EventType = "page_view" | "pdf_create" | "record_save";
 
@@ -66,6 +67,8 @@ export default function AdminStatsPage() {
   const [data, setData] = useState<StatsData | null>(null);
   const [activeType, setActiveType] = useState<EventType>("page_view");
   const [selectedKey, setSelectedKey] = useState<string>("__all__");
+  // 管理画面にログインした端末は、集計から除外する（B・自分のアクセスを数えない）
+  const [excluded, setExcluded] = useState(false);
 
   async function fetchStats(pw: string) {
     setLoading(true);
@@ -86,6 +89,9 @@ export default function AdminStatsPage() {
       setData(json);
       setAuthorized(true);
       sessionStorage.setItem(SESSION_KEY, pw);
+      // 管理画面に入れた（＝運営者の）端末は、自分のアクセスを数えないよう除外する
+      setNoTrack(true);
+      setExcluded(true);
     } catch {
       setError("通信に失敗しました。時間をおいてもう一度お試しください。");
     } finally {
@@ -192,6 +198,26 @@ export default function AdminStatsPage() {
             className="text-sm text-gray-500 underline underline-offset-4 hover:text-gray-700"
           >
             ロックする
+          </button>
+        </div>
+
+        {/* この端末の集計除外の状態と切り替え */}
+        <div className="bg-white border border-gray-200 rounded-xl px-4 py-3 flex items-center justify-between gap-3 text-sm">
+          <span className="text-gray-600">
+            {excluded
+              ? "この端末（ブラウザ）のアクセスは集計に数えていません。"
+              : "この端末のアクセスは集計に数えられます。"}
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              const next = !excluded;
+              setNoTrack(next);
+              setExcluded(next);
+            }}
+            className="shrink-0 rounded-lg border-2 border-gray-300 px-3 py-1.5 font-bold text-gray-700 hover:border-gray-500 transition-colors"
+          >
+            {excluded ? "この端末を集計に含める" : "この端末を除外する"}
           </button>
         </div>
 
