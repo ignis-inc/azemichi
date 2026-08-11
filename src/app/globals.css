@@ -655,6 +655,23 @@ body {
   font-size: 1.0125rem;
   margin-bottom: 14px;
 }
+.landing .legal ul {
+  margin: 0 0 14px;
+  padding-left: 1.4em;
+  list-style: disc;
+}
+.landing .legal li {
+  color: #3a4731;
+  line-height: 1.95;
+  font-size: 1.0125rem;
+  margin-bottom: 8px;
+}
+/* プライバシーポリシーの最終改定日（小さめの補足表示） */
+.landing .legal .legal-updated {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin-top: 24px;
+}
 /* 用語集の出典・最終確認行（小さめの補足表示） */
 .landing .legal .yougo-source {
   font-size: 0.86rem;
