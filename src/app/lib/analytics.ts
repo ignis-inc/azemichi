@@ -1,6 +1,7 @@
 import { getSupabaseBrowser } from "./supabaseBrowser";
 
-export type AnalyticsEventType = "page_view" | "pdf_create" | "record_save";
+// record_save = ログイン版（クラウド保存）／ record_save_free = 無料版（ログイン不要・ローカル保存）
+export type AnalyticsEventType = "page_view" | "pdf_create" | "record_save" | "record_save_free";
 
 // この端末を集計から除外する印（localStorage）。運営者・開発者の自分のアクセスを数えないために使う。
 const NOTRACK_KEY = "azemichi-notrack";

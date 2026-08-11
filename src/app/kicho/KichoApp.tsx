@@ -255,7 +255,8 @@ export default function KichoApp({ cloud }: { cloud?: { reloadKey: number } } = 
     const next = [...entries, entry];
     setEntries(next);
     persist((s) => s.add(entry), next);
-    trackEvent("record_save", "kicho");
+    // ログイン版（クラウド保存）と無料版（ローカル保存）で集計を分ける
+    trackEvent(isCloud ? "record_save" : "record_save_free", "kicho");
     setCategory("");
     setAmount("");
     setMemo("");

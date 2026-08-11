@@ -5,7 +5,7 @@ import { DOC_META, type DocType } from "../../dashboardStore";
 import { BarChart } from "../../components/BarChart";
 import { setNoTrack } from "../../lib/analytics";
 
-type EventType = "page_view" | "pdf_create" | "record_save";
+type EventType = "page_view" | "pdf_create" | "record_save" | "record_save_free";
 
 type TotalRow = { event_type: EventType; key: string; count: number };
 type DailyRow = { event_type: EventType; key: string; day: string; count: number };
@@ -18,7 +18,8 @@ const SESSION_KEY = "azemichi-admin-stats-password";
 const EVENT_TABS: { type: EventType; label: string }[] = [
   { type: "page_view", label: "ページ閲覧" },
   { type: "pdf_create", label: "書類作成" },
-  { type: "record_save", label: "記録保存" },
+  { type: "record_save", label: "記録保存（ログイン版）" },
+  { type: "record_save_free", label: "記録保存（無料版）" },
 ];
 
 const RECORD_TOOL_LABELS: Record<string, string> = {
@@ -27,15 +28,83 @@ const RECORD_TOOL_LABELS: Record<string, string> = {
   nisshi: "農作業日誌",
 };
 
+// ページ閲覧（page_view）のkeyはURLのパス。運営者が分かるよう日本語のページ名に変換する。
+const PAGE_LABELS: Record<string, string> = {
+  "/": "トップページ",
+  "/tool": "ツール一覧",
+  "/yougo": "用語集",
+  "/privacy": "プライバシーポリシー",
+  "/chokkura": "ちょっくら紹介",
+  // 書類作成ツール
+  "/kome": "米の販売届出",
+  "/aoiro": "青色申告承認申請",
+  "/kaigyo": "開業届",
+  "/kaigyo-set": "開業まとめて作成",
+  "/senjusha": "専従者給与の届出",
+  "/kyuyo-jimusho": "給与支払事務所の届出",
+  "/gennsen-tokurei": "源泉所得税の納期特例",
+  "/nouchi": "農地法の届出",
+  "/nenkin": "農業者年金の申込",
+  "/keiei": "経営所得安定対策の申請",
+  // 記録ツール（無料版）
+  "/kicho": "記帳（無料版）",
+  "/boujo": "農薬・肥料記録（無料版）",
+  "/nisshi": "農作業日誌（無料版）",
+  "/dashboard": "ダッシュボード（無料版）",
+  // ログイン版
+  "/app/kicho": "記帳（ログイン版）",
+  "/app/boujo": "農薬・肥料記録（ログイン版）",
+  "/app/nisshi": "農作業日誌（ログイン版）",
+  "/app/dashboard": "ダッシュボード（ログイン版）",
+  "/app/documents": "保存した書類（ログイン版）",
+  "/app/settings": "共有設定（ログイン版）",
+  // 認証まわり
+  "/login": "ログイン画面",
+  "/invite": "招待の承認画面",
+  "/reset-password": "パスワード再設定画面",
+};
+
+// ページ閲覧の一覧を、種類ごとにまとめて並べるためのグループ番号（小さいほど上）。
+//   0: 書類作成ツール ／ 1: 記録ツール（ログイン版）／ 2: 記録ツール（無料版）／ 3: その他
+const DOC_PAGES = new Set([
+  "/kome", "/aoiro", "/kaigyo", "/kaigyo-set", "/senjusha",
+  "/kyuyo-jimusho", "/gennsen-tokurei", "/nouchi", "/nenkin", "/keiei",
+]);
+const FREE_RECORD_PAGES = new Set(["/kicho", "/boujo", "/nisshi", "/dashboard"]);
+
+// ページ閲覧の一覧で、閲覧が0でも常に表示するページ（書類作成ツール・記録ツールは全部並べる）。
+// これで「まだ誰にも見られていない書類・ツール」も0件として一覧に出て、全体を把握できる。
+const ALWAYS_SHOWN_PAGES: string[] = [
+  ...DOC_PAGES, // 書類作成ツール
+  "/kicho", "/boujo", "/nisshi", "/dashboard", // 記録ツール（無料版）
+  "/app/kicho", "/app/boujo", "/app/nisshi", "/app/dashboard", // 記録ツール（ログイン版）
+];
+
+// 各タブで、件数0でも常に一覧に出す対象。
+//   書類作成（pdf_create）… 全書類の種類 ／ 記録保存（record_save）… 全記録ツール
+const ALWAYS_SHOWN_BY_TYPE: Record<EventType, string[]> = {
+  page_view: ALWAYS_SHOWN_PAGES,
+  pdf_create: Object.keys(DOC_META),
+  record_save: Object.keys(RECORD_TOOL_LABELS),
+  record_save_free: Object.keys(RECORD_TOOL_LABELS),
+};
+
+function pageCategoryRank(key: string): number {
+  if (DOC_PAGES.has(key)) return 0;
+  if (key.startsWith("/app/")) return 1; // ログイン版
+  if (FREE_RECORD_PAGES.has(key)) return 2; // 無料版の記録ツール
+  return 3; // トップ・ログイン画面など その他
+}
+
 // event_type・keyの組み合わせを、画面に出す日本語ラベルに変換する
 function labelFor(eventType: EventType, key: string): string {
   if (eventType === "pdf_create") {
     return DOC_META[key as DocType]?.title ?? key;
   }
-  if (eventType === "record_save") {
+  if (eventType === "record_save" || eventType === "record_save_free") {
     return RECORD_TOOL_LABELS[key] ?? key;
   }
-  return key || "/"; // page_view はパスそのまま
+  return PAGE_LABELS[key] ?? (key || "/"); // page_view は日本語ページ名（無ければパスそのまま）
 }
 
 function lastNDaysISO(n: number): string[] {
@@ -122,10 +191,30 @@ export default function AdminStatsPage() {
 
   const totalsForType = useMemo(() => {
     if (!data) return [];
-    return data.totals
-      .filter((t) => t.event_type === activeType)
-      .map((t) => ({ ...t, label: labelFor(t.event_type, t.key) }))
-      .sort((a, b) => b.count - a.count);
+    // 各タブの対象を、実データ＋「件数0でも常に出す対象」を重複なくまとめる。
+    // 無いものは0件として補い、まだ使われていない書類・ツールも一覧に出す（全体を把握するため）。
+    const counts = new Map<string, number>();
+    for (const t of data.totals) {
+      if (t.event_type === activeType) counts.set(t.key, t.count);
+    }
+    const keys = new Set<string>([...(ALWAYS_SHOWN_BY_TYPE[activeType] ?? []), ...counts.keys()]);
+    const merged = [...keys].map((key) => ({
+      event_type: activeType,
+      key,
+      count: counts.get(key) ?? 0,
+      label: labelFor(activeType, key),
+    }));
+    if (activeType === "page_view") {
+      // 「書類作成→ログイン版→無料版→その他」のグループ順、各グループ内は多い順（同数はページ名順）
+      return merged.sort(
+        (a, b) =>
+          pageCategoryRank(a.key) - pageCategoryRank(b.key) ||
+          b.count - a.count ||
+          a.label.localeCompare(b.label, "ja"),
+      );
+    }
+    // 書類作成・記録保存は多い順（同数は名前順）
+    return merged.sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, "ja"));
   }, [data, activeType]);
 
   const dailyPoints = useMemo(() => {
@@ -258,8 +347,13 @@ export default function AdminStatsPage() {
               <tbody>
                 {totalsForType.map((t) => (
                   <tr key={t.key} className="border-b border-gray-100 last:border-0">
-                    <td className="py-2 text-gray-800">{t.label}</td>
-                    <td className="py-2 text-right font-bold text-gray-800">{t.count.toLocaleString()}</td>
+                    <td className="py-2 text-gray-800">
+                      {t.label}
+                      {t.label !== t.key && (
+                        <span className="block text-xs text-gray-400">{t.key}</span>
+                      )}
+                    </td>
+                    <td className="py-2 text-right font-bold text-gray-800 align-top">{t.count.toLocaleString()}</td>
                   </tr>
                 ))}
               </tbody>

@@ -305,7 +305,8 @@ export default function NisshiApp({ cloud }: { cloud?: { reloadKey: number } } =
     const next = [...entries, entry];
     setEntries(next);
     persist((s) => s.add(entry), next);
-    trackEvent("record_save", "nisshi");
+    // ログイン版（クラウド保存）と無料版（ローカル保存）で集計を分ける
+    trackEvent(isCloud ? "record_save" : "record_save_free", "nisshi");
     registerFieldCrop(entry.field, entry.crop);
     setFieldSuggestions(loadFieldOptions());
     setCropSuggestions(loadCropOptions());

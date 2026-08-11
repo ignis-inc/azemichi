@@ -286,7 +286,8 @@ export default function BoujoApp({ cloud }: { cloud?: { reloadKey: number } } = 
     const next = [...entries, entry];
     setEntries(next);
     persist((s) => s.add(entry), next);
-    trackEvent("record_save", "boujo");
+    // ログイン版（クラウド保存）と無料版（ローカル保存）で集計を分ける
+    trackEvent(isCloud ? "record_save" : "record_save_free", "boujo");
     registerFieldCrop(entry.field, entry.crop);
     setFieldSuggestions(loadFieldOptions());
     setCropSuggestions(loadCropOptions());
