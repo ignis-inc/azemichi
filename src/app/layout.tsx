@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import SiteFooter from "./components/SiteFooter";
+import SiteHeader from "./components/SiteHeader";
 import PageViewTracker from "./components/PageViewTracker";
 import { OG_IMAGE, SITE_NAME, SITE_URL } from "./site";
 
@@ -81,6 +82,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
         <PageViewTracker />
+        <SiteHeader />
         {children}
         <SiteFooter />
       </body>

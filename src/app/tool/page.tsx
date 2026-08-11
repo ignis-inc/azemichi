@@ -1,10 +1,27 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { CHOKKURA_NOTIFY_URL } from "../site";
+import { getSupabaseBrowser } from "../lib/supabaseBrowser";
 
 export default function Home() {
+  // ログイン状態に応じて、ログイン版カードの遷移先を切り替える（ログイン中→マイページ／未ログイン→ログイン）
+  const [loggedIn, setLoggedIn] = useState(false);
+  useEffect(() => {
+    let active = true;
+    getSupabaseBrowser()
+      .auth.getUser()
+      .then(({ data }) => {
+        if (active) setLoggedIn(!!data.user);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-green-50">
       {/* あぜみち サービス紹介 */}
@@ -228,6 +245,23 @@ export default function Home() {
             </Link>
           </div>
         </div>
+      </section>
+
+      {/* ログイン版の案内カード（3カテゴリに加えて、ログイン版の価値を軽く紹介） */}
+      <section className="max-w-5xl mx-auto px-4 pt-2 pb-10">
+        <Link
+          href={loggedIn ? "/app/dashboard" : "/login"}
+          className="block bg-white rounded-2xl shadow-sm border-2 border-green-300 p-6 text-center hover:border-green-500 transition-colors"
+        >
+          <p className="text-sm font-bold text-green-700 mb-1">ログイン版（無料）</p>
+          <h2 className="text-xl font-bold text-green-800 mb-2">記録をクラウドに保存・家族と共有</h2>
+          <p className="text-base text-gray-600 leading-relaxed max-w-lg mx-auto mb-5">
+            ログインすると、記帳・農薬肥料・農作業日誌の記録をクラウドに保存でき、機種変更しても引き継げます。家族と同じ記録を共有することもできます。
+          </p>
+          <span className="inline-block bg-green-600 text-white text-lg font-bold py-4 px-8 rounded-2xl shadow-md">
+            {loggedIn ? "マイページを開く →" : "ログイン・新規登録へ →"}
+          </span>
+        </Link>
       </section>
 
       {/* 別サービス「ちょっくら」紹介（琥珀・茶系アクセントで別サービスと区別） */}
