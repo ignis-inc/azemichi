@@ -7,6 +7,9 @@ import { setNoTrack } from "../../lib/analytics";
 
 type EventType = "page_view" | "pdf_create" | "record_save" | "record_save_free";
 
+// タブの識別子。"other_page" は本来ページ閲覧の一部だが、「その他」タブとして分けて表示する。
+type TabId = EventType | "other_page";
+
 type TotalRow = { event_type: EventType; key: string; count: number };
 type DailyRow = { event_type: EventType; key: string; day: string; count: number };
 type MonthlyRow = { event_type: EventType; key: string; month: string; count: number };
@@ -15,11 +18,12 @@ type StatsData = { totals: TotalRow[]; daily: DailyRow[]; monthly: MonthlyRow[] 
 
 const SESSION_KEY = "azemichi-admin-stats-password";
 
-const EVENT_TABS: { type: EventType; label: string }[] = [
-  { type: "page_view", label: "ページ閲覧" },
-  { type: "pdf_create", label: "書類作成" },
-  { type: "record_save", label: "記録保存（ログイン版）" },
-  { type: "record_save_free", label: "記録保存（無料版）" },
+const EVENT_TABS: { id: TabId; label: string }[] = [
+  { id: "page_view", label: "ページ閲覧" },
+  { id: "pdf_create", label: "書類作成" },
+  { id: "record_save", label: "記録保存（ログイン版）" },
+  { id: "record_save_free", label: "記録保存（無料版）" },
+  { id: "other_page", label: "その他" },
 ];
 
 const RECORD_TOOL_LABELS: Record<string, string> = {
@@ -96,6 +100,52 @@ function pageCategoryRank(key: string): number {
   return 3; // トップ・ログイン画面など その他
 }
 
+// 「その他」タブで、閲覧0でも常に出すページ（トップ・案内・認証まわり）。
+const OTHER_PAGES: string[] = [
+  "/", "/tool", "/yougo", "/privacy", "/chokkura",
+  "/login", "/invite", "/reset-password",
+];
+
+// タブ→実際のイベント種別（「その他」はページ閲覧の一部）
+function tabEventType(tab: TabId): EventType {
+  return tab === "other_page" ? "page_view" : tab;
+}
+
+// このkeyが、選んだタブに含まれるか。
+// ページ閲覧タブは「その他」を除いたツール系ページ、その他タブは「その他」ページだけを表示する（重複させない）。
+function keyInTab(tab: TabId, key: string): boolean {
+  if (tab === "page_view") return pageCategoryRank(key) !== 3;
+  if (tab === "other_page") return pageCategoryRank(key) === 3;
+  return true; // 書類作成・記録保存はそのまま
+}
+
+// そのタブで、件数0でも常に一覧に出す対象。
+function alwaysShownForTab(tab: TabId): string[] {
+  if (tab === "other_page") return OTHER_PAGES;
+  return ALWAYS_SHOWN_BY_TYPE[tab];
+}
+
+// グラフの日付・月ラベル用の小さな変換
+function toMD(iso: string): string {
+  // "2026-08-11" → "8/11"
+  const [, m, d] = iso.split("-");
+  return `${Number(m)}/${Number(d)}`;
+}
+function toJaDate(iso: string): string {
+  // "2026-08-11" → "2026年8月11日"
+  const [y, m, d] = iso.split("-");
+  return `${y}年${Number(m)}月${Number(d)}日`;
+}
+function toMonthTick(ym: string): string {
+  // "2026-08" → "8月"
+  return `${Number(ym.split("-")[1])}月`;
+}
+function toJaMonth(ym: string): string {
+  // "2026-08" → "2026年8月"
+  const [y, m] = ym.split("-");
+  return `${y}年${Number(m)}月`;
+}
+
 // event_type・keyの組み合わせを、画面に出す日本語ラベルに変換する
 function labelFor(eventType: EventType, key: string): string {
   if (eventType === "pdf_create") {
@@ -134,7 +184,7 @@ export default function AdminStatsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<StatsData | null>(null);
-  const [activeType, setActiveType] = useState<EventType>("page_view");
+  const [activeTab, setActiveTab] = useState<TabId>("page_view");
   const [selectedKey, setSelectedKey] = useState<string>("__all__");
   // 管理画面にログインした端末は、集計から除外する（B・自分のアクセスを数えない）
   const [excluded, setExcluded] = useState(false);
@@ -193,19 +243,20 @@ export default function AdminStatsPage() {
     if (!data) return [];
     // 各タブの対象を、実データ＋「件数0でも常に出す対象」を重複なくまとめる。
     // 無いものは0件として補い、まだ使われていない書類・ツールも一覧に出す（全体を把握するため）。
+    const et = tabEventType(activeTab);
     const counts = new Map<string, number>();
     for (const t of data.totals) {
-      if (t.event_type === activeType) counts.set(t.key, t.count);
+      if (t.event_type === et && keyInTab(activeTab, t.key)) counts.set(t.key, t.count);
     }
-    const keys = new Set<string>([...(ALWAYS_SHOWN_BY_TYPE[activeType] ?? []), ...counts.keys()]);
+    const keys = new Set<string>([...alwaysShownForTab(activeTab), ...counts.keys()]);
     const merged = [...keys].map((key) => ({
-      event_type: activeType,
+      event_type: et,
       key,
       count: counts.get(key) ?? 0,
-      label: labelFor(activeType, key),
+      label: labelFor(et, key),
     }));
-    if (activeType === "page_view") {
-      // 「書類作成→ログイン版→無料版→その他」のグループ順、各グループ内は多い順（同数はページ名順）
+    if (activeTab === "page_view") {
+      // 「書類作成→ログイン版→無料版」のグループ順、各グループ内は多い順（同数はページ名順）
       return merged.sort(
         (a, b) =>
           pageCategoryRank(a.key) - pageCategoryRank(b.key) ||
@@ -213,28 +264,36 @@ export default function AdminStatsPage() {
           a.label.localeCompare(b.label, "ja"),
       );
     }
-    // 書類作成・記録保存は多い順（同数は名前順）
+    // 書類作成・記録保存・その他は多い順（同数は名前順）
     return merged.sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, "ja"));
-  }, [data, activeType]);
+  }, [data, activeTab]);
 
   const dailyPoints = useMemo(() => {
     if (!data) return [];
+    const et = tabEventType(activeTab);
     const days = lastNDaysISO(30);
     const rows = data.daily.filter(
-      (d) => d.event_type === activeType && (selectedKey === "__all__" || d.key === selectedKey),
+      (d) =>
+        d.event_type === et &&
+        keyInTab(activeTab, d.key) &&
+        (selectedKey === "__all__" || d.key === selectedKey),
     );
     const byDay = new Map<string, number>();
     for (const r of rows) {
       byDay.set(r.day, (byDay.get(r.day) ?? 0) + r.count);
     }
     return days.map((day) => ({ label: day, value: byDay.get(day) ?? 0 }));
-  }, [data, activeType, selectedKey]);
+  }, [data, activeTab, selectedKey]);
 
   const monthlyPoints = useMemo(() => {
     if (!data) return [];
+    const et = tabEventType(activeTab);
     const months = lastNMonths(12);
     const rows = data.monthly.filter(
-      (m) => m.event_type === activeType && (selectedKey === "__all__" || m.key === selectedKey),
+      (m) =>
+        m.event_type === et &&
+        keyInTab(activeTab, m.key) &&
+        (selectedKey === "__all__" || m.key === selectedKey),
     );
     const byMonth = new Map<string, number>();
     for (const r of rows) {
@@ -242,7 +301,7 @@ export default function AdminStatsPage() {
       byMonth.set(ym, (byMonth.get(ym) ?? 0) + r.count);
     }
     return months.map((ym) => ({ label: ym, value: byMonth.get(ym) ?? 0 }));
-  }, [data, activeType, selectedKey]);
+  }, [data, activeTab, selectedKey]);
 
   if (!authorized) {
     return (
@@ -314,14 +373,14 @@ export default function AdminStatsPage() {
         <div className="flex gap-2 flex-wrap">
           {EVENT_TABS.map((t) => (
             <button
-              key={t.type}
+              key={t.id}
               type="button"
               onClick={() => {
-                setActiveType(t.type);
+                setActiveTab(t.id);
                 setSelectedKey("__all__");
               }}
               className={`px-4 py-2 rounded-full text-sm font-bold border-2 transition-colors ${
-                activeType === t.type
+                activeTab === t.id
                   ? "bg-gray-800 border-gray-800 text-white"
                   : "bg-white border-gray-200 text-gray-600 hover:border-gray-400"
               }`}
@@ -385,11 +444,21 @@ export default function AdminStatsPage() {
 
         {/* 日別グラフ */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
-          <h2 className="text-lg font-bold text-gray-800 mb-3">日別（直近30日）</h2>
+          <div className="mb-3">
+            <h2 className="text-lg font-bold text-gray-800">日別（直近30日）</h2>
+            {dailyPoints.length > 0 && (
+              <p className="text-xs text-gray-500 mt-0.5">
+                {toJaDate(dailyPoints[0].label)} 〜 {toJaDate(dailyPoints[dailyPoints.length - 1].label)}（左が古い日→右が最新）
+              </p>
+            )}
+          </div>
           {dailyPoints.some((p) => p.value > 0) ? (
             <BarChart
               points={dailyPoints}
-              formatTitle={(label, value) => `${label}：${value}件`}
+              formatTitle={(label, value) => `${toJaDate(label)}：${value}件`}
+              axisLabelFor={(p) => toMD(p.label)}
+              barWidth={24}
+              scrollToEnd
             />
           ) : (
             <p className="text-gray-500 text-sm">データがありません。</p>
@@ -398,11 +467,21 @@ export default function AdminStatsPage() {
 
         {/* 月別グラフ */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
-          <h2 className="text-lg font-bold text-gray-800 mb-3">月別（直近12か月）</h2>
+          <div className="mb-3">
+            <h2 className="text-lg font-bold text-gray-800">月別（直近12か月）</h2>
+            {monthlyPoints.length > 0 && (
+              <p className="text-xs text-gray-500 mt-0.5">
+                {toJaMonth(monthlyPoints[0].label)} 〜 {toJaMonth(monthlyPoints[monthlyPoints.length - 1].label)}（左が古い月→右が最新）
+              </p>
+            )}
+          </div>
           {monthlyPoints.some((p) => p.value > 0) ? (
             <BarChart
               points={monthlyPoints}
-              formatTitle={(label, value) => `${label}：${value}件`}
+              formatTitle={(label, value) => `${toJaMonth(label)}：${value}件`}
+              axisLabelFor={(p) => toMonthTick(p.label)}
+              barWidth={28}
+              scrollToEnd
             />
           ) : (
             <p className="text-gray-500 text-sm">データがありません。</p>
