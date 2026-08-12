@@ -6,7 +6,7 @@ import Reveal from "./components/Reveal";
 import { CHOKKURA_NOTIFY_URL, pageMetadata } from "./site";
 
 export const metadata: Metadata = pageMetadata({
-  title: "つくる人が、ちゃんと報われる農業へ。｜あぜみち・ちょっくら / IGNIS",
+  title: "つくる人が、ちゃんと報われる農業へ。｜あぜみち",
   description:
     "農業の手続き書類を、スマホでかんたんにPDF化できる無料ツール「あぜみち」。米の販売届出・青色申告・農地の届出・農業者年金・補助金申請に対応。登録不要で、つくる人の最初の一歩を軽くします。",
   path: "/",
