@@ -59,6 +59,28 @@ export default function Home() {
         </div>
       </div>
 
+      {/* まずはこれから：初めての方向けに、最初の一歩となる書類（/kome）だけを大きく特別扱いで案内 */}
+      <section className="max-w-3xl mx-auto px-4 pt-8">
+        <h2 className="text-2xl font-bold text-green-800 text-center mb-4">まずはこれから</h2>
+        <Link
+          href="/kome"
+          className="block bg-green-100 rounded-3xl shadow-md border-4 border-green-500 hover:border-green-600 transition-colors p-6 sm:p-8 text-center"
+        >
+          <span className="inline-block bg-green-600 text-white text-sm font-bold rounded-full px-4 py-1 mb-4">
+            初めての方はまずこちら
+          </span>
+          <h3 className="text-xl sm:text-2xl font-bold text-green-800 mb-3">
+            米の販売届出（米穀の出荷又は販売の事業開始届出書）
+          </h3>
+          <p className="text-base text-gray-700 leading-relaxed max-w-lg mx-auto mb-6">
+            お米を売り始めるときに必要な届出を、入力するだけでPDF化できます。
+          </p>
+          <span className="inline-block bg-green-600 text-white text-lg font-bold py-4 px-8 rounded-2xl shadow-md">
+            この書類を作る →
+          </span>
+        </Link>
+      </section>
+
       {/* 書類を作る：やりたいことから書類を選ぶカード一覧 */}
       <section className="doc-picker">
         <div className="doc-picker-inner">
