@@ -31,6 +31,9 @@ export default function SiteHeader() {
     return null;
   }
 
+  // ツール一覧ページ自体にいるときは、そこへのリンクは出さない
+  const onToolListPage = pathname === "/tool";
+
   return (
     <header className="bg-white border-b border-green-100">
       <div className="max-w-5xl mx-auto px-4 h-12 flex items-center justify-between gap-3">
@@ -38,12 +41,22 @@ export default function SiteHeader() {
           <Image src="/azemichi-logo.png" alt="" width={668} height={618} className="h-7 w-auto" />
           <span className="text-base">あぜみち</span>
         </Link>
-        <Link
-          href={loggedIn ? "/app/dashboard" : "/login"}
-          className="shrink-0 rounded-lg bg-green-600 hover:bg-green-700 active:bg-green-800 text-white text-sm font-bold px-4 py-2 transition-colors"
-        >
-          {loggedIn ? "マイページ" : "ログイン"}
-        </Link>
+        <div className="flex items-center gap-3 shrink-0">
+          {!onToolListPage && (
+            <Link
+              href="/tool"
+              className="text-sm font-bold text-green-700 hover:text-green-800 hover:underline underline-offset-2 whitespace-nowrap"
+            >
+              ツール一覧
+            </Link>
+          )}
+          <Link
+            href={loggedIn ? "/app/dashboard" : "/login"}
+            className="shrink-0 rounded-lg bg-green-600 hover:bg-green-700 active:bg-green-800 text-white text-sm font-bold px-4 py-2 transition-colors"
+          >
+            {loggedIn ? "マイページ" : "ログイン"}
+          </Link>
+        </div>
       </div>
     </header>
   );
