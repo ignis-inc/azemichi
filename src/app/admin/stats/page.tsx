@@ -36,6 +36,7 @@ const RECORD_TOOL_LABELS: Record<string, string> = {
 const PAGE_LABELS: Record<string, string> = {
   "/": "トップページ",
   "/tool": "ツール一覧",
+  "/kiroku": "記録メニュー",
   "/yougo": "用語集",
   "/privacy": "プライバシーポリシー",
   "/chokkura": "ちょっくら紹介",
@@ -102,7 +103,7 @@ function pageCategoryRank(key: string): number {
 
 // 「その他」タブで、閲覧0でも常に出すページ（トップ・案内・認証まわり）。
 const OTHER_PAGES: string[] = [
-  "/", "/tool", "/yougo", "/privacy", "/chokkura",
+  "/", "/tool", "/kiroku", "/yougo", "/privacy", "/chokkura",
   "/login", "/invite", "/reset-password",
 ];
 
