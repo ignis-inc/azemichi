@@ -6,6 +6,79 @@ import Link from "next/link";
 import { CHOKKURA_NOTIFY_URL } from "../site";
 import { getSupabaseBrowser } from "../lib/supabaseBrowser";
 
+// 目的別メニュー（ページ冒頭・スクロールせず見える範囲に配置）。
+// 「新規就農者はまず何が分からないか」「現役農家は毎年何を作るか」の両方から、
+// 迷わず最初の一歩を選べるよう、書類の正式名称ではなく「やりたいこと」で表現する。
+const PURPOSE_MENU = [
+  {
+    href: "/kaigyo-set",
+    label: "新しく農業を始める",
+    desc: "開業に必要な書類をまとめて作成",
+    icon: (
+      <>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 8v8M8 12h8" />
+      </>
+    ),
+  },
+  {
+    href: "/kome",
+    label: "お米の販売を始める",
+    desc: "米穀の出荷・販売の届出",
+    icon: (
+      <>
+        <path d="M7 8h10l1 12H6L7 8Z" />
+        <path d="M9 8a3 3 0 0 1 6 0" />
+      </>
+    ),
+  },
+  {
+    href: "/aoiro",
+    label: "税金・確定申告の準備",
+    desc: "青色申告承認申請書",
+    icon: (
+      <>
+        <path d="M7 3h8l4 4v14H7V3Z" />
+        <path d="M15 3v4h4" />
+        <path d="M9.5 12h6M9.5 15h6M9.5 18h4" />
+      </>
+    ),
+  },
+  {
+    href: "/nouchi",
+    label: "農地の手続き",
+    desc: "農地法の届出",
+    icon: (
+      <>
+        <path d="M9 4 4 6v14l5-2 6 2 5-2V4l-5 2-6-2Z" />
+        <path d="M9 4v14M15 6v14" />
+      </>
+    ),
+  },
+  {
+    href: "/keiei",
+    label: "補助金・交付金の申請",
+    desc: "経営所得安定対策の申請",
+    icon: (
+      <>
+        <circle cx="12" cy="12" r="8" />
+        <path d="M12 8v8M9.5 9.5h5M9.5 14.5h4" />
+      </>
+    ),
+  },
+  {
+    href: "#kiroku",
+    label: "日々の記録をつける",
+    desc: "記帳・防除・作業日誌",
+    icon: (
+      <>
+        <path d="M6 4h10l2 2v14H6z" />
+        <path d="M9 9h6M9 12h6M9 15h4" />
+      </>
+    ),
+  },
+] as const;
+
 export default function Home() {
   // ログイン状態に応じて、ログイン版カードの遷移先を切り替える（ログイン中→マイページ／未ログイン→ログイン）
   const [loggedIn, setLoggedIn] = useState(false);
@@ -24,62 +97,65 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-green-50">
-      {/* あぜみち サービス紹介 */}
-      <div className="bg-white border-b-2 border-green-100 px-4 py-8 text-center">
+      {/* あぜみち サービス紹介＋目的別メニュー（スクロールせず見える範囲に配置） */}
+      <div className="bg-white border-b-2 border-green-100 px-4 py-6 text-center">
         <Image
           src="/azemichi-logo.png"
           alt="あぜみち"
           width={668}
           height={618}
-          className="mx-auto mb-2 h-24 w-auto sm:h-28"
+          className="mx-auto mb-1 h-12 w-auto sm:h-14"
           priority
         />
-        <h2 className="text-4xl font-bold text-green-800 mb-2">あぜみち</h2>
-        <p className="text-lg font-bold text-green-700 mb-3">農家の手続きを、もっと簡単に。</p>
-        <p className="text-xl font-medium text-gray-700 mb-4">農業の手続き書類を、スマホで簡単に作れます</p>
-        <p className="text-base text-gray-600 leading-relaxed max-w-lg mx-auto">
-          必要な情報を入力すると、農林水産省や税務署に提出する書類の様式をPDFにできます。内容をご確認のうえ、印刷して窓口に持参するか、オンラインで申請してください。
+        <h1 className="text-xl sm:text-2xl font-bold text-green-800 mb-1">あぜみち</h1>
+        <p className="text-sm sm:text-base text-gray-600 mb-5">
+          入力するだけで、農業の手続き書類を無料でPDF化できます。
         </p>
-        <p className="text-sm text-gray-500 leading-relaxed max-w-lg mx-auto mt-3">
-          つくったものを売る準備ができたら、その先は直販のしくみ『ちょっくら』へ（近日公開）。
-        </p>
+
+        {/* 目的別メニュー：正式な書類名が分からなくても、やりたいことから選べる入り口 */}
+        <h2 className="text-base sm:text-lg font-bold text-green-800 mb-3">何を作りたいですか？</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-w-2xl mx-auto">
+          {PURPOSE_MENU.map((item) => (
+            <Link
+              key={item.label}
+              href={item.href}
+              className="flex flex-col items-center gap-1 bg-white rounded-2xl border-2 border-green-200 hover:border-green-500 hover:shadow-md transition-colors px-2 py-3 sm:px-3 sm:py-4"
+            >
+              <span className="flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-green-100 text-green-700">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-5 h-5 sm:w-6 sm:h-6"
+                  aria-hidden="true"
+                >
+                  {item.icon}
+                </svg>
+              </span>
+              <span className="text-xs sm:text-sm font-bold text-green-800 leading-snug">{item.label}</span>
+              <span className="text-[11px] sm:text-xs text-gray-500 leading-snug">{item.desc}</span>
+            </Link>
+          ))}
+        </div>
+
         <div className="mt-5 flex items-center justify-center gap-5">
           <Link
             href="/"
-            className="text-base font-bold text-green-700 underline underline-offset-4 hover:text-green-800"
+            className="text-sm font-bold text-green-700 underline underline-offset-4 hover:text-green-800"
           >
             ← あぜみちトップへ
           </Link>
           <Link
             href="/#omoi"
-            className="text-base font-bold text-green-700 underline underline-offset-4 hover:text-green-800"
+            className="text-sm font-bold text-green-700 underline underline-offset-4 hover:text-green-800"
           >
             私たちの想い
           </Link>
         </div>
       </div>
-
-      {/* まずはこれから：初めての方向けに、最初の一歩となる書類（/kome）だけを大きく特別扱いで案内 */}
-      <section className="max-w-3xl mx-auto px-4 pt-8">
-        <h2 className="text-2xl font-bold text-green-800 text-center mb-4">まずはこれから</h2>
-        <Link
-          href="/kome"
-          className="block bg-green-100 rounded-3xl shadow-md border-4 border-green-500 hover:border-green-600 transition-colors p-6 sm:p-8 text-center"
-        >
-          <span className="inline-block bg-green-600 text-white text-sm font-bold rounded-full px-4 py-1 mb-4">
-            初めての方はまずこちら
-          </span>
-          <h3 className="text-xl sm:text-2xl font-bold text-green-800 mb-3">
-            米の販売届出（米穀の出荷又は販売の事業開始届出書）
-          </h3>
-          <p className="text-base text-gray-700 leading-relaxed max-w-lg mx-auto mb-6">
-            お米を売り始めるときに必要な届出を、入力するだけでPDF化できます。
-          </p>
-          <span className="inline-block bg-green-600 text-white text-lg font-bold py-4 px-8 rounded-2xl shadow-md">
-            この書類を作る →
-          </span>
-        </Link>
-      </section>
 
       {/* 書類を作る：やりたいことから書類を選ぶカード一覧 */}
       <section className="doc-picker">
@@ -191,8 +267,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 記録する */}
-      <section className="max-w-5xl mx-auto px-4 pt-4 pb-2">
+      {/* 記録する（目的別メニューの「日々の記録をつける」からのアンカーリンク先） */}
+      <section id="kiroku" className="max-w-5xl mx-auto px-4 pt-4 pb-2 scroll-mt-4">
         <h2 className="text-2xl font-bold text-green-800 text-center">記録する</h2>
       </section>
 
