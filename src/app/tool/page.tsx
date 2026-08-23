@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { CHOKKURA_NOTIFY_URL } from "../site";
 
 // 目的別メニュー（ページ冒頭・スクロールせず見える範囲に配置）。
 // 「新規就農者はまず何が分からないか」「現役農家は毎年何を作るか」の両方から、
@@ -304,36 +303,8 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* 別サービス「ちょっくら」紹介（琥珀・茶系アクセントで別サービスと区別） */}
-      <section className="border-t-4 px-4 py-10" style={{ background: "#FFFBEB", borderColor: "#B45309" }}>
-        <div className="max-w-2xl mx-auto text-center">
-          <span
-            className="inline-block text-sm font-bold rounded-full px-4 py-1 mb-4"
-            style={{ background: "#B45309", color: "#FFFFFF" }}
-          >
-            ちょっくら（近日公開）
-          </span>
-          <h2 className="text-2xl font-bold mb-3" style={{ color: "#92400E" }}>
-            つくったものを、自分の値段で直接売る。
-          </h2>
-          <p className="text-base leading-relaxed max-w-lg mx-auto mb-6" style={{ color: "#78350F" }}>
-            ちょっくらは、農家さんが育てた農産物を、自分でつけた価格でお客さまに直接販売できる直販サービスです。あぜみちで手続きを整えたら、次は売る場所へ。
-          </p>
-          <a
-            href={CHOKKURA_NOTIFY_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block text-lg font-bold py-4 px-8 rounded-2xl shadow-md transition-colors"
-            style={{ background: "#B45309", color: "#FFFFFF" }}
-          >
-            興味がある方はこちら（お知らせ登録）
-          </a>
-          <p className="text-xs mt-4" style={{ color: "#B45309" }}>
-            ※ ちょっくらはあぜみちとは別のサービスです
-          </p>
-        </div>
-      </section>
+      {/* 「ちょっくら」の紹介は トップページ（/）にすでに同内容のセクションがあるため、
+          ここでは重複させず省略する */}
     </div>
   );
 }
