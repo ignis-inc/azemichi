@@ -115,30 +115,52 @@ export default function Home() {
         {/* 目的別メニュー：正式な書類名が分からなくても、やりたいことから選べる入り口 */}
         <h2 className="text-base sm:text-lg font-bold text-green-800 mb-3">何を作りたいですか？</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-w-2xl mx-auto">
-          {PURPOSE_MENU.map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              className="flex flex-col items-center gap-1 bg-white rounded-2xl border-2 border-green-200 hover:border-green-500 hover:shadow-md transition-colors px-2 py-3 sm:px-3 sm:py-4"
-            >
-              <span className="flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-green-100 text-green-700">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="w-5 h-5 sm:w-6 sm:h-6"
-                  aria-hidden="true"
+          {PURPOSE_MENU.map((item, index) => {
+            // 1枚目「新しく農業を始める」だけ、対象者が最も多いため少し大きく・色を変えて目立たせる
+            const isPrimary = index === 0;
+            return (
+              <Link
+                key={item.label}
+                href={item.href}
+                className={
+                  isPrimary
+                    ? "flex flex-col items-center gap-1 bg-green-50 rounded-2xl border-4 border-green-500 hover:border-green-600 hover:shadow-md transition-colors px-2 py-4 sm:px-3 sm:py-5"
+                    : "flex flex-col items-center gap-1 bg-white rounded-2xl border-2 border-green-200 hover:border-green-500 hover:shadow-md transition-colors px-2 py-3 sm:px-3 sm:py-4"
+                }
+              >
+                <span
+                  className={
+                    isPrimary
+                      ? "flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-green-600 text-white"
+                      : "flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-green-100 text-green-700"
+                  }
                 >
-                  {item.icon}
-                </svg>
-              </span>
-              <span className="text-xs sm:text-sm font-bold text-green-800 leading-snug">{item.label}</span>
-              <span className="text-[11px] sm:text-xs text-gray-500 leading-snug">{item.desc}</span>
-            </Link>
-          ))}
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className={isPrimary ? "w-6 h-6 sm:w-7 sm:h-7" : "w-5 h-5 sm:w-6 sm:h-6"}
+                    aria-hidden="true"
+                  >
+                    {item.icon}
+                  </svg>
+                </span>
+                <span
+                  className={
+                    isPrimary
+                      ? "text-sm sm:text-base font-bold text-green-800 leading-snug"
+                      : "text-xs sm:text-sm font-bold text-green-800 leading-snug"
+                  }
+                >
+                  {item.label}
+                </span>
+                <span className="text-[11px] sm:text-xs text-gray-500 leading-snug">{item.desc}</span>
+              </Link>
+            );
+          })}
         </div>
 
         <div className="mt-5 flex items-center justify-center gap-5">
@@ -156,6 +178,11 @@ export default function Home() {
           </Link>
         </div>
       </div>
+
+      {/* すべての書類から探す：初期状態は閉じておき、開くと従来の「書類を作る」9枚グリッドと
+          「開業時にまとめて書類を作る」CTAを表示する（目的別メニューで迷ったときの逃げ道） */}
+      <details className="doc-toggle">
+        <summary>すべての書類から探す</summary>
 
       {/* 書類を作る：やりたいことから書類を選ぶカード一覧 */}
       <section className="doc-picker">
@@ -266,6 +293,7 @@ export default function Home() {
           </Link>
         </div>
       </section>
+      </details>
 
       {/* 記録する（目的別メニューの「日々の記録をつける」からのアンカーリンク先） */}
       <section id="kiroku" className="max-w-5xl mx-auto px-4 pt-4 pb-2 scroll-mt-4">

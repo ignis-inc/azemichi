@@ -781,6 +781,9 @@ body {
 }
 .doc-card-body {
   flex: 1;
+  /* flexアイテムは既定でmin-width:autoのため、長い文字列のとき縮みきれず
+     カードからはみ出すことがある。0にして、必ず折り返しを優先させる */
+  min-width: 0;
 }
 .doc-card-purpose {
   display: block;
@@ -789,6 +792,7 @@ body {
   font-size: 1.2rem;
   line-height: 1.5;
   color: var(--field-deep);
+  overflow-wrap: break-word;
 }
 .doc-card-name {
   display: block;
@@ -796,12 +800,62 @@ body {
   color: var(--muted);
   margin-top: 4px;
   line-height: 1.5;
+  overflow-wrap: break-word;
 }
 .doc-card-arrow {
   flex-shrink: 0;
   color: var(--field);
   font-weight: 700;
   font-size: 1.3rem;
+}
+
+/* =========================================================
+   /tool ページ：「すべての書類から探す」開閉トグル
+   ネイティブの <details>/<summary> を使い、キーボード操作に標準対応。
+   .doc-toggle 自体には幅の制約をつけず（中の .doc-picker が横幅いっぱいの
+   背景色を保てるように）、ボタン（summary）だけを中央寄せ・幅制限する。
+   ========================================================= */
+.doc-toggle {
+  padding: 4px 16px 8px;
+}
+.doc-toggle summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  max-width: 320px;
+  margin: 0 auto;
+  padding: 14px 24px;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--field-deep);
+  transition: border-color 0.15s ease, box-shadow 0.2s ease;
+}
+.doc-toggle summary::-webkit-details-marker {
+  display: none;
+}
+.doc-toggle summary::after {
+  content: "▾";
+  flex-shrink: 0;
+  color: var(--field);
+  font-size: 0.9rem;
+  transition: transform 0.2s ease;
+}
+.doc-toggle[open] summary::after {
+  transform: rotate(180deg);
+}
+.doc-toggle summary:hover {
+  border-color: var(--field);
+}
+@media (prefers-reduced-motion: reduce) {
+  .doc-toggle summary::after {
+    transition: none;
+  }
 }
 
 /* スクロール演出 */
