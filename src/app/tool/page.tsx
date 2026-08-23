@@ -278,21 +278,8 @@ export default function Home() {
       </section>
       </details>
 
-      {/* 記録する：/kiroku に切り出したので、ここでは軽い案内だけ表示する */}
-      <section className="max-w-2xl mx-auto px-4 pt-4 pb-8">
-        <div className="bg-white rounded-2xl shadow-sm border border-green-100 p-6 text-center">
-          <h2 className="text-xl font-bold text-green-800 mb-2">日々の記録をつける</h2>
-          <p className="text-base text-gray-600 leading-relaxed mb-5">
-            収支・農薬肥料の使用・作業内容を、スマホで手軽に記録できます。
-          </p>
-          <Link
-            href="/kiroku"
-            className="inline-block bg-green-600 hover:bg-green-700 active:bg-green-800 text-white text-lg font-bold py-4 px-8 rounded-2xl shadow-md transition-colors"
-          >
-            記録するツールを見る →
-          </Link>
-        </div>
-      </section>
+      {/* 記録する：/kiroku への導線は目的別メニュー内の「日々の記録をつける」カードで
+          足りるため、ここでの重複案内ブロックは置かない */}
 
       {/* 確認する */}
       <section className="max-w-5xl mx-auto px-4 pt-4 pb-2">
