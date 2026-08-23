@@ -96,7 +96,7 @@ export default function Home() {
           </p>
           <div className="cta-row">
             <Link className="btn btn-primary" href="/tool">
-              あぜみちを無料で使う<span className="arrow">→</span>
+              今すぐ書類を作る<span className="arrow">→</span>
             </Link>
             <a className="btn btn-ghost" href="#omoi">
               私たちの想い ↓
