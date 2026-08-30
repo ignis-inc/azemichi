@@ -8,7 +8,8 @@ import { setNoTrack } from "../../lib/analytics";
 type EventType = "page_view" | "pdf_create" | "record_save" | "record_save_free";
 
 // タブの識別子。"other_page" は本来ページ閲覧の一部だが、「その他」タブとして分けて表示する。
-type TabId = EventType | "other_page";
+// "all" はイベント種別をまたいで全部まとめて見るための特別なタブ。
+type TabId = EventType | "other_page" | "all";
 
 type TotalRow = { event_type: EventType; key: string; count: number };
 type DailyRow = { event_type: EventType; key: string; day: string; count: number };
@@ -19,12 +20,21 @@ type StatsData = { totals: TotalRow[]; daily: DailyRow[]; monthly: MonthlyRow[] 
 const SESSION_KEY = "azemichi-admin-stats-password";
 
 const EVENT_TABS: { id: TabId; label: string }[] = [
+  { id: "all", label: "すべて" },
   { id: "page_view", label: "ページ閲覧" },
   { id: "pdf_create", label: "書類作成" },
   { id: "record_save", label: "記録保存（ログイン版）" },
   { id: "record_save_free", label: "記録保存（無料版）" },
   { id: "other_page", label: "その他" },
 ];
+
+// 「すべて」タブで、各行がどの種別かを示す小さなタグ用のラベル
+const EVENT_TYPE_TAG: Record<EventType, string> = {
+  page_view: "ページ閲覧",
+  pdf_create: "書類作成",
+  record_save: "記録保存（ログイン版）",
+  record_save_free: "記録保存（無料版）",
+};
 
 const RECORD_TOOL_LABELS: Record<string, string> = {
   kicho: "記帳",
@@ -107,21 +117,25 @@ const OTHER_PAGES: string[] = [
   "/login", "/invite", "/reset-password",
 ];
 
+// "all"（すべて）タブは複数のイベント種別をまたぐため、下の関数群では扱わない。
+// 呼び出し側で activeTab !== "all" を確認してから渡すことで、この型に絞り込む。
+type SingleTab = EventType | "other_page";
+
 // タブ→実際のイベント種別（「その他」はページ閲覧の一部）
-function tabEventType(tab: TabId): EventType {
+function tabEventType(tab: SingleTab): EventType {
   return tab === "other_page" ? "page_view" : tab;
 }
 
 // このkeyが、選んだタブに含まれるか。
 // ページ閲覧タブは「その他」を除いたツール系ページ、その他タブは「その他」ページだけを表示する（重複させない）。
-function keyInTab(tab: TabId, key: string): boolean {
+function keyInTab(tab: SingleTab, key: string): boolean {
   if (tab === "page_view") return pageCategoryRank(key) !== 3;
   if (tab === "other_page") return pageCategoryRank(key) === 3;
   return true; // 書類作成・記録保存はそのまま
 }
 
 // そのタブで、件数0でも常に一覧に出す対象。
-function alwaysShownForTab(tab: TabId): string[] {
+function alwaysShownForTab(tab: SingleTab): string[] {
   if (tab === "other_page") return OTHER_PAGES;
   return ALWAYS_SHOWN_BY_TYPE[tab];
 }
@@ -242,6 +256,34 @@ export default function AdminStatsPage() {
 
   const totalsForType = useMemo(() => {
     if (!data) return [];
+
+    if (activeTab === "all") {
+      // 種別をまたいで全部まとめる。keyだけだと種別間で重複しうるので event_type+key で管理する。
+      const counts = new Map<string, number>();
+      for (const t of data.totals) counts.set(`${t.event_type}:${t.key}`, t.count);
+
+      // 件数0でも出す対象（各タブの「常に出す対象」＋「その他」ページ）を全種別分集める
+      const always: { event_type: EventType; key: string }[] = [];
+      (Object.keys(ALWAYS_SHOWN_BY_TYPE) as EventType[]).forEach((et) => {
+        ALWAYS_SHOWN_BY_TYPE[et].forEach((key) => always.push({ event_type: et, key }));
+      });
+      OTHER_PAGES.forEach((key) => always.push({ event_type: "page_view", key }));
+
+      const seen = new Set<string>();
+      const merged: { event_type: EventType; key: string; count: number; label: string }[] = [];
+      const addRow = (event_type: EventType, key: string) => {
+        const id = `${event_type}:${key}`;
+        if (seen.has(id)) return;
+        seen.add(id);
+        merged.push({ event_type, key, count: counts.get(id) ?? 0, label: labelFor(event_type, key) });
+      };
+      always.forEach((a) => addRow(a.event_type, a.key));
+      data.totals.forEach((t) => addRow(t.event_type, t.key));
+
+      // 種別をまたぐため、グループ分けはせず単純に多い順（同数は名前順）
+      return merged.sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, "ja"));
+    }
+
     // 各タブの対象を、実データ＋「件数0でも常に出す対象」を重複なくまとめる。
     // 無いものは0件として補い、まだ使われていない書類・ツールも一覧に出す（全体を把握するため）。
     const et = tabEventType(activeTab);
@@ -271,14 +313,18 @@ export default function AdminStatsPage() {
 
   const dailyPoints = useMemo(() => {
     if (!data) return [];
-    const et = tabEventType(activeTab);
     const days = lastNDaysISO(30);
-    const rows = data.daily.filter(
-      (d) =>
-        d.event_type === et &&
-        keyInTab(activeTab, d.key) &&
-        (selectedKey === "__all__" || d.key === selectedKey),
-    );
+    const rows =
+      activeTab === "all"
+        ? data.daily.filter(
+            (d) => selectedKey === "__all__" || `${d.event_type}:${d.key}` === selectedKey,
+          )
+        : data.daily.filter(
+            (d) =>
+              d.event_type === tabEventType(activeTab) &&
+              keyInTab(activeTab, d.key) &&
+              (selectedKey === "__all__" || d.key === selectedKey),
+          );
     const byDay = new Map<string, number>();
     for (const r of rows) {
       byDay.set(r.day, (byDay.get(r.day) ?? 0) + r.count);
@@ -288,14 +334,18 @@ export default function AdminStatsPage() {
 
   const monthlyPoints = useMemo(() => {
     if (!data) return [];
-    const et = tabEventType(activeTab);
     const months = lastNMonths(12);
-    const rows = data.monthly.filter(
-      (m) =>
-        m.event_type === et &&
-        keyInTab(activeTab, m.key) &&
-        (selectedKey === "__all__" || m.key === selectedKey),
-    );
+    const rows =
+      activeTab === "all"
+        ? data.monthly.filter(
+            (m) => selectedKey === "__all__" || `${m.event_type}:${m.key}` === selectedKey,
+          )
+        : data.monthly.filter(
+            (m) =>
+              m.event_type === tabEventType(activeTab) &&
+              keyInTab(activeTab, m.key) &&
+              (selectedKey === "__all__" || m.key === selectedKey),
+          );
     const byMonth = new Map<string, number>();
     for (const r of rows) {
       const ym = r.month.slice(0, 7);
@@ -406,9 +456,12 @@ export default function AdminStatsPage() {
               </thead>
               <tbody>
                 {totalsForType.map((t) => (
-                  <tr key={t.key} className="border-b border-gray-100 last:border-0">
+                  <tr key={`${t.event_type}-${t.key}`} className="border-b border-gray-100 last:border-0">
                     <td className="py-2 text-gray-800">
                       {t.label}
+                      {activeTab === "all" && (
+                        <span className="block text-xs text-gray-400">{EVENT_TYPE_TAG[t.event_type]}</span>
+                      )}
                       {t.label !== t.key && (
                         <span className="block text-xs text-gray-400">{t.key}</span>
                       )}
@@ -435,8 +488,11 @@ export default function AdminStatsPage() {
             >
               <option value="__all__">すべて合計</option>
               {totalsForType.map((t) => (
-                <option key={t.key} value={t.key}>
-                  {t.label}
+                <option
+                  key={`${t.event_type}-${t.key}`}
+                  value={activeTab === "all" ? `${t.event_type}:${t.key}` : t.key}
+                >
+                  {activeTab === "all" ? `${t.label}（${EVENT_TYPE_TAG[t.event_type]}）` : t.label}
                 </option>
               ))}
             </select>
