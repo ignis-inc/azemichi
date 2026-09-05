@@ -84,6 +84,21 @@ export default function KirokuPage() {
               作業日誌を開く →
             </Link>
           </div>
+
+          {/* 被害記録ツール案内 */}
+          <div className="bg-white rounded-2xl shadow-sm border border-green-100 p-6 text-center">
+            <h3 className="text-xl font-bold text-green-800 mb-2">被害を記録する</h3>
+            <p className="text-sm font-bold text-green-700 mb-3">無料・ログイン不要</p>
+            <p className="text-base text-gray-600 leading-relaxed mb-5">
+              台風・大雨・獣害などの被害をスマホで記録して、期間を指定して「被害記録一覧」としてPDFに出力できます。正式なり災証明・共済金請求とは異なる、記録専用のツールです。
+            </p>
+            <Link
+              href="/higai"
+              className="inline-block bg-green-600 hover:bg-green-700 active:bg-green-800 text-white text-lg font-bold py-4 px-8 rounded-2xl shadow-md transition-colors"
+            >
+              被害記録ツールを開く →
+            </Link>
+          </div>
         </div>
       </section>
 

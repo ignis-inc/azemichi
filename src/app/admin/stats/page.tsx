@@ -40,6 +40,7 @@ const RECORD_TOOL_LABELS: Record<string, string> = {
   kicho: "記帳",
   boujo: "農薬・肥料記録",
   nisshi: "農作業日誌",
+  higai: "被害記録",
 };
 
 // ページ閲覧（page_view）のkeyはURLのパス。運営者が分かるよう日本語のページ名に変換する。
@@ -65,6 +66,7 @@ const PAGE_LABELS: Record<string, string> = {
   "/kicho": "記帳（無料版）",
   "/boujo": "農薬・肥料記録（無料版）",
   "/nisshi": "農作業日誌（無料版）",
+  "/higai": "被害記録（無料版）",
   "/dashboard": "ダッシュボード（無料版）",
   // ログイン版
   "/app/kicho": "記帳（ログイン版）",
@@ -85,13 +87,13 @@ const DOC_PAGES = new Set([
   "/kome", "/aoiro", "/kaigyo", "/kaigyo-set", "/senjusha",
   "/kyuyo-jimusho", "/gennsen-tokurei", "/nouchi", "/nenkin", "/keiei",
 ]);
-const FREE_RECORD_PAGES = new Set(["/kicho", "/boujo", "/nisshi", "/dashboard"]);
+const FREE_RECORD_PAGES = new Set(["/kicho", "/boujo", "/nisshi", "/higai", "/dashboard"]);
 
 // ページ閲覧の一覧で、閲覧が0でも常に表示するページ（書類作成ツール・記録ツールは全部並べる）。
 // これで「まだ誰にも見られていない書類・ツール」も0件として一覧に出て、全体を把握できる。
 const ALWAYS_SHOWN_PAGES: string[] = [
   ...DOC_PAGES, // 書類作成ツール
-  "/kicho", "/boujo", "/nisshi", "/dashboard", // 記録ツール（無料版）
+  "/kicho", "/boujo", "/nisshi", "/higai", "/dashboard", // 記録ツール（無料版）
   "/app/kicho", "/app/boujo", "/app/nisshi", "/app/dashboard", // 記録ツール（ログイン版）
 ];
 
