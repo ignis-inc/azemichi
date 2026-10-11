@@ -279,6 +279,24 @@ export default function TedoriApp() {
       );
   }
 
+  // 1時間あたりの手取りの比較（出荷・直販の両方に作業時間が入っているときだけ）。
+  // 作業時間が空・0以下のときは perHour が null になる（0以下は入力エラーで結果自体が出ない）。
+  // 手取りが同じで1時間あたりだけ違う場合は、指定の文言に当てはまらないため表示しない。
+  let hourlyText: string | null = null;
+  if (ship && direct && ship.perHour !== null && direct.perHour !== null) {
+    const netDiff = direct.net - ship.net;
+    const hourDiff = direct.perHour - ship.perHour;
+    const hourWinner = hourDiff > 0 ? "直販" : "出荷";
+    const amount = `${formatYen(Math.abs(hourDiff))}円`;
+    if (hourDiff === 0) {
+      hourlyText = "1時間あたりの手取りは同じです。";
+    } else if (netDiff !== 0 && (netDiff > 0) !== (hourDiff > 0)) {
+      hourlyText = `ただし、1時間あたりでは${hourWinner}のほうが${amount}多くなります。`;
+    } else if (netDiff !== 0) {
+      hourlyText = `1時間あたりでも、${hourWinner}のほうが${amount}多くなります。`;
+    }
+  }
+
   return (
     <div className="min-h-screen bg-green-50">
       {/* ヘッダー */}
@@ -392,7 +410,10 @@ export default function TedoriApp() {
             手取りの比較{inputs.crop.trim() && `（${inputs.crop.trim()}）`}
           </h2>
           {diffText && (
-            <p className="text-lg text-gray-700 leading-relaxed mb-5 bg-green-50 rounded-xl px-4 py-3">{diffText}</p>
+            <div className="mb-5 bg-green-50 rounded-xl px-4 py-3">
+              <p className="text-lg text-gray-700 leading-relaxed">{diffText}</p>
+              {hourlyText && <p className="text-base text-gray-600 leading-relaxed mt-1">{hourlyText}</p>}
+            </div>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {resultCard("出荷した場合の手取り", ship, "出荷経費", "数量と出荷単価を入力すると表示されます。")}
