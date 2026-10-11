@@ -34,7 +34,7 @@ export default function KirokuPage() {
         </Link>
         <h1 className="text-xl sm:text-2xl font-bold text-green-800 mt-3 mb-1">記録する</h1>
         <p className="text-sm sm:text-base text-gray-600">
-          日々の収支・農薬肥料の使用・作業内容を、スマホで手軽に記録できます。
+          日々の収支・農薬肥料の使用・作業内容をスマホで手軽に記録できるほか、出荷と直販の手取りも計算できます。
         </p>
       </div>
 
@@ -49,9 +49,9 @@ export default function KirokuPage() {
             </p>
             <Link
               href="/kicho"
-              className="inline-block bg-green-600 hover:bg-green-700 active:bg-green-800 text-white text-lg font-bold py-4 px-8 rounded-2xl shadow-md transition-colors"
+              className="inline-block bg-green-600 hover:bg-green-700 active:bg-green-800 text-white text-lg font-bold py-4 px-4 rounded-2xl shadow-md transition-colors"
             >
-              記帳ツールを開く →
+              記帳ツールを<span className="whitespace-nowrap">開く →</span>
             </Link>
           </div>
 
@@ -64,9 +64,9 @@ export default function KirokuPage() {
             </p>
             <Link
               href="/boujo"
-              className="inline-block bg-green-600 hover:bg-green-700 active:bg-green-800 text-white text-lg font-bold py-4 px-8 rounded-2xl shadow-md transition-colors"
+              className="inline-block bg-green-600 hover:bg-green-700 active:bg-green-800 text-white text-lg font-bold py-4 px-4 rounded-2xl shadow-md transition-colors"
             >
-              使用記録ツールを開く →
+              使用記録ツールを<span className="whitespace-nowrap">開く →</span>
             </Link>
           </div>
 
@@ -79,9 +79,9 @@ export default function KirokuPage() {
             </p>
             <Link
               href="/nisshi"
-              className="inline-block bg-green-600 hover:bg-green-700 active:bg-green-800 text-white text-lg font-bold py-4 px-8 rounded-2xl shadow-md transition-colors"
+              className="inline-block bg-green-600 hover:bg-green-700 active:bg-green-800 text-white text-lg font-bold py-4 px-4 rounded-2xl shadow-md transition-colors"
             >
-              作業日誌を開く →
+              作業日誌を<span className="whitespace-nowrap">開く →</span>
             </Link>
           </div>
 
@@ -94,9 +94,24 @@ export default function KirokuPage() {
             </p>
             <Link
               href="/higai"
-              className="inline-block bg-green-600 hover:bg-green-700 active:bg-green-800 text-white text-lg font-bold py-4 px-8 rounded-2xl shadow-md transition-colors"
+              className="inline-block bg-green-600 hover:bg-green-700 active:bg-green-800 text-white text-lg font-bold py-4 px-4 rounded-2xl shadow-md transition-colors"
             >
-              被害記録ツールを開く →
+              被害記録ツールを<span className="whitespace-nowrap">開く →</span>
+            </Link>
+          </div>
+
+          {/* 出荷と直販の手取り比較ツール案内 */}
+          <div className="bg-white rounded-2xl shadow-sm border border-green-100 p-6 text-center">
+            <h3 className="text-xl font-bold text-green-800 mb-2">出荷と直販の手取りを比べる</h3>
+            <p className="text-sm font-bold text-green-700 mb-3">無料・ログイン不要</p>
+            <p className="text-base text-gray-600 leading-relaxed mb-5">
+              同じ作物をJA・市場に出荷した場合と、自分で直販した場合で、手元に残るお金がいくら違うかを計算できます。手数料や送料などは、ご自身の条件を入力します。
+            </p>
+            <Link
+              href="/tedori"
+              className="inline-block bg-green-600 hover:bg-green-700 active:bg-green-800 text-white text-lg font-bold py-4 px-4 rounded-2xl shadow-md transition-colors"
+            >
+              手取り比較ツールを<span className="whitespace-nowrap">開く →</span>
             </Link>
           </div>
         </div>

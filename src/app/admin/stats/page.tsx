@@ -68,6 +68,8 @@ const PAGE_LABELS: Record<string, string> = {
   "/nisshi": "農作業日誌（無料版）",
   "/higai": "被害記録（無料版）",
   "/dashboard": "ダッシュボード（無料版）",
+  // 計算ツール
+  "/tedori": "出荷と直販の手取り比較",
   // ログイン版
   "/app/kicho": "記帳（ログイン版）",
   "/app/boujo": "農薬・肥料記録（ログイン版）",
@@ -82,12 +84,14 @@ const PAGE_LABELS: Record<string, string> = {
 };
 
 // ページ閲覧の一覧を、種類ごとにまとめて並べるためのグループ番号（小さいほど上）。
-//   0: 書類作成ツール ／ 1: 記録ツール（ログイン版）／ 2: 記録ツール（無料版）／ 3: その他
+//   0: 書類作成ツール ／ 1: 記録ツール（ログイン版）／ 2: 記録ツール（無料版）／ 3: 計算ツール ／ 4: その他
 const DOC_PAGES = new Set([
   "/kome", "/aoiro", "/kaigyo", "/kaigyo-set", "/senjusha",
   "/kyuyo-jimusho", "/gennsen-tokurei", "/nouchi", "/nenkin", "/keiei",
 ]);
 const FREE_RECORD_PAGES = new Set(["/kicho", "/boujo", "/nisshi", "/higai", "/dashboard"]);
+const CALC_PAGES = new Set(["/tedori"]);
+const OTHER_RANK = 4;
 
 // ページ閲覧の一覧で、閲覧が0でも常に表示するページ（書類作成ツール・記録ツールは全部並べる）。
 // これで「まだ誰にも見られていない書類・ツール」も0件として一覧に出て、全体を把握できる。
@@ -95,6 +99,7 @@ const ALWAYS_SHOWN_PAGES: string[] = [
   ...DOC_PAGES, // 書類作成ツール
   "/kicho", "/boujo", "/nisshi", "/higai", "/dashboard", // 記録ツール（無料版）
   "/app/kicho", "/app/boujo", "/app/nisshi", "/app/dashboard", // 記録ツール（ログイン版）
+  ...CALC_PAGES, // 計算ツール
 ];
 
 // 各タブで、件数0でも常に一覧に出す対象。
@@ -110,7 +115,8 @@ function pageCategoryRank(key: string): number {
   if (DOC_PAGES.has(key)) return 0;
   if (key.startsWith("/app/")) return 1; // ログイン版
   if (FREE_RECORD_PAGES.has(key)) return 2; // 無料版の記録ツール
-  return 3; // トップ・ログイン画面など その他
+  if (CALC_PAGES.has(key)) return 3; // 計算ツール
+  return OTHER_RANK; // トップ・ログイン画面など その他
 }
 
 // 「その他」タブで、閲覧0でも常に出すページ（トップ・案内・認証まわり）。
@@ -131,8 +137,8 @@ function tabEventType(tab: SingleTab): EventType {
 // このkeyが、選んだタブに含まれるか。
 // ページ閲覧タブは「その他」を除いたツール系ページ、その他タブは「その他」ページだけを表示する（重複させない）。
 function keyInTab(tab: SingleTab, key: string): boolean {
-  if (tab === "page_view") return pageCategoryRank(key) !== 3;
-  if (tab === "other_page") return pageCategoryRank(key) === 3;
+  if (tab === "page_view") return pageCategoryRank(key) !== OTHER_RANK;
+  if (tab === "other_page") return pageCategoryRank(key) === OTHER_RANK;
   return true; // 書類作成・記録保存はそのまま
 }
 
@@ -301,7 +307,7 @@ export default function AdminStatsPage() {
       label: labelFor(et, key),
     }));
     if (activeTab === "page_view") {
-      // 「書類作成→ログイン版→無料版」のグループ順、各グループ内は多い順（同数はページ名順）
+      // 「書類作成→ログイン版→無料版→計算ツール」のグループ順、各グループ内は多い順（同数はページ名順）
       return merged.sort(
         (a, b) =>
           pageCategoryRank(a.key) - pageCategoryRank(b.key) ||

@@ -66,7 +66,12 @@ const PURPOSE_MENU = [
   {
     href: "/kiroku",
     label: "日々の記録をつける",
-    desc: "記帳・防除・作業日誌",
+    // 「手取り計算」の途中で改行されないよう、ひとかたまりにする
+    desc: (
+      <>
+        記帳・防除・日誌・<span className="whitespace-nowrap">手取り計算</span>
+      </>
+    ),
     icon: (
       <>
         <path d="M6 4h10l2 2v14H6z" />
