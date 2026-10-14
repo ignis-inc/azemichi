@@ -7,6 +7,8 @@ type ModalButton = {
   href?: string;
   variant: "green" | "outline" | "gray";
   onClick?: () => void;
+  // ボタンのすぐ下に出す補足の一文とリンク（指定された画面でのみ渡す）
+  caption?: { text: string; linkLabel: string; linkHref: string };
 };
 
 type PDFModalProps = {
@@ -156,11 +158,29 @@ export default function PDFModal({ steps, note, buttons, chokkuraCta, onClose, r
                 : "bg-gray-100 hover:bg-gray-200 text-gray-600";
 
             if (btn.href) {
-              return (
+              const link = (
                 <a key={i} href={btn.href} target="_blank" rel="noopener noreferrer"
                   className={`${baseClass} ${variantClass}`}>
                   {btn.label}
                 </a>
+              );
+              if (!btn.caption) return link;
+              return (
+                <div key={i}>
+                  {link}
+                  <p className="text-sm text-gray-600 leading-relaxed mt-2 px-1">
+                    {btn.caption.text}
+                    <br />
+                    <a
+                      href={btn.caption.linkHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-green-700 underline underline-offset-2 hover:text-green-800 break-words"
+                    >
+                      {btn.caption.linkLabel}
+                    </a>
+                  </p>
+                </div>
               );
             }
             return (

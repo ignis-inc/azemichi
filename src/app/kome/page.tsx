@@ -4,11 +4,15 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import DocNav from "../components/DocNav";
 import PDFModal from "../components/PDFModal";
-import { CHOKKURA_NOTIFY_URL, DOC_LAST_CHECKED } from "../site";
+import { CHOKKURA_NOTIFY_URL } from "../site";
 import { recordGeneratedDoc } from "../dashboardStore";
 import { createFuriganaTracker } from "../furiganaAutofill";
 import { trackEvent } from "../lib/analytics";
 import { saveGeneratedPdfToCloud } from "../lib/documentCloud";
+
+// 2026年10月の新制度にあわせて確認したため、共通の DOC_LAST_CHECKED とは別に持つ
+const KOME_LAST_CHECKED = "2026年10月";
+const KOME_NEW_SYSTEM_URL = "https://www.maff.go.jp/j/nousan/kokumotu/kome_todokede.html";
 
 const PREFECTURES = [
   "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
@@ -39,7 +43,7 @@ const NOSEI_KYOKU: Record<string, string> = {
   "福岡県": "九州農政局","佐賀県": "九州農政局","長崎県": "九州農政局",
   "熊本県": "九州農政局","大分県": "九州農政局","宮崎県": "九州農政局",
   "鹿児島県": "九州農政局",
-  "沖縄県": "内閣府沖縄総合事務局",
+  "沖縄県": "沖縄総合事務局",
 };
 
 type FormData = {
@@ -174,12 +178,20 @@ export default function KomePage() {
         <PDFModal
           returnFocusRef={pdfButtonRef}
           steps={[
-            "このPDFを印刷してください",
-            "以下のいずれかで農政局に提出してください",
+            "このPDFを保存してください（郵送する場合は印刷してください）",
+            "メールまたは郵送で、地方農政局に提出してください",
           ]}
           buttons={[
-            { label: "eMAFFでオンライン申請する →", href: "https://e.maff.go.jp/PortalLogin", variant: "green" },
-            { label: "最寄りの農政局を探す →", href: "https://www.maff.go.jp/j/org/outline/dial/kyoku.html", variant: "outline" },
+            {
+              label: "最寄りの農政局を探す →",
+              href: "https://www.maff.go.jp/j/org/outline/dial/kyoku.html",
+              variant: "green",
+              caption: {
+                text: "新しい届出の手続きは、農林水産省の案内ページをご確認ください",
+                linkLabel: "農林水産省：米穀等取扱事業の届出について",
+                linkHref: KOME_NEW_SYSTEM_URL,
+              },
+            },
             { label: "閉じる", variant: "gray", onClick: () => setShowModal(false) },
           ]}
           chokkuraCta={{
@@ -217,13 +229,40 @@ export default function KomePage() {
               農林水産省「米穀の出荷又は販売の事業の届出等について」
             </a>
             <br />
-            最終確認：{DOC_LAST_CHECKED}
+            最終確認：{KOME_LAST_CHECKED}
           </p>
           <p className="mt-2 text-sm text-gray-500">
             わからない言葉は
             <Link href="/yougo" className="text-green-700 underline underline-offset-2 hover:text-green-800">用語集</Link>
             で説明しています。
           </p>
+        </div>
+
+        {/* 2026年10月からの新しい届出制度の案内 */}
+        <div className="border-2 border-yellow-300 bg-yellow-50 rounded-xl px-5 py-4 mt-4">
+          <h2 className="text-base font-bold text-yellow-900 mb-2">
+            2026年10月から、米の届出制度が変わりました
+          </h2>
+          <div className="space-y-2 text-sm text-yellow-900 leading-relaxed">
+            <p>
+              食糧法の改正により、新しい「米穀等取扱事業の届出」の受付が2026年10月1日から始まりました。すでに米穀の出荷・販売の届出をしている方も、届出事項が増えたため、2027年4月1日までに改めて届出が必要です。新しい届出は、原則として電子申請（eMAFF）で行います。
+            </p>
+            <p>
+              このページで作れるのは、これまでの「米穀の出荷又は販売の事業開始届出書」です。2027年3月31日までに事業を始める・変える・やめる場合は、新しい届出とあわせて、こちらの届出も必要です。
+            </p>
+            <p>
+              詳しくは、農林水産省のページでご確認ください。
+              <br />
+              <a
+                href={KOME_NEW_SYSTEM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline underline-offset-2 font-bold hover:text-yellow-950 break-words"
+              >
+                農林水産省：米穀等取扱事業の届出について
+              </a>
+            </p>
+          </div>
         </div>
       </div>
 
