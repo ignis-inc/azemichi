@@ -187,6 +187,15 @@ export default function Home() {
               </Link>
             </li>
             <li>
+              <Link href="/kome-shin" className="doc-card">
+                <span className="doc-card-body">
+                  <span className="doc-card-purpose">お米の新しい届出（電子申請）をする方へ</span>
+                  <span className="doc-card-name">米穀等取扱事業の開始届出（eMAFF入力の下書き）</span>
+                </span>
+                <span className="doc-card-arrow" aria-hidden="true">→</span>
+              </Link>
+            </li>
+            <li>
               <Link href="/aoiro" className="doc-card">
                 <span className="doc-card-body">
                   <span className="doc-card-purpose">青色申告をはじめる方へ</span>

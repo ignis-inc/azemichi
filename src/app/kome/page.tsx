@@ -263,6 +263,12 @@ export default function KomePage() {
               </a>
             </p>
           </div>
+          <Link
+            href="/kome-shin"
+            className="mt-3 block w-full text-center bg-green-600 hover:bg-green-700 text-white text-base font-bold py-3 px-4 rounded-xl transition-colors"
+          >
+            新しい届出の下書きをつくる →
+          </Link>
         </div>
       </div>
 

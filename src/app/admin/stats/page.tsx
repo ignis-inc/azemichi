@@ -53,6 +53,7 @@ const PAGE_LABELS: Record<string, string> = {
   "/chokkura": "ちょっくら紹介",
   // 書類作成ツール
   "/kome": "米の販売届出",
+  "/kome-shin": "米の新しい届出の下書き",
   "/aoiro": "青色申告承認申請",
   "/kaigyo": "開業届",
   "/kaigyo-set": "開業まとめて作成",
@@ -86,7 +87,7 @@ const PAGE_LABELS: Record<string, string> = {
 // ページ閲覧の一覧を、種類ごとにまとめて並べるためのグループ番号（小さいほど上）。
 //   0: 書類作成ツール ／ 1: 記録ツール（ログイン版）／ 2: 記録ツール（無料版）／ 3: 計算ツール ／ 4: その他
 const DOC_PAGES = new Set([
-  "/kome", "/aoiro", "/kaigyo", "/kaigyo-set", "/senjusha",
+  "/kome", "/kome-shin", "/aoiro", "/kaigyo", "/kaigyo-set", "/senjusha",
   "/kyuyo-jimusho", "/gennsen-tokurei", "/nouchi", "/nenkin", "/keiei",
 ]);
 const FREE_RECORD_PAGES = new Set(["/kicho", "/boujo", "/nisshi", "/higai", "/dashboard"]);

@@ -13,6 +13,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/chokkura",
     "/tool",
     "/kome",
+    "/kome-shin",
     "/nenkin",
     "/nouchi",
     "/aoiro",

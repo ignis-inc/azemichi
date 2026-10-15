@@ -21,6 +21,8 @@ type Term = {
   // 段落ごとの本文。数値・期限は書かず、一次ソースに委ねる方針（裏取り報告で確定した文面）
   body: string[];
   sources: Source[];
+  // この用語だけ別の時期に確認した場合の最終確認（未指定なら共通の DOC_LAST_CHECKED）
+  lastChecked?: string;
 };
 
 const TERMS: Term[] = [
@@ -204,6 +206,21 @@ const TERMS: Term[] = [
       },
     ],
   },
+  {
+    id: "beikoku-toriatsukai",
+    title: "米穀等取扱事業の届出",
+    body: [
+      "主要食糧の需給及び価格の安定に関する法律（食糧法）の一部が改正され、米の流通実態把握の強化のため、特定規模以上の米穀等取扱事業（出荷又は販売の事業、加工等事業）を行おうとする者は、新たに届出（食糧法第9条）が必要となるとされています。また、これまでの米穀の出荷又は販売の事業の届出（食糧法第47条）についても、届出事項が追加となるため、改めて届出が必要となるとされています。届出は、原則、電子申請（eMAFF）で行います。届出の対象となる規模や届出期間など、詳しくは農林水産省の公式情報でご確認ください。",
+    ],
+    sources: [
+      {
+        org: "農林水産省",
+        page: "米穀等取扱事業の届出について",
+        url: "https://www.maff.go.jp/j/nousan/kokumotu/kome_todokede.html",
+      },
+    ],
+    lastChecked: "2026年10月",
+  },
 ];
 
 export default function YougoPage() {
@@ -232,7 +249,7 @@ export default function YougoPage() {
                 </span>
               ))}
               <br />
-              最終確認：{DOC_LAST_CHECKED}
+              最終確認：{term.lastChecked ?? DOC_LAST_CHECKED}
             </p>
           </section>
         ))}
