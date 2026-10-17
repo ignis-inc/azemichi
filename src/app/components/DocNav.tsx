@@ -17,6 +17,7 @@ const NAV_ITEMS = [
   { href: "/kyuyo-jimusho", label: "給与を払い始めるときの届出", formal: "給与支払事務所等の開設・移転・廃止届出書" },
   { href: "/gennsen-tokurei", label: "源泉所得税の納期をまとめるときの申請", formal: "源泉所得税の納期の特例の承認に関する申請書" },
   { href: "/keiei", label: "経営所得安定対策（補助金）の申請書", formal: "経営所得安定対策等交付金交付申請書（様式第1号A）" },
+  { href: "/nintei-nogyosha", label: "認定農業者の申請書づくり", formal: "農業経営改善計画認定申請書" },
 ];
 
 export default function DocNav({ current }: DocNavProps) {

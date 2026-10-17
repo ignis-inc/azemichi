@@ -3,7 +3,7 @@
 
 const STORAGE_KEY = "azemichi-dashboard-v1";
 
-export type DocType = "kaigyo" | "aoiro" | "senjusha" | "nouchi" | "kome" | "keiei" | "nenkin" | "kyuyoJimusho" | "gennsenTokurei";
+export type DocType = "kaigyo" | "aoiro" | "senjusha" | "nouchi" | "kome" | "keiei" | "nenkin" | "kyuyoJimusho" | "gennsenTokurei" | "nintei";
 
 export type GeneratedDoc = {
   id: string;
@@ -22,6 +22,7 @@ export const DOC_META: Record<DocType, { title: string; path: string }> = {
   nenkin: { title: "農業者年金通常加入申込書", path: "/nenkin" },
   kyuyoJimusho: { title: "給与支払事務所等の開設届出書", path: "/kyuyo-jimusho" },
   gennsenTokurei: { title: "源泉所得税の納期の特例の承認に関する申請書", path: "/gennsen-tokurei" },
+  nintei: { title: "農業経営改善計画認定申請書", path: "/nintei-nogyosha" },
 };
 
 function todayISO(): string {
@@ -157,6 +158,9 @@ export function computeDeadline(doc: GeneratedDoc): DeadlineInfo {
     }
     case "gennsenTokurei": {
       return { kind: "none", dueDate: null, label: "期限なし（随時提出可）", status: "n/a" };
+    }
+    case "nintei": {
+      return { kind: "none", dueDate: null, label: "提出の時期は市町村の窓口でご確認ください", status: "n/a" };
     }
   }
 }

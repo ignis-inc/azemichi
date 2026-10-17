@@ -269,6 +269,15 @@ export default function Home() {
                 <span className="doc-card-arrow" aria-hidden="true">→</span>
               </Link>
             </li>
+            <li>
+              <Link href="/nintei-nogyosha" className="doc-card">
+                <span className="doc-card-body">
+                  <span className="doc-card-purpose">認定農業者になりたい方へ</span>
+                  <span className="doc-card-name">農業経営改善計画認定申請書</span>
+                </span>
+                <span className="doc-card-arrow" aria-hidden="true">→</span>
+              </Link>
+            </li>
           </ul>
         </div>
       </section>

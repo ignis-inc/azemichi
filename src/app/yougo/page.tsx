@@ -23,6 +23,8 @@ type Term = {
   sources: Source[];
   // この用語だけ別の時期に確認した場合の最終確認（未指定なら共通の DOC_LAST_CHECKED）
   lastChecked?: string;
+  // この用語に関係する、あぜみちの書類ツール
+  tool?: { href: string; label: string };
 };
 
 const TERMS: Term[] = [
@@ -124,6 +126,7 @@ const TERMS: Term[] = [
         url: "https://www.maff.go.jp/j/kobetu_ninaite/n_seido/seido_ninaite.html",
       },
     ],
+    tool: { href: "/nintei-nogyosha", label: "認定農業者の申請書（農業経営改善計画認定申請書）をつくる" },
   },
   {
     id: "nenkin",
@@ -238,6 +241,11 @@ export default function YougoPage() {
             {term.body.map((paragraph, i) => (
               <p key={i}>{paragraph}</p>
             ))}
+            {term.tool && (
+              <p>
+                <Link href={term.tool.href}>{term.tool.label} →</Link>
+              </p>
+            )}
             <p className="yougo-source">
               出典：
               {term.sources.map((s, i) => (

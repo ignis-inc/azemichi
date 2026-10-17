@@ -18,6 +18,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/nouchi",
     "/aoiro",
     "/keiei",
+    "/nintei-nogyosha",
     "/yougo",
     "/privacy",
     "/kicho",

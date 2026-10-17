@@ -63,6 +63,7 @@ const PAGE_LABELS: Record<string, string> = {
   "/nouchi": "農地法の届出",
   "/nenkin": "農業者年金の申込",
   "/keiei": "経営所得安定対策の申請",
+  "/nintei-nogyosha": "認定農業者の申請書づくり",
   // 記録ツール（無料版）
   "/kicho": "記帳（無料版）",
   "/boujo": "農薬・肥料記録（無料版）",
@@ -88,7 +89,7 @@ const PAGE_LABELS: Record<string, string> = {
 //   0: 書類作成ツール ／ 1: 記録ツール（ログイン版）／ 2: 記録ツール（無料版）／ 3: 計算ツール ／ 4: その他
 const DOC_PAGES = new Set([
   "/kome", "/kome-shin", "/aoiro", "/kaigyo", "/kaigyo-set", "/senjusha",
-  "/kyuyo-jimusho", "/gennsen-tokurei", "/nouchi", "/nenkin", "/keiei",
+  "/kyuyo-jimusho", "/gennsen-tokurei", "/nouchi", "/nenkin", "/keiei", "/nintei-nogyosha",
 ]);
 const FREE_RECORD_PAGES = new Set(["/kicho", "/boujo", "/nisshi", "/higai", "/dashboard"]);
 const CALC_PAGES = new Set(["/tedori"]);
