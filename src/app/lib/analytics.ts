@@ -13,6 +13,16 @@ function isLocalhost(): boolean {
   return h === "localhost" || h === "127.0.0.1" || h === "0.0.0.0" || h.endsWith(".local");
 }
 
+// 検索ロボット・自動巡回ツールかどうか（C）。人間の利用者だけを数えるため。
+// ブラウザが名乗る種類（userAgent）に、ロボットを示す言葉が入っていれば除外する。
+function isBot(): boolean {
+  if (typeof navigator === "undefined") return false;
+  if (navigator.webdriver) return true;
+  return /bot|crawl|spider|slurp|lighthouse|headless|preview|monitor|facebookexternalhit/i.test(
+    navigator.userAgent,
+  );
+}
+
 // この端末を「数えない」に設定／解除する（B）。
 export function setNoTrack(on: boolean): void {
   try {
@@ -39,9 +49,10 @@ export function isNoTrack(): boolean {
 // 次の場合は記録しない：
 //   A) 開発中（localhost）… ローカルの動作確認・自動テストを集計に混ぜない
 //   B) この端末が「数えない」設定（?notrack=1 や 管理画面ログイン）になっている
+//   C) 検索ロボット・自動巡回ツールからのアクセス
 export function trackEvent(eventType: AnalyticsEventType, key: string): void {
   try {
-    if (isLocalhost() || isNoTrack()) return;
+    if (isLocalhost() || isNoTrack() || isBot()) return;
     getSupabaseBrowser()
       .from("analytics_events")
       .insert({ event_type: eventType, key })
