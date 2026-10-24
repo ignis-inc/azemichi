@@ -44,3 +44,5 @@ next-env.d.ts
 # ただし PDF 生成サーバーが読み込む NotoSansJP.ttf だけは本番でも必要なのでコミットする。
 /public/fonts/*
 !/public/fonts/NotoSansJP.ttf
+# お米のラベルづくり（/kome-label）が画面で使うフォント（使う文字だけに絞ったもの）とライセンス文もコミットする。
+!/public/fonts/kome-label/

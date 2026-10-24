@@ -224,6 +224,27 @@ const TERMS: Term[] = [
     ],
     lastChecked: "2026年10月",
   },
+  {
+    id: "kome-hyouji",
+    title: "玄米・精米の表示（一括表示）",
+    body: [
+      "袋に入れた玄米や精米を売るときは、食品表示基準にもとづいて、名称・原料玄米（産地・品種・産年）・内容量・精米時期（玄米は調製時期）・販売者の氏名又は名称、住所及び電話番号を、決まった様式の欄（一括表示）に書くこととされています。生産者が直売所やインターネットで直接売る場合も対象になるとされています。産地・品種・産年を書くには、その根拠を示す資料の保管が必要とされ、「新米」などの言葉にも使える条件があります。詳しくは消費者庁の公式情報でご確認ください。",
+    ],
+    sources: [
+      {
+        org: "消費者庁",
+        page: "食品表示基準Q&A 別添 玄米及び精米に関する事項",
+        url: "https://www.caa.go.jp/policies/policy/food_labeling/food_labeling_act/assets/food_labeling_cms201_260401_29.pdf",
+      },
+      {
+        org: "e-Gov法令検索",
+        page: "食品表示基準",
+        url: "https://laws.e-gov.go.jp/law/427M60000002010",
+      },
+    ],
+    lastChecked: "2026年10月",
+    tool: { href: "/kome-label", label: "お米のラベル（表のデザイン面と裏の一括表示）をつくる" },
+  },
 ];
 
 export default function YougoPage() {

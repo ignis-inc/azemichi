@@ -9,6 +9,7 @@ type DocNavProps = {
 const NAV_ITEMS = [
   { href: "/kome", label: "お米を売り始めるときの届出", formal: "米穀の出荷又は販売の事業開始届出書" },
   { href: "/kome-shin", label: "お米の新しい届出（電子申請）の下書き", formal: "米穀等取扱事業の開始届出（eMAFF入力の下書き）" },
+  { href: "/kome-label", label: "お米のラベルづくり", formal: "玄米及び精米の表示（表のデザイン面と裏の一括表示）" },
   { href: "/kaigyo", label: "農業をはじめるときの開業届", formal: "個人事業の開業・廃業等届出書（開業）" },
   { href: "/nenkin", label: "農業者年金に加入するときの申込書", formal: "農業者年金通常加入申込書（様式第1号）" },
   { href: "/nouchi", label: "農地を相続・売買したときの届出", formal: "農地法第3条の3第1項の規定による届出書" },

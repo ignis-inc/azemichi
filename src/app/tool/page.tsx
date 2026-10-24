@@ -196,6 +196,15 @@ export default function Home() {
               </Link>
             </li>
             <li>
+              <Link href="/kome-label" className="doc-card">
+                <span className="doc-card-body">
+                  <span className="doc-card-purpose">お米を袋に詰めて売る方へ</span>
+                  <span className="doc-card-name">お米のラベルづくり（表のデザイン面と裏の一括表示）</span>
+                </span>
+                <span className="doc-card-arrow" aria-hidden="true">→</span>
+              </Link>
+            </li>
+            <li>
               <Link href="/aoiro" className="doc-card">
                 <span className="doc-card-body">
                   <span className="doc-card-purpose">青色申告をはじめる方へ</span>

@@ -14,6 +14,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/tool",
     "/kome",
     "/kome-shin",
+    "/kome-label",
     "/nenkin",
     "/nouchi",
     "/aoiro",
