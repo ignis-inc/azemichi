@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import DocNav from "../components/DocNav";
+import { trackEvent } from "../lib/analytics";
 import {
   BUNZUKI_OPTIONS,
   CAA_ACT_URL,
@@ -390,6 +391,7 @@ export default function KomeLabelApp() {
       }
       const { downloadSheetPdf } = await import("./komeLabelOutput");
       await downloadSheetPdf(front, back, sheet, toMm(i.offsetX), toMm(i.offsetY), `お米のラベル_A4_${sheet.value}面.pdf`);
+      trackEvent("pdf_create", "komeLabel");
     } catch (err) {
       console.error("PDF作成エラー:", err);
       alert("PDFの作成に失敗しました。もう一度お試しください。");
@@ -411,6 +413,7 @@ export default function KomeLabelApp() {
       }
       const { downloadPng } = await import("./komeLabelOutput");
       await downloadPng(side === "front" ? front : back, `お米のラベル_${side === "front" ? "表" : "裏"}_${size.value}判.png`);
+      trackEvent("pdf_create", "komeLabel");
     } catch (err) {
       console.error("画像作成エラー:", err);
       alert("画像の作成に失敗しました。もう一度お試しください。");

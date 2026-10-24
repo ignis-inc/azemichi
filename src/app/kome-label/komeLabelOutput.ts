@@ -66,23 +66,66 @@ export async function downloadSheetPdf(
   await pdfMake.createPdf(docDef).download(fileName);
 }
 
-// コンビニのシール紙向けの画像（断裁線なしの全面画像）をダウンロードさせる
-export function downloadPng(canvas: HTMLCanvasElement, fileName: string): Promise<void> {
+// PNGに「300dpi」の情報（pHYsチャンク）を入れる。コンビニの機械が大きさを決めるときの手がかりになる。
+// pHYs は 1メートルあたりの点の数。300dpi = 300 / 0.0254 = 11811（四捨五入）。
+const CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+
+function crc32(bytes: Uint8Array): number {
+  let c = 0xffffffff;
+  for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xff] ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
+}
+
+export function addPngDpi(png: Uint8Array, dpi: number): Uint8Array {
+  const sig = 8;
+  const ihdrEnd = sig + 8 + 13 + 4; // 署名 + (長さ・種類) + IHDR本体 + CRC
+  const perMeter = Math.round(dpi / 0.0254);
+  const chunk = new Uint8Array(21); // 長さ4 + 種類4 + 本体9 + CRC4
+  const v = new DataView(chunk.buffer);
+  v.setUint32(0, 9);
+  chunk.set([0x70, 0x48, 0x59, 0x73], 4); // "pHYs"
+  v.setUint32(8, perMeter);
+  v.setUint32(12, perMeter);
+  chunk[16] = 1; // 単位：メートル
+  v.setUint32(17, crc32(chunk.subarray(4, 17)));
+  // すでに pHYs があれば作り直さずそのまま返す（canvas の出力には通常ない）
+  const out = new Uint8Array(png.length + chunk.length);
+  out.set(png.subarray(0, ihdrEnd), 0);
+  out.set(chunk, ihdrEnd);
+  out.set(png.subarray(ihdrEnd), ihdrEnd + chunk.length);
+  return out;
+}
+
+// コンビニのシール紙向けの画像（断裁線なしの全面画像・300dpi）をダウンロードさせる
+export function downloadPng(canvas: HTMLCanvasElement, fileName: string, dpi = 300): Promise<void> {
   return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => {
+    canvas.toBlob(async (blob) => {
       if (!blob) {
         reject(new Error("画像を作れませんでした"));
         return;
       }
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      resolve();
+      try {
+        const bytes = addPngDpi(new Uint8Array(await blob.arrayBuffer()), dpi);
+        const url = URL.createObjectURL(new Blob([bytes as BlobPart], { type: "image/png" }));
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        resolve();
+      } catch (e) {
+        reject(e);
+      }
     }, "image/png");
   });
 }

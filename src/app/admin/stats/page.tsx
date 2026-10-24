@@ -36,6 +36,11 @@ const EVENT_TYPE_TAG: Record<EventType, string> = {
   record_save_free: "記録保存（無料版）",
 };
 
+// 書類作成（pdf_create）のうち、保存した書類の一覧（DOC_META）には載せないツール
+const EXTRA_DOC_LABELS: Record<string, string> = {
+  komeLabel: "お米のラベルづくり（PDF・画像）",
+};
+
 const RECORD_TOOL_LABELS: Record<string, string> = {
   kicho: "記帳",
   boujo: "農薬・肥料記録",
@@ -109,7 +114,7 @@ const ALWAYS_SHOWN_PAGES: string[] = [
 //   書類作成（pdf_create）… 全書類の種類 ／ 記録保存（record_save）… 全記録ツール
 const ALWAYS_SHOWN_BY_TYPE: Record<EventType, string[]> = {
   page_view: ALWAYS_SHOWN_PAGES,
-  pdf_create: Object.keys(DOC_META),
+  pdf_create: [...Object.keys(DOC_META), ...Object.keys(EXTRA_DOC_LABELS)],
   record_save: Object.keys(RECORD_TOOL_LABELS),
   record_save_free: Object.keys(RECORD_TOOL_LABELS),
 };
@@ -175,7 +180,7 @@ function toJaMonth(ym: string): string {
 // event_type・keyの組み合わせを、画面に出す日本語ラベルに変換する
 function labelFor(eventType: EventType, key: string): string {
   if (eventType === "pdf_create") {
-    return DOC_META[key as DocType]?.title ?? key;
+    return DOC_META[key as DocType]?.title ?? EXTRA_DOC_LABELS[key] ?? key;
   }
   if (eventType === "record_save" || eventType === "record_save_free") {
     return RECORD_TOOL_LABELS[key] ?? key;
