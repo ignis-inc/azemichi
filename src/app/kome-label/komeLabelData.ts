@@ -62,11 +62,13 @@ export const COLOR_OPTIONS = [
   { value: "sumi", label: "墨", hex: "#333333" },
 ] as const;
 
-// A4のシール用紙。余白はメーカーの公式ページに記載がないため、用紙の中央にそろえて置く（ずれは微調整で直す）
+// A4のシール用紙（12面は、どの例でも一括表示が下限の大きさで入りきらないため選べない）。
+// 位置はエーワンの公式ページ（寸法図・テスト印刷用PDF）の数字に合わせている。
+//   4面（61204）：余白なし・すき間なし。A4を2×2に分けた形（1枚 105×148.5mm、横向きに置くと 148.5×105mm）
+//   10面（31283）：左余白18.6mm・上余白21.2mm、すき間なし（1枚 86.4×50.8mm）
 export const SHEET_OPTIONS = [
-  { value: "4", label: "A4 4面（1枚 148.5×105mm）", cols: 2, rows: 2, wMm: 148.5, hMm: 105, landscape: true },
-  { value: "10", label: "A4 10面（1枚 86.4×50.8mm）", cols: 2, rows: 5, wMm: 86.4, hMm: 50.8, landscape: false },
-  { value: "12", label: "A4 12面（1枚 86.4×42.3mm）", cols: 2, rows: 6, wMm: 86.4, hMm: 42.3, landscape: false },
+  { value: "4", label: "A4 4面（1枚 148.5×105mm）", cols: 2, rows: 2, wMm: 148.5, hMm: 105, landscape: true, leftMm: 0, topMm: 0 },
+  { value: "10", label: "A4 10面（1枚 86.4×50.8mm）", cols: 2, rows: 5, wMm: 86.4, hMm: 50.8, landscape: false, leftMm: 18.6, topMm: 21.2 },
 ] as const;
 export type SheetOption = (typeof SHEET_OPTIONS)[number];
 
@@ -125,6 +127,8 @@ export function loadInputs(): Inputs {
     for (const k of FIELD_KEYS) {
       if (typeof parsed[k] === "string") result[k] = parsed[k];
     }
+    // 選べなくなった用紙（12面）が保存されていたら、4面に戻す
+    if (!SHEET_OPTIONS.some((o) => o.value === result.sheet)) result.sheet = EMPTY.sheet;
     return result;
   } catch {
     return EMPTY;

@@ -567,6 +567,19 @@ function layoutBack(ctx: Ctx, m: BackModel, fs: number, family: string, x0: numb
   return { ops, height: y - y0, ok: true, stacked };
 }
 
+// 文字の大きさの下限に足す余裕（ポイント）。画像の細かさの丸めなどで、書き出したPDFの文字が
+// ごくわずかに小さくなっても、下限を割らないようにする。
+export const PT_SAFETY = 0.1;
+
+// 試す文字の大きさ（大きい順）。最後は「下限＋余裕」。
+function ptCandidates(minPt: number): number[] {
+  const floor = minPt + PT_SAFETY;
+  const list: number[] = [];
+  for (let pt = minPt * 1.5; pt > floor + 1e-9; pt -= 0.5) list.push(pt);
+  list.push(floor);
+  return list;
+}
+
 export type BackResult = { fits: boolean; pt: number };
 
 // 一括表示を描く。文字は minPt 以上の同じ大きさにそろえる（入りきらなければ fits=false）
@@ -597,7 +610,7 @@ export function renderBack(
     if (layout.ok && layout.height <= availH) chosen = { layout, pt: forcePt };
   }
   for (const allowStacked of forcePt !== undefined ? [] : [false, true]) {
-    for (let pt = minPt * 1.5; pt >= minPt - 1e-9; pt -= 0.5) {
+    for (const pt of ptCandidates(minPt)) {
       const fs = pt * JIS_PT_MM * pxPerMm;
       const layout = layoutBack(ctx, model, fs, fonts.sans, margin, margin, availW);
       if (layout.ok && layout.height <= availH && (allowStacked || !layout.stacked)) {

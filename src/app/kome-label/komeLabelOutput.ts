@@ -6,7 +6,7 @@ import { OUTPUT_DPI, mmToPx } from "./komeLabelRender";
 const A4 = { w: 210, h: 297 };
 
 // 用紙1枚ぶんに、同じラベルをすべての面に並べた絵を作る。
-// 余白はメーカーの公式ページに記載がないため、用紙の中央にそろえる（offset で微調整）。
+// 余白はエーワンの公式の寸法（komeLabelData の SHEET_OPTIONS）のとおり。offset で微調整できる。
 function composeSheet(label: HTMLCanvasElement, sheet: SheetOption, offsetXMm: number, offsetYMm: number): HTMLCanvasElement {
   const pageW = sheet.landscape ? A4.h : A4.w;
   const pageH = sheet.landscape ? A4.w : A4.h;
@@ -17,8 +17,8 @@ function composeSheet(label: HTMLCanvasElement, sheet: SheetOption, offsetXMm: n
   if (!ctx) return page;
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, page.width, page.height);
-  const left = (pageW - sheet.cols * sheet.wMm) / 2 + offsetXMm;
-  const top = (pageH - sheet.rows * sheet.hMm) / 2 + offsetYMm;
+  const left = sheet.leftMm + offsetXMm;
+  const top = sheet.topMm + offsetYMm;
   for (let r = 0; r < sheet.rows; r++) {
     for (let c = 0; c < sheet.cols; c++) {
       const x = mmToPx(left + c * sheet.wMm, OUTPUT_DPI);

@@ -1023,7 +1023,7 @@ export default function KomeLabelApp() {
           <details className="rounded-lg border-2 border-green-100 px-4 py-3">
             <summary className="cursor-pointer text-base font-bold text-gray-700">印刷の位置がずれるとき（微調整）</summary>
             <p className={noteClass}>
-              用紙の余白はメーカーの公式ページに書かれていないため、ラベルを用紙の中央にそろえて置いています。試しに普通紙へ印刷し、シール用紙と重ねてずれを確かめてください。
+              ラベルの位置は、エーワンの公式の寸法（4面は余白・すき間なし、10面は左18.6mm・上21.2mm）のとおりです。それでも機械ごとに少しずれることがあるので、試しに普通紙へ印刷し、シール用紙と重ねてずれを確かめてください。4面はA4をぴったり4つに分ける形なので、フチなし印刷（または余白なしの設定）が必要です。
             </p>
             <div className="grid grid-cols-2 gap-4 mt-3">
               <div>
