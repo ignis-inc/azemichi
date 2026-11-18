@@ -21,7 +21,7 @@ export default function PrivacyPage() {
             あぜみちは、株式会社IGNIS（大分県豊後大野市）が運営する、農業に関する手続き書類の作成・記録を補助する無料のサービスです。
           </p>
           <p>
-            ご質問・ご意見は、サイト内の意見箱、または info@ignis-inc.jp までお問い合わせください。
+            ご質問・ご意見は、サイト内の<Link href="/#contact" className="legal-inline-link">意見箱</Link>、または info@ignis-inc.jp までお問い合わせください。
           </p>
         </section>
 

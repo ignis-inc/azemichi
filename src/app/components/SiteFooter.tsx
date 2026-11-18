@@ -24,6 +24,7 @@ export default function SiteFooter() {
             <Link href="/chokkura">ちょっくら</Link>
             <Link href="/yougo">用語集</Link>
             <Link href="/privacy">運営者情報・プライバシー</Link>
+            <Link href="/#contact">ご意見箱</Link>
           </nav>
         </div>
         <div className="meta">
